@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pedidos · MF Colombia</title>
+<style>
+  :root { --tinta:#111; --suave:#6b6b6b; --linea:#e7e2da; --fondo:#faf8f5; --champagne:#b89b6a; --ok:#2f6b4f; --mal:#a3342f; --aviso:#9a6b00; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body { margin:0; background:var(--fondo); color:var(--tinta); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--linea); background:#fff; }
+  h1 { font:600 1.2rem Georgia,serif; margin:0; }
+  main { max-width:980px; margin:0 auto; padding:1.2rem; }
+  input, select, button { font:inherit; padding:.5rem .7rem; border:1px solid var(--linea); border-radius:8px; background:#fff; }
+  button { background:var(--tinta); color:#fff; border-color:var(--tinta); cursor:pointer; }
+  button.claro { background:#fff; color:var(--tinta); }
+  button:disabled { opacity:.5; cursor:default; }
+  .barra { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+  .pedido { background:#fff; border:1px solid var(--linea); border-radius:12px; padding:1rem; margin:.9rem 0; }
+  .fila { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; justify-content:space-between; }
+  .ref { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.82rem; }
+  .suave { color:var(--suave); font-size:.88rem; }
+  .etiqueta { display:inline-block; padding:.1rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; border:1px solid currentColor; }
+  .APPROVED { color:var(--ok); } .PENDING { color:var(--aviso); } .DECLINED, .ERROR, .VOIDED { color:var(--mal); }
+  .alerta { background:#fff4e0; border:1px solid #f0d49a; color:#7a5200; border-radius:8px; padding:.4rem .7rem; margin:.6rem 0; font-size:.88rem; }
+  .envio { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.7rem; align-items:center; }
+  #msg { margin:.8rem 0; min-height:1.4em; } #msg.mal { color:var(--mal); } #msg.ok { color:var(--ok); }
+  a { color:inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Pedidos · MF Colombia</h1>
+  <div class="barra">
+    <input id="token" type="password" placeholder="Clave del panel" autocomplete="current-password" aria-label="Clave del panel">
+    <button id="entrar" type="button">Entrar</button>
+    <button id="salir" type="button" class="claro" hidden>Salir</button>
+  </div>
+</header>
+<main>
+  <div class="barra" id="filtros" hidden>
+    <label>Pago <select id="f-pago"><option value="">Todos</option><option value="APPROVED" selected>Aprobado</option><option value="PENDING">Pendiente</option><option value="DECLINED">Rechazado</option></select></label>
+    <label>Envío <select id="f-envio"><option value="">Todos</option><option value="PREPARANDO">Preparando</option><option value="EN_CAMINO">En camino</option><option value="ENTREGADO">Entregado</option><option value="DEVUELTO">Devuelto</option></select></label>
+    <button id="recargar" type="button" class="claro">Actualizar</button>
+  </div>
+  <p id="msg" role="status"></p>
+  <div id="lista"></div>
+</main>
+<script src="panel-pedidos.js"></script>
+</body>
+</html>

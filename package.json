@@ -1,0 +1,14 @@
+{
+  "name": "mf-pagos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Flujo de pagos Wompi + Supabase para MF Colombia",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "test:front": "node test/frontend.e2e.js",
+    "verificar": "node scripts/verificar-despliegue.js"
+  }
+}

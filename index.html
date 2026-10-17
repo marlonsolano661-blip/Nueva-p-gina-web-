@@ -315,4 +315,5 @@ document.addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;$('
 addEventListener('storage',e=>{if(e.key!=='marlon_admin_v1')return;try{ADM=JSON.parse(e.newValue)}catch(x){ADM=null}real=!!(ADM&&ADM.products&&ADM.products.length);draw()});
 try{history.replaceState({p:'home',a:null,m:mode},'')}catch(e){}
 draw();
-</script></body></html>
+</script><script src="pago-online.js"></script>
+</body></html>
