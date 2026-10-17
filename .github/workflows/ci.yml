@@ -10,5 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verificar que existe index.html
-        run: test -f index.html
+      - name: Verificar archivos obligatorios
+        run: |
+          test -f index.html
+          test -f admin.html
+      - name: Buscar tokens expuestos
+        run: |
+          if grep -rIE "ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}" --exclude-dir=.git --exclude-dir=.github .; then
+            echo "Posible token de GitHub en el código"
+            exit 1
+          fi
