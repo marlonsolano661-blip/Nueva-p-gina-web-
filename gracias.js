@@ -96,10 +96,10 @@
   function consultar() {
     var q = token ? 't=' + encodeURIComponent(token) : 'id=' + encodeURIComponent(idTx);
     fetch(API + '/api/seguimiento?' + q, { cache: 'no-store' })
-      .then(function (r) { return r.status === 404 ? null : r.json(); })
+      .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (p) {
         intentos++;
-        if (!p) { if (intentos < 6) return setTimeout(consultar, INTERVALO); return pintarSinPedido(); }
+        if (!p || !p.estado_pago) { if (intentos < INTENTOS_MAX) return setTimeout(consultar, INTERVALO); return pintarSinPedido(); }
         pintar(p);
         if (p.estado_pago === 'PENDING' && intentos < INTENTOS_MAX) setTimeout(consultar, INTERVALO);
       })
