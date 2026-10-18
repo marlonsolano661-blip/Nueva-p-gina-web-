@@ -43,10 +43,11 @@ const colExpr = (k) => { const m = /^(\w+)->>(\w+)$/.exec(k); return m ? `${iden
 function dondeDe(sp) {
   const conds = [];
   for (const [k, v] of sp) {
-    if (['select', 'order', 'limit'].includes(k)) continue;
+    if (['select', 'order', 'limit', 'on_conflict'].includes(k)) continue;
     const e = colExpr(k), i = v.indexOf('.'), op = v.slice(0, i), val = v.slice(i + 1);
     if (op === 'eq') conds.push(`(${e})::text = ${lit(val)}`);
     else if (op === 'neq') conds.push(`(${e})::text <> ${lit(val)}`);
+    else if (op === 'is') conds.push(`(${e}) is ${val === 'null' ? 'null' : 'not null'}`);
     else if (op === 'gte') conds.push(`(${e}) >= ${lit(val)}::timestamptz`);
     else if (op === 'in') conds.push(`(${e})::text in (${val.replace(/^\(|\)$/g, '').split(',').map((s) => lit(s.replace(/^"|"$/g, ''))).join(',')})`);
     else throw new Error('operador no soportado: ' + op);
@@ -109,14 +110,17 @@ async function iniciar() {
       let cuerpoSql;
       if (method === 'POST') {
         const ks = Object.keys(body);
-        cuerpoSql = `insert into ${tabla} (${ks.map(ident).join(', ')}) values (${ks.map((k) => lit(body[k])).join(', ')}) returning *`;
+        cuerpoSql = `insert into ${tabla} (${ks.map(ident).join(', ')}) values (${ks.map((k) => lit(body[k])).join(', ')})`;
+        const oc = u.searchParams.get('on_conflict');
+        if (oc && prefer.includes('merge-duplicates')) cuerpoSql += ` on conflict (${ident(oc)}) do update set ${ks.filter((k) => k !== oc).map((k) => `${ident(k)} = excluded.${ident(k)}`).join(', ')}`;
+        cuerpoSql += ' returning *';
       } else if (method === 'PATCH') {
         cuerpoSql = `update ${tabla} set ${Object.keys(body).map((k) => `${ident(k)} = ${lit(body[k])}`).join(', ')}${donde} returning *`;
       } else throw new Error('método no soportado ' + method);
       const filas = JSON.parse(await psql(`with r as (${cuerpoSql}) select coalesce(json_agg(r), '[]'::json) from r;`));
       return prefer.includes('return=representation') ? jsonRes(method === 'POST' ? 201 : 200, filas) : new Response(null, { status: method === 'POST' ? 201 : 204 });
     } catch (e) {
-      return jsonRes(400, { message: e.message });
+      return jsonRes(/duplicate key/.test(e.message) ? 409 : 400, { message: e.message });
     }
   }
 
