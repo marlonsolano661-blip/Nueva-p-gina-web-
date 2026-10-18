@@ -6,7 +6,7 @@ const tracking = require('../netlify/functions/seguimiento');
 const webhook = require('../netlify/functions/webhook-wompi');
 const admin = require('../netlify/functions/admin-pedidos');
 
-const envKeys = ['SUPABASE_URL','SUPABASE_SERVICE_KEY','WOMPI_PUBLIC_KEY','WOMPI_INTEGRITY_SECRET','WOMPI_EVENTS_SECRET','SITE_URL','ADMIN_TOKEN'];
+const envKeys = ['SUPABASE_URL','SUPABASE_SERVICE_KEY','WOMPI_PUBLIC_KEY','WOMPI_INTEGRITY_SECRET','WOMPI_EVENTS_SECRET','SITE_URL','ADMIN_TOKEN','STORE_CHECKOUT_ENABLED','STOCK_RESERVATION_READY'];
 function withoutIntegrationEnv(fn) {
   const before = Object.fromEntries(envKeys.map(k => [k, process.env[k]]));
   for (const key of envKeys) delete process.env[key];
@@ -14,10 +14,10 @@ function withoutIntegrationEnv(fn) {
   finally { for (const key of envKeys) { if (before[key] === undefined) delete process.env[key]; else process.env[key] = before[key]; } }
 }
 
-test('crear-pedido no crea pedidos si falta configuración de servidor', async () => {
+test('crear-pedido permanece desactivado hasta verificar la reserva de stock', async () => {
   const result = await withoutIntegrationEnv(() => createOrder.handler({ httpMethod: 'POST', body: JSON.stringify({ items: [{id:'x',talla:'36',cant:1}] }) }));
   assert.equal(result.statusCode, 503);
-  assert.match(JSON.parse(result.body).error, /no está configurado/i);
+  assert.match(JSON.parse(result.body).error, /desactivada/i);
 });
 
 test('crear-pedido rechaza métodos que no sean POST', async () => {
