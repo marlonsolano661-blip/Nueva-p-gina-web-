@@ -129,6 +129,17 @@ body.bagopen,body.shopen{overflow:hidden}body.bagopen #dro,body.shopen #sho{opac
 @media(hover:none),(pointer:coarse){.pc:hover,.feat:hover,.btn:hover,.x:hover{transform:none;box-shadow:none}.pc:hover .im img{transform:none}.btn:active{transform:none}.rv{transition:opacity .18s ease;transform:none}.rv:not(.in){opacity:0}.pc,.feat,.btn,.sz,.sw,.hs-dots button{transition-duration:.12s}.dr,.sh,.dro{transition-duration:.2s}}
 html,body{overflow-x:clip}
 
+/* Ajuste móvil: evitar que los CTA del producto desborden el viewport */
+@media(max-width:600px){
+  .pd,.pd>* ,.pd .pi{min-width:0;max-width:100%}
+  .pd .pi .row{display:grid;grid-template-columns:minmax(0,1fr);width:100%;min-width:0;gap:.65rem}
+  .pd .pi .row>.btn{display:flex;width:100%;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:.85rem 1rem;line-height:1.3}
+  .stk{box-sizing:border-box;width:100%;min-width:0;gap:.65rem;padding-left:1rem;padding-right:1rem}
+  .stk>div{flex:0 1 auto;min-width:0}
+  .stk .btn{flex:1 1 0;min-width:0;max-width:none;width:auto;white-space:normal;overflow-wrap:anywhere;padding:.85rem .75rem;line-height:1.25}
+}
+
+
 .spg{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gr);transform:scaleX(0);transform-origin:left;pointer-events:none}
 .pgin{animation:pgi .5s var(--ease)}@keyframes pgi{from{opacity:0;transform:translateY(.8rem)}}
 .ph{width:34%;height:auto;color:#cfcfca}
