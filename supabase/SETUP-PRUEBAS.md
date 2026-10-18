@@ -7,7 +7,7 @@ Esta rama es de integración. No desplegar a producción ni usar claves de produ
 1. Abre el proyecto Supabase de pruebas y entra en SQL Editor.
 2. Revisa y ejecuta `supabase/schema.sql`.
 3. Confirma que existan `productos`, `pedidos` y la función RPC `aprobar_pedido`; RLS debe estar habilitado.
-4. Importa el catálogo real solo después de verificar IDs, precios COP e inventario real por talla. No cargues stock ficticio. Productos sin disponibilidad confirmada deben permanecer con stock cero o no visibles.
+4. Ejecuta `supabase/importar-catalogo-inicial.sql`: contiene los 55 productos y precios del catálogo actual, pero los crea con stock cero y `visible=false`. Después verifica IDs, precios COP e inventario real por talla. No cargues stock ficticio. Solo habilita un producto después de confirmar su disponibilidad.
 5. No crees políticas públicas para pedidos. La clave de servicio solo se configura en el servidor.
 
 ## Variables de entorno de prueba
@@ -33,5 +33,5 @@ La función de creación de pedidos rechaza claves públicas que no sean de prue
 ## Limitaciones conocidas
 
 - El backend valida existencias al crear el pedido, pero no reserva stock mientras la persona permanece en el checkout. Antes de recibir tráfico real, debe implementarse reserva con expiración o una operación atómica para evitar ventas concurrentes de la última unidad.
-- El catálogo no se importa automáticamente desde `DATA/catalogo_tienda.js`; debe hacerse una importación verificada antes de habilitar compras.
+- El catálogo inicial está preparado en `supabase/importar-catalogo-inicial.sql`, con stock cero y visibilidad desactivada; la verificación manual de existencias por talla sigue siendo obligatoria.
 - Las tablas y variables de Supabase deben configurarse manualmente en el proyecto de pruebas.
