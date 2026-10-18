@@ -141,6 +141,7 @@ body.bagopen .stk,body.shopen .stk{display:none}
 <main id="app"></main><form name="looks" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden><input name="bot-field"><input name="nombre"><textarea name="mensaje"></textarea><input name="instagram"><input name="autoriza"><input type="file" name="foto"></form>
 <div id="sho" class="dro" data-n="shclose"></div><aside id="sh" class="sh" role="dialog" aria-modal="true" aria-label="Comparte tus MF" aria-hidden="true"></aside>
 <div id="dro" class="dro" data-n="bagclose"></div><aside id="dr" class="dr" role="dialog" aria-modal="true" aria-labelledby="drt" aria-hidden="true"></aside><div id="toast" role="status" aria-live="polite"></div>
+<script src="DATA/catalogo_tienda.js"></script>
 <script>
 /* ====== CONFIGURA AQUÍ ====== */
 const CFG={wa:'573000000000',pagos:[
@@ -161,7 +162,7 @@ const DEMO=[['Stiletto Noir',289900,'Tacón aguja de 10 cm en charol negro.','Ne
 let ADM=null;try{ADM=JSON.parse(localStorage.getItem('marlon_admin_v1'))}catch(e){}
 let real=!!(ADM&&ADM.products&&ADM.products.length);
 const soldN=(p,t)=>(ADM.rows||[]).filter(r=>r.producto===p.name&&String(r.talla).trim()===t&&r.estado!=='Devuelto').reduce((s,r)=>s+(+r.cant||0),0);
-const catalog=()=>real?ADM.products.filter(p=>p.vis!==false&&p.price>0).map(p=>({id:p.id,name:p.name,price:p.price,desc:p.desc||'',colors:colorList(p.color),img:(p.imgs&&p.imgs[0])||p.img||'',imgs:(p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[])),tallas:TALLAS.filter(t=>(+p.stock[t]||0)-soldN(p,t)>0)})):DEMO;
+const catalog=()=>real?ADM.products.filter(p=>p.vis!==false&&p.price>0).map(p=>({id:p.id,name:p.name,price:p.price,desc:p.desc||'',colors:colorList(p.color),img:(p.imgs&&p.imgs[0])||p.img||'',imgs:(p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[])),tallas:TALLAS.filter(t=>(+p.stock[t]||0)-soldN(p,t)>0)})):(Array.isArray(window.MF_CATALOGO_PRODUCTOS)?window.MF_CATALOGO_PRODUCTOS.filter(p=>p.price>0&&Object.keys(p.stock||{}).length>0).map(p=>({...p,tallas:TALLAS.filter(t=>(+p.stock[t]||0)>0)})):DEMO);
 const WA=(()=>{const d=String((real&&ADM.marca&&ADM.marca.telefono)||CFG.wa).replace(/\D/g,'');return d.length===10?'57'+d:d})();
 const waLink=t=>`https://wa.me/${WA}?text=${encodeURIComponent(t)}`;
 let CART=[];try{CART=JSON.parse(localStorage.getItem('mf_cart'))||[]}catch(e){}
