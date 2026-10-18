@@ -15,6 +15,12 @@ async function readJson(response) { try { return await response.json(); } catch 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { error: 'Método no permitido.' }, { allow: 'POST' });
   const cfg = env();
+  if (process.env.STORE_CHECKOUT_ENABLED !== 'true') {
+    return json(503, { error: 'La creación de pedidos está desactivada hasta verificar el catálogo y la reserva de inventario.' });
+  }
+  if (process.env.STOCK_RESERVATION_READY !== 'true') {
+    return json(503, { error: 'No se pueden iniciar pedidos hasta habilitar y verificar la reserva de inventario.' });
+  }
   if (![cfg.db, cfg.key, cfg.publicKey, cfg.integrity, cfg.site].every(Boolean)) {
     return json(503, { error: 'El pago aún no está configurado. No se creó ningún cobro.' });
   }
