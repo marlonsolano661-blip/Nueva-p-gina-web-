@@ -13,7 +13,7 @@
       label.innerHTML = '<input type="checkbox" style="margin-top:.2rem;width:1.1rem;height:1.1rem;flex:none"><span>Quiero recibir actualizaciones de mi pedido por WhatsApp. Puedes retirar tu autorización cuando quieras.</span>';
       label.querySelector('input').addEventListener('change', function (e) { consent = e.target.checked; });
     }
-    button.before(label);
+    if (label.parentNode !== button.parentNode || label.nextElementSibling !== button) button.before(label);
   });
   if (document.body) observer.observe(document.body, { childList: true, subtree: true });
   function cookie(name) {
