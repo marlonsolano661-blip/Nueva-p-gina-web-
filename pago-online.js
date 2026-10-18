@@ -1,21 +1,23 @@
-/* Checkout preparado para el backend de la tienda. No contiene claves privadas. */
+/* Checkout aislado. No contiene credenciales y exige consentimiento explícito de WhatsApp. */
 (function () {
   'use strict';
   var consent = false;
   var observer = new MutationObserver(function () {
     var button = document.querySelector('[data-n="topay"]');
-    if (!button || document.getElementById('mf-wa')) return;
-    var label = document.createElement('label');
-    label.id = 'mf-wa';
-    label.style.cssText = 'display:flex;gap:.6rem;align-items:flex-start;margin:.9rem 0;font-size:.92rem;line-height:1.45;cursor:pointer';
-    label.innerHTML = '<input type="checkbox" style="margin-top:.2rem;width:1.1rem;height:1.1rem;flex:none"><span>Quiero recibir actualizaciones de mi pedido por WhatsApp. Puedes retirar tu autorización cuando quieras.</span>';
-    label.querySelector('input').addEventListener('change', function (e) { consent = e.target.checked; });
+    if (!button) return;
+    var label = document.getElementById('mf-wa');
+    if (!label) {
+      label = document.createElement('label');
+      label.id = 'mf-wa';
+      label.style.cssText = 'display:flex;gap:.6rem;align-items:flex-start;margin:.9rem 0;font-size:.92rem;line-height:1.45;cursor:pointer';
+      label.innerHTML = '<input type="checkbox" style="margin-top:.2rem;width:1.1rem;height:1.1rem;flex:none"><span>Quiero recibir actualizaciones de mi pedido por WhatsApp. Puedes retirar tu autorización cuando quieras.</span>';
+      label.querySelector('input').addEventListener('change', function (e) { consent = e.target.checked; });
+    }
     button.before(label);
   });
   if (document.body) observer.observe(document.body, { childList: true, subtree: true });
   function cookie(name) {
-    var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    var match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+    var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
     return match ? decodeURIComponent(match[1]) : '';
   }
   document.addEventListener('click', async function (event) {
@@ -23,7 +25,8 @@
     if (!button) return;
     event.preventDefault(); event.stopImmediatePropagation();
     var notify = function (message) { if (typeof window.toast === 'function') window.toast(message); else window.alert(message); };
-    var form = window.FRM || {}, cart = Array.isArray(window.CART) ? window.CART : [];
+    var form = typeof FRM !== 'undefined' ? FRM : {};
+    var cart = typeof CART !== 'undefined' && Array.isArray(CART) ? CART : [];
     if (!cart.length) return notify('Tu carrito está vacío.');
     if (![form.nombre, form.tel, form.ciudad, form.dir].every(function (v) { return String(v || '').trim(); })) return notify('Completa tus datos de entrega.');
     if (button.disabled) return;
