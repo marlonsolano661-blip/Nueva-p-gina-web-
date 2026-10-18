@@ -80,7 +80,11 @@ begin
   end if;
 
   -- Valida existencias antes de descontarlas. La transacción se revierte si falta stock.
-  for item in select value from jsonb_array_elements(pedido.items)
+  for item in
+    select jsonb_build_object('id', value->>'id', 'talla', value->>'talla',
+                              'cant', sum((value->>'cant')::integer)) as line
+    from jsonb_array_elements(pedido.items)
+    group by value->>'id', value->>'talla'
   loop
     cantidad := (item->>'cant')::integer;
     select coalesce((stock->>(item->>'talla'))::integer, 0)
@@ -94,7 +98,11 @@ begin
     end if;
   end loop;
 
-  for item in select value from jsonb_array_elements(pedido.items)
+  for item in
+    select jsonb_build_object('id', value->>'id', 'talla', value->>'talla',
+                              'cant', sum((value->>'cant')::integer)) as line
+    from jsonb_array_elements(pedido.items)
+    group by value->>'id', value->>'talla'
   loop
     cantidad := (item->>'cant')::integer;
     update public.productos
