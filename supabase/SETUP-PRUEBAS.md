@@ -12,9 +12,9 @@ Esta rama es de integración. No desplegar a producción ni usar claves de produ
 
 ## Variables de entorno de prueba
 
-Configura en el entorno de pruebas: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `WOMPI_PUBLIC_KEY` (debe comenzar por `pub_test_`), `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`, `SITE_URL` y `ADMIN_TOKEN` (mínimo 24 caracteres aleatorios). No pegues secretos en GitHub ni en el chat.
+Configura en el entorno de pruebas: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `WOMPI_PUBLIC_KEY` (debe comenzar por `pub_test_`), `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`, `SITE_URL` y `ADMIN_TOKEN` (mínimo 24 caracteres aleatorios). Mantén `STORE_CHECKOUT_ENABLED=false` y `STOCK_RESERVATION_READY=false` hasta que exista una reserva de inventario atómica, con expiración y liberación idempotente. No pegues secretos en GitHub ni en el chat.
 
-La función de creación de pedidos rechaza claves públicas que no sean de prueba.
+La función de creación de pedidos permanece desactivada por defecto y rechaza claves públicas que no sean de prueba. No cambies esas banderas todavía: la reserva de stock debe implementarse y probarse primero.
 
 ## Endpoints
 
