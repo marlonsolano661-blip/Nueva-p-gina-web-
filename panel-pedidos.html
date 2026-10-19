@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#b86b77">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='240 254 581 508'%3E%3Cpolygon points='246,260 426,548 606,260 607,756 570,756 570,388 426,617 283,388 283,756 246,756'/%3E%3Crect x='606' y='323' width='209' height='37'/%3E%3Crect x='606' y='521' width='161' height='37'/%3E%3C/svg%3E">
 <title>Pedidos · MF Colombia</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -46,6 +47,20 @@
   .alerta { background:var(--warn-bg); color:var(--warn); border-radius:1rem; padding:.55rem .9rem; margin:.7rem 0; font-size:.9rem; }
   .envio { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.8rem; align-items:center; }
   #msg { margin:.8rem 0; min-height:1.5em; } #msg.mal { color:var(--bad); } #msg.ok { color:var(--gr); font-weight:500; }
+
+  /* ===== Diseño del panel nuevo (rosa): solo estilo, la lógica no cambia ===== */
+  :root { --k:#1b1315; --g1:#f7f3f2; --g2:#e8e0de; --g3:#7a6d70; --gr:#b86b77; --gs:#f8e8e6; --rs:#ecc0c2; --ok:#4c8a62; }
+  body { background:var(--g1); }
+  header { background:#fffffff2; backdrop-filter:blur(12px); }
+  h1 { color:var(--gr); }
+  .pedido, .form { background:#fff; border:0; border-radius:1.4rem; box-shadow:0 10px 30px -24px #7d3f4f; }
+  button, .btn, .boton { background:var(--rs); border-color:var(--rs); color:#3a1d24; }
+  button:hover:not(:disabled), .btn:hover, .boton:hover { background:#fff; color:var(--k); border-color:var(--rs); }
+  button.claro, .btn.o, .boton.claro { background:#fff; border-color:var(--g2); color:var(--k); }
+  button.claro:hover:not(:disabled), .btn.o:hover, .boton.claro:hover { background:var(--g1); color:var(--k); }
+  input:focus, select:focus, textarea:focus { border-color:var(--gr); }
+  .etiqueta { font-weight:600; }
+  :focus-visible { outline-color:var(--gr); }
 </style>
 </head>
 <body>
