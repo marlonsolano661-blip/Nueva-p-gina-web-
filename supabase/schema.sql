@@ -147,3 +147,6 @@ alter table ajustes enable row level security;
 alter table eventos enable row level security;
 revoke all on table ajustes, eventos from anon, authenticated;
 grant all on table ajustes, eventos to service_role;
+
+-- Enlace de rastreo de la transportadora (lo escribe Marlon en el panel; el cliente ve el botón "Rastrear pedido")
+alter table pedidos add column if not exists link_rastreo text;
