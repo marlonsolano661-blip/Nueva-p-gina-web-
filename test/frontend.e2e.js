@@ -117,9 +117,29 @@ async function prueba(nombre, fn) {
     await p.waitForSelector('h1');
     assert.equal(await p.locator('h1').textContent(), '¡Pago recibido!');
     const t = await p.locator('#tarjeta').textContent();
-    assert.match(t, /Plataforma Luna · talla 36/); assert.match(t, /379\.800/); assert.match(t, /MF-123/); assert.match(t, /Preparando/);
+    assert.match(t, /Plataforma Luna/); assert.match(t, /Talla 36 · Cant\. 2/); assert.match(t, /379\.800/); assert.match(t, /MF-123/); assert.match(t, /Preparando/);
     assert.equal(await p.evaluate(() => localStorage.getItem('cart')), null);
     assert.ok((await p.evaluate(() => location.search)).startsWith('?t='), 'el enlace pasa a ser el privado');
+    assert.equal(p.errores.length, 0, p.errores.join()); await p.close();
+  });
+  await prueba('resumen completo con el enlace privado: precios, envío, datos del cliente, guía y botón Rastrear pedido', async () => {
+    const p = await nueva();
+    const completo = seg({ estado_envio: 'EN_CAMINO', transportadora: 'Coordinadora', guia: '7000282727272', link_rastreo: 'https://rastreo.ejemplo.com/?g=7000282727272', subtotal_centavos: 17900000, envio_centavos: 1750000, amount_in_cents: 19650000, items: [{ nombre: 'Bota Nueva', talla: '37', color: 'Negro', cant: 1, precio: 179000 }], cliente: { nombre: 'Ana Pérez', tel: '3115752334', email: 'ana@correo.com', ciudad: 'Medellín', direccion: 'Calle 10 # 5-5' } });
+    await p.route('**/api/seguimiento*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: completo }));
+    await p.goto(base + '/gracias.html?t=' + 'a'.repeat(32));
+    await p.waitForSelector('h1');
+    const t = await p.locator('#tarjeta').textContent();
+    for (const x of [/Resumen de tu compra/, /Bota Nueva/, /Talla 37 · Negro · Cant\. 1/, /179\.000/, /Envío/, /17\.500/, /196\.500/, /Datos de tu compra/, /Ana Pérez/, /3115752334/, /Medellín/, /Calle 10 # 5-5/, /Coordinadora/, /7000282727272/]) assert.match(t, x);
+    const a = p.locator('a:has-text("Rastrear pedido")');
+    assert.equal(await a.getAttribute('href'), 'https://rastreo.ejemplo.com/?g=7000282727272');
+    assert.equal(await a.getAttribute('target'), '_blank'); assert.match(await a.getAttribute('rel'), /noopener/);
+    assert.equal(p.errores.length, 0, p.errores.join()); await p.close();
+  });
+  await prueba('un link de rastreo que no sea https no se muestra como botón', async () => {
+    const p = await nueva();
+    await p.route('**/api/seguimiento*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: seg({ estado_envio: 'EN_CAMINO', transportadora: 'X', guia: '1', link_rastreo: 'javascript:alert(1)' }) }));
+    await p.goto(base + '/gracias.html?t=' + 'a'.repeat(32)); await p.waitForSelector('h1');
+    assert.equal(await p.locator('a:has-text("Rastrear pedido")').count(), 0);
     assert.equal(p.errores.length, 0, p.errores.join()); await p.close();
   });
   await prueba('pendiente → se actualiza solo cuando llega la aprobación', async () => {
@@ -181,7 +201,7 @@ async function prueba(nombre, fn) {
     await p.selectOption('.pedido select[aria-label="Estado de envío"]', 'EN_CAMINO');
     await p.fill('[aria-label=Transportadora]', 'Servientrega'); await p.fill('[aria-label="Número de guía"]', 'SV-9');
     await p.click('text=Guardar envío'); await p.waitForSelector('#msg.ok');
-    assert.deepEqual(guardado, { id: 7, estado_envio: 'EN_CAMINO', transportadora: 'Servientrega', guia: 'SV-9' });
+    assert.deepEqual(guardado, { id: 7, estado_envio: 'EN_CAMINO', transportadora: 'Servientrega', guia: 'SV-9', link_rastreo: '' });
     assert.equal(p.errores.length, 0, p.errores.join()); await p.close();
   });
   await prueba('clave incorrecta (401): vuelve a pedirla y no deja datos en pantalla', async () => {

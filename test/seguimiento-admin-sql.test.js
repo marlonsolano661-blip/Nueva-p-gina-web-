@@ -30,7 +30,7 @@ describe('seguimiento, panel admin y SQL', { skip: !hayDB && 'Falta TEST_DATABAS
   }
 
   describe('seguimiento', () => {
-    it('por token privado: devuelve estado sin datos personales', async () => {
+    it('por token privado: devuelve resumen completo y los datos de la compra', async () => {
       const p = await pedidoPagado();
       const r = await get({ t: p.token });
       assert.equal(r.status, 200);
@@ -38,10 +38,23 @@ describe('seguimiento, panel admin y SQL', { skip: !hayDB && 'Falta TEST_DATABAS
       assert.equal(r.json.estado_envio, 'PREPARANDO');
       assert.equal(r.json.reference, p.ref);
       assert.equal(r.json.amount_in_cents, p.monto);
-      assert.deepEqual(r.json.items, [{ nombre: 'Plataforma Luna', talla: '36', cant: 1 }]);
+      assert.equal(r.json.items.length, 1);
+      assert.deepEqual([r.json.items[0].nombre, r.json.items[0].talla, r.json.items[0].cant], ['Plataforma Luna', '36', 1]);
+      assert.ok(r.json.items[0].precio > 0);
+      assert.equal(r.json.subtotal_centavos + r.json.envio_centavos, r.json.amount_in_cents);
+      assert.equal(r.json.link_rastreo, null);
+      assert.deepEqual([r.json.cliente.nombre, r.json.cliente.tel, r.json.cliente.ciudad], ['Ana Pérez', '3115752334', 'Medellín']);
       const texto = JSON.stringify(r.json);
-      for (const secreto of ['Ana Pérez', '3115752334', 'ana@correo.com', 'Calle 10', 'Medellín', '"ip"', '"cliente"']) assert.equal(texto.includes(secreto), false, secreto);
+      for (const secreto of ['"ip"', '"meta"', 'fbp', 'consent_wa']) assert.equal(texto.includes(secreto), false, secreto);
       assert.equal(r.headers['Cache-Control'], 'no-store');
+    });
+    it('por id de transacción NO devuelve datos personales (solo con el enlace privado)', async () => {
+      await pedidoPagado('tx-priv');
+      const r = await get({ id: 'tx-priv' });
+      assert.equal(r.status, 200);
+      assert.equal(r.json.cliente, undefined);
+      const texto = JSON.stringify(r.json);
+      for (const secreto of ['Ana Pérez', '3115752334', 'ana@correo.com', 'Calle 10']) assert.equal(texto.includes(secreto), false, secreto);
     });
     it('por id de transacción (regreso desde Wompi)', async () => {
       const p = await pedidoPagado('tx-777');
@@ -59,11 +72,26 @@ describe('seguimiento, panel admin y SQL', { skip: !hayDB && 'Falta TEST_DATABAS
       b.wompi.txs.set('tx-vivo', { id: 'tx-vivo', status: 'DECLINED', reference: p.ref, amount_in_cents: p.monto, currency: 'COP' });
       assert.equal((await get({ id: 'tx-vivo' })).json.estado_pago, 'DECLINED');
     });
-    it('un estado "en vivo" APPROVED no se acepta como pagado hasta que el webhook lo confirme... pero se muestra', async () => {
+    it('si el webhook no llega, al regresar de Wompi la API confirma el pago y el pedido queda aprobado (una sola vez, con stock descontado)', async () => {
       const p = await pedidoPendiente();
-      b.wompi.txs.set('tx-vivo-2', { id: 'tx-vivo-2', status: 'APPROVED', reference: p.ref, amount_in_cents: p.monto, currency: 'COP' });
+      const stock0 = Number((await b.filas("select (stock->>'36')::int as n from productos where id='plataforma-luna'"))[0].n);
+      b.wompi.txs.set('tx-vivo-2', { id: 'tx-vivo-2', status: 'APPROVED', reference: p.ref, amount_in_cents: p.monto, currency: 'COP', payment_method_type: 'CARD' });
       assert.equal((await get({ id: 'tx-vivo-2' })).json.estado_pago, 'APPROVED');
-      assert.equal((await b.pedido(p.ref)).estado_pago, 'PENDING', 'la base solo la cambia el webhook');
+      assert.equal((await b.pedido(p.ref)).estado_pago, 'APPROVED');
+      await get({ id: 'tx-vivo-2' }); await get({ id: 'tx-vivo-2' });
+      const stock1 = Number((await b.filas("select (stock->>'36')::int as n from productos where id='plataforma-luna'"))[0].n);
+      assert.equal(stock1, stock0 - 1, 'el stock se descuenta una sola vez');
+      // y si después llega el webhook, no duplica nada
+      await webhook({ method: 'POST', headers: {}, query: {}, body: eventoWompi({ id: 'tx-vivo-2', status: 'APPROVED', reference: p.ref, monto: p.monto }) });
+      assert.equal(Number((await b.filas("select (stock->>'36')::int as n from productos where id='plataforma-luna'"))[0].n), stock1);
+    });
+    it('el respaldo no aprueba si la moneda no es COP ni si Wompi dice PENDING', async () => {
+      const p = await pedidoPendiente();
+      b.wompi.txs.set('tx-usd', { id: 'tx-usd', status: 'APPROVED', reference: p.ref, amount_in_cents: p.monto, currency: 'USD' });
+      await get({ id: 'tx-usd' });
+      b.wompi.txs.set('tx-pend', { id: 'tx-pend', status: 'PENDING', reference: p.ref, amount_in_cents: p.monto, currency: 'COP' });
+      await get({ id: 'tx-pend' });
+      assert.equal((await b.pedido(p.ref)).estado_pago, 'PENDING');
     });
     it('descarta la transacción si su monto no coincide con el pedido', async () => {
       const p = await pedidoPendiente();
@@ -122,6 +150,28 @@ describe('seguimiento, panel admin y SQL', { skip: !hayDB && 'Falta TEST_DATABAS
       assert.equal(seg.json.guia, 'SV-123/45');
       await adminReq('POST', { body: { id, estado_envio: 'ENTREGADO', transportadora: 'Servientrega', guia: 'SV-123/45' } });
       assert.ok((await b.pedido(p.ref)).entregado_en);
+    });
+    it('guarda el link de rastreo (https) y el cliente lo ve; lo puede borrar', async () => {
+      const p = await pedidoPagado();
+      const id = (await b.pedido(p.ref)).id;
+      const link = 'https://www.coordinadora.com/portafolio-de-servicios/servicios-en-linea/rastreo-de-guias/?guia=7000282727272';
+      const r = await adminReq('POST', { body: { id, estado_envio: 'EN_CAMINO', transportadora: 'Coordinadora', guia: '7000282727272', link_rastreo: link } });
+      assert.equal(r.status, 200);
+      assert.equal((await get({ t: p.token })).json.link_rastreo, link);
+      assert.equal((await adminReq('GET', {})).json.pedidos.find((x) => x.id === id).link_rastreo, link);
+      // sin mandar el campo, no se toca; vacío, se borra
+      await adminReq('POST', { body: { id, estado_envio: 'EN_CAMINO', guia: '7000282727272' } });
+      assert.equal((await get({ t: p.token })).json.link_rastreo, link);
+      await adminReq('POST', { body: { id, estado_envio: 'EN_CAMINO', link_rastreo: '' } });
+      assert.equal((await get({ t: p.token })).json.link_rastreo, null);
+    });
+    it('rechaza links de rastreo peligrosos o inválidos', async () => {
+      const p = await pedidoPagado();
+      const id = (await b.pedido(p.ref)).id;
+      for (const link of ['javascript:alert(1)', 'http://sitio.com/x', 'ftp://x.com', 'no es un link', 'https://a.com/ b', 'https://user:pw@a.com/', 'https://a.com/' + 'x'.repeat(300), 'data:text/html,hola']) {
+        assert.equal((await adminReq('POST', { body: { id, estado_envio: 'EN_CAMINO', link_rastreo: link } })).status, 400, link.slice(0, 40));
+      }
+      assert.equal((await b.pedido(p.ref)).link_rastreo ?? null, null);
     });
     it('no deja cambiar el envío de un pedido sin pago aprobado', async () => {
       const p = await pedidoPendiente();
