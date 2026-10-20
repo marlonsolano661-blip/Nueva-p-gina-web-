@@ -58,12 +58,33 @@
     tarjeta.appendChild(el('p', { class: 'suave' }, [document.createTextNode('Pedido '), el('span', { class: 'ref', text: p.reference })]));
     tarjeta.appendChild(el('hr'));
 
+    tarjeta.appendChild(el('h2', { class: 'sec', text: 'Resumen de tu compra' }));
     var ul = el('ul');
     (p.items || []).forEach(function (i) {
-      ul.appendChild(el('li', {}, [el('span', { text: i.nombre + ' · talla ' + i.talla }), el('span', { text: '× ' + i.cant })]));
+      var det = 'Talla ' + i.talla + (i.color ? ' · ' + i.color : '') + ' · Cant. ' + i.cant;
+      var precio = i.precio != null ? pesos(i.precio * i.cant * 100) : '';
+      ul.appendChild(el('li', {}, [
+        el('span', {}, [el('strong', { text: i.nombre }), el('small', { class: 'suave', text: det })]),
+        el('span', { text: precio }),
+      ]));
     });
     tarjeta.appendChild(ul);
+    var fil = [];
+    if (p.subtotal_centavos != null) fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Productos' }), el('span', { text: pesos(p.subtotal_centavos) })]));
+    if (p.envio_centavos != null) fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Envío' }), el('span', { text: pesos(p.envio_centavos) })]));
+    fil.forEach(function (f) { tarjeta.appendChild(f); });
     tarjeta.appendChild(el('div', { class: 'total' }, [el('span', { text: 'Total' }), el('span', { text: pesos(p.amount_in_cents) })]));
+    if (p.payment_method_type) tarjeta.appendChild(el('p', { class: 'suave', text: 'Medio de pago: ' + ({ CARD: 'Tarjeta', NEQUI: 'Nequi', PSE: 'PSE', BANCOLOMBIA_TRANSFER: 'Bancolombia', BANCOLOMBIA_COLLECT: 'Bancolombia' }[p.payment_method_type] || p.payment_method_type) }));
+
+    var c = p.cliente;
+    if (c) {
+      tarjeta.appendChild(el('h2', { class: 'sec', text: 'Datos de tu compra' }));
+      var dl = el('div', { class: 'datos' });
+      [['Nombre', c.nombre], ['WhatsApp', c.tel], ['Correo', c.email], ['Ciudad', c.ciudad], ['Dirección de entrega', c.direccion]].forEach(function (d) {
+        if (d[1]) dl.appendChild(el('div', { class: 'fila-r' }, [el('span', { class: 'suave', text: d[0] }), el('span', { text: d[1] })]));
+      });
+      tarjeta.appendChild(dl);
+    }
 
     if (ok) {
       limpiarCarrito();
@@ -74,8 +95,16 @@
       etapas.forEach(function (e, n) { pasos.appendChild(el('div', { class: 'paso' + (n <= idx ? ' on' : ''), text: e[1] })); });
       tarjeta.appendChild(pasos);
       if (p.estado_envio === 'DEVUELTO') tarjeta.appendChild(el('p', { class: 'suave', text: 'Este envío fue devuelto. Escríbenos por WhatsApp para ayudarte.' }));
-      if (p.transportadora || p.guia) {
-        tarjeta.appendChild(el('p', { class: 'suave', text: 'Transportadora: ' + (p.transportadora || '—') + (p.guia ? ' · Guía: ' + p.guia : '') }));
+      if (p.transportadora || p.guia || p.link_rastreo) {
+        var envio = el('div', { class: 'datos' });
+        if (p.transportadora) envio.appendChild(el('div', { class: 'fila-r' }, [el('span', { class: 'suave', text: 'Transportadora' }), el('span', { text: p.transportadora })]));
+        if (p.guia) envio.appendChild(el('div', { class: 'fila-r' }, [el('span', { class: 'suave', text: 'Número de guía' }), el('span', { text: p.guia })]));
+        tarjeta.appendChild(envio);
+        if (p.link_rastreo && /^https:\/\//i.test(p.link_rastreo)) {
+          tarjeta.appendChild(el('a', { class: 'boton', href: p.link_rastreo, target: '_blank', rel: 'noopener noreferrer', text: 'Rastrear pedido' }));
+        } else if (p.estado_envio === 'EN_CAMINO') {
+          tarjeta.appendChild(el('p', { class: 'suave', text: 'Pronto verás aquí el botón para rastrear tu pedido.' }));
+        }
       }
       if (p.token) {
         // A partir de aquí el pedido se consulta con su enlace privado
@@ -99,6 +128,8 @@
       .then(function (r) { return r.status === 404 ? null : r.json(); })
       .then(function (p) {
         intentos++;
+        // Con ?id= solo llega el token; se vuelve a consultar con el enlace privado para ver también los datos de la compra
+        if (p && !token && p.token) { token = p.token; return consultar(); }
         if (!p) { if (intentos < 6) return setTimeout(consultar, INTERVALO); return pintarSinPedido(); }
         pintar(p);
         if (p.estado_pago === 'PENDING' && intentos < INTENTOS_MAX) setTimeout(consultar, INTERVALO);

@@ -46,12 +46,13 @@
     });
     var transp = el('input', { type: 'text', placeholder: 'Transportadora', maxlength: '40', 'aria-label': 'Transportadora' }); transp.value = p.transportadora || '';
     var guia = el('input', { type: 'text', placeholder: 'Número de guía', maxlength: '60', 'aria-label': 'Número de guía' }); guia.value = p.guia || '';
+    var link = el('input', { type: 'url', placeholder: 'Link de rastreo (https://…)', maxlength: '300', 'aria-label': 'Link de rastreo', inputmode: 'url', autocapitalize: 'off' }); link.value = p.link_rastreo || '';
     var boton = el('button', { type: 'button', text: 'Guardar envío' });
     var aprobado = p.estado_pago === 'APPROVED';
-    [sel, transp, guia, boton].forEach(function (x) { x.disabled = !aprobado; });
+    [sel, transp, guia, link, boton].forEach(function (x) { x.disabled = !aprobado; });
     boton.onclick = function () {
       boton.disabled = true;
-      llamar('/api/admin-pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, estado_envio: sel.value, transportadora: transp.value, guia: guia.value }) })
+      llamar('/api/admin-pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, estado_envio: sel.value, transportadora: transp.value, guia: guia.value, link_rastreo: link.value }) })
         .then(function () { aviso('Envío actualizado (' + p.referencia + ')', 'ok'); })
         .catch(function (e) { aviso(e.message, 'mal'); })
         .then(function () { boton.disabled = false; });
@@ -73,7 +74,7 @@
       contacto,
       el('p', { class: 'suave', text: (cli.direccion || '') + (cli.nota ? ' · Nota: ' + cli.nota : '') }),
       el('p', { text: items }),
-      el('div', { class: 'envio' }, [sel, transp, guia, boton]),
+      el('div', { class: 'envio' }, [sel, transp, guia, link, boton]),
     ]);
   }
 
