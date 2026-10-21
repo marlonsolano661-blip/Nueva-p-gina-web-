@@ -61,8 +61,10 @@
     if (enviando || b.disabled) return;
 
     var c = FRM;
-    var completo = [c.nombre, c.tel, c.ciudad, c.dir].every(function (v) { return String(v == null ? '' : v).trim(); });
+    var completo = [c.nombre, c.doc, c.email, c.tel, c.ciudad, c.dir].every(function (v) { return String(v == null ? '' : v).trim(); });
     if (!completo) return aviso('Completa tus datos de entrega');
+    if (!/^\d{5,12}$/.test(String(c.doc).replace(/[\s.\-]/g, ''))) return aviso('Escribe el documento del titular (solo números)');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(c.email).trim())) return aviso('Escribe el correo del titular');
     if (!CART.length) return aviso('Tu carrito está vacío');
 
     enviando = true;
@@ -81,7 +83,7 @@
         items: lineas, clave: clave(lineas, c) || undefined, total_esperado: esperado,
         consent_wa: WA_OK,
         meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
-        cliente: { nombre: c.nombre, tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
+        cliente: { nombre: c.nombre, documento: c.doc || '', tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
       }),
     })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos iniciar el pago. Intenta de nuevo.'); return d; }); })

@@ -60,7 +60,7 @@
 
     var items = (p.items || []).map(function (i) { return i.cant + ' × ' + i.nombre + ' (talla ' + i.talla + ')'; }).join(' · ');
     var contacto = el('p', {}, [
-      document.createTextNode((cli.nombre || '—') + ' · '),
+      document.createTextNode((cli.nombre || '—') + (cli.documento ? ' · CC ' + cli.documento : '') + ' · '),
       tel ? el('a', { href: 'https://wa.me/57' + tel.replace(/^57/, ''), target: '_blank', rel: 'noopener', text: cli.tel }) : document.createTextNode('—'),
     ]);
     return el('article', { class: 'pedido' }, [
@@ -72,6 +72,7 @@
       el('p', { class: 'suave', text: 'Creado ' + fecha(p.creado_en) + ' · Pagado ' + fecha(p.pagado_en) + (p.metodo ? ' · ' + p.metodo : '') + (p.consent_wa ? ' · Aceptó WhatsApp' : '') }),
       p.alerta ? el('div', { class: 'alerta', text: 'Revisar: ' + p.alerta }) : null,
       contacto,
+      cli.email ? el('p', { class: 'suave', text: cli.email }) : null,
       el('p', { class: 'suave', text: (cli.direccion || '') + (cli.nota ? ' · Nota: ' + cli.nota : '') }),
       el('p', { text: items }),
       el('div', { class: 'envio' }, [sel, transp, guia, link, boton]),
