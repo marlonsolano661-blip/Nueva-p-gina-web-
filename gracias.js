@@ -125,12 +125,13 @@
   function consultar() {
     var q = token ? 't=' + encodeURIComponent(token) : 'id=' + encodeURIComponent(idTx);
     fetch(API + '/api/seguimiento?' + q, { cache: 'no-store' })
-      .then(function (r) { return r.status === 404 ? null : r.json(); })
+      .then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .then(function (p) {
         intentos++;
         // Con ?id= solo llega el token; se vuelve a consultar con el enlace privado para ver también los datos de la compra
         if (p && !token && p.token) { token = p.token; return consultar(); }
         if (!p) { if (intentos < 6) return setTimeout(consultar, INTERVALO); return pintarSinPedido(); }
+        if (!p.estado_pago) throw new Error('respuesta inválida');
         pintar(p);
         if (p.estado_pago === 'PENDING' && intentos < INTENTOS_MAX) setTimeout(consultar, INTERVALO);
       })
