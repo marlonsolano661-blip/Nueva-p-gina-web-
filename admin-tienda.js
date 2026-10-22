@@ -59,21 +59,85 @@
     cont.appendChild(el('table', {}, [el('thead', {}, [el('tr', {}, ['Producto', 'Precio', 'Inventario', 'Estado', 'Colección', ''].map(function (t) { return el('th', { text: t }); }))]), tb]));
     cont.appendChild(el('div', { id: 'form-prod' }));
   }
+
+  // ---------- Fotos: se eligen desde el teléfono, se reducen y se suben solas ----------
+  function reducirFoto(file) {
+    return new Promise(function (ok, mal) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var M = 1400, k = Math.min(1, M / Math.max(im.naturalWidth, im.naturalHeight));
+        var w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+        var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(im, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function (bl) {
+          if (!bl) return mal(new Error('No se pudo preparar la foto'));
+          var fr = new FileReader();
+          fr.onload = function () { ok(String(fr.result).split(',')[1] || ''); };
+          fr.onerror = function () { mal(new Error('No se pudo leer la foto')); };
+          fr.readAsDataURL(bl);
+        }, 'image/jpeg', 0.85);
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); mal(new Error('No se pudo abrir la foto (usa JPG, PNG o WEBP)')); };
+      im.src = url;
+    });
+  }
+  function subirFoto(file) {
+    return reducirFoto(file).then(function (datos) {
+      return api('admin-tienda', { method: 'POST', body: { recurso: 'foto', datos: datos } });
+    }).then(function (r) { return r.url; });
+  }
+  function galeria(imgs) {
+    var g = el('div', { class: 'ancho' }), ocupado = false;
+    var rejilla = el('div', { class: 'fotos' });
+    var entrada = el('input', { type: 'file', accept: 'image/*', multiple: true, id: 'f-file', hidden: true });
+    var boton = el('button', { type: 'button', class: 'claro', text: '+ Agregar fotos', onclick: function () { entrada.click(); } });
+    function pintar() {
+      rejilla.textContent = '';
+      imgs.forEach(function (u, i) {
+        var t = el('div', { class: 'foto' }, [
+          el('img', { src: u, alt: 'Foto ' + (i + 1), loading: 'lazy' }),
+          i === 0 ? el('span', { class: 'prin', text: 'Principal' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer principal', onclick: function () { imgs.unshift(imgs.splice(i, 1)[0]); pintar(); } }),
+          el('button', { type: 'button', class: 'claro quitar', text: 'Quitar', onclick: function () { imgs.splice(i, 1); pintar(); } }),
+        ]);
+        rejilla.appendChild(t);
+      });
+      if (!imgs.length) rejilla.appendChild(el('p', { class: 'nota', text: 'Todavía no hay fotos. La primera que agregues será la principal.' }));
+    }
+    entrada.addEventListener('change', function () {
+      var archivos = Array.prototype.slice.call(entrada.files || []);
+      entrada.value = '';
+      if (!archivos.length || ocupado) return;
+      if (imgs.length + archivos.length > 12) return msg('Máximo 12 fotos por producto', true);
+      ocupado = true; boton.disabled = true;
+      var seguir = function (i) {
+        if (i >= archivos.length) { ocupado = false; boton.disabled = false; return msg('Fotos listas ✓ Recuerda tocar "Guardar" abajo.'); }
+        msg('Subiendo foto ' + (i + 1) + ' de ' + archivos.length + '…');
+        return subirFoto(archivos[i]).then(function (u) { imgs.push(u); pintar(); return seguir(i + 1); });
+      };
+      seguir(0).catch(function (e) { ocupado = false; boton.disabled = false; falla(e); });
+    });
+    pintar();
+    g.appendChild(el('p', { class: 'nota', text: 'Fotos del producto (la primera es la principal)' }));
+    g.appendChild(boton); g.appendChild(entrada); g.appendChild(rejilla);
+    return g;
+  }
+  var slug = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50); };
   function formProducto(p) {
     var nuevo = !p; p = p || { stock: {}, imagenes: [], colores: [], visible: true, orden: 0 };
+    var IMGS = (p.imagenes || []).slice();
     var f = $('#form-prod'); f.textContent = '';
     var tallas = el('div', { class: 'tallas' }, TALLAS.map(function (t) { return el('label', {}, ['Talla ' + t, el('input', { type: 'number', min: '0', max: '9999', 'data-t': t, value: p.stock && p.stock[t] != null ? p.stock[t] : 0 })]); }));
     var cols = (CONT.colecciones || []).map(function (c) { return el('option', { value: c.id, text: c.nombre }); });
     var sel = el('select', { id: 'f-col' }, [el('option', { value: '', text: '— sin colección —' })].concat(cols));
     sel.value = p.coleccion || '';
     var form = el('form', { class: 'form' }, [
-      campo('Identificador (único, sin espacios)', el('input', { id: 'f-id', value: p.id || '', maxlength: '64', required: true, readonly: !nuevo })),
       campo('Nombre', el('input', { id: 'f-nombre', value: p.nombre || '', maxlength: '120', required: true })),
       campo('Precio (COP, entero)', el('input', { id: 'f-precio', type: 'number', min: '1', step: '1', value: p.precio || '', required: true })),
       campo('Colección', sel),
       campo('Orden en la tienda (menor primero)', el('input', { id: 'f-orden', type: 'number', step: '1', value: p.orden || 0 })),
       campo('Descripción', el('textarea', { id: 'f-desc', maxlength: '1500', text: p.descripcion || '' }), 'ancho'),
-      campo('Imágenes (una URL https:// o assets/... por línea; la primera es la principal)', el('textarea', { id: 'f-imgs', text: (p.imagenes || []).join('\n') }), 'ancho'),
+      galeria(IMGS),
       campo('Colores (uno por línea: Nombre #RRGGBB)', el('textarea', { id: 'f-cols', text: (p.colores || []).map(function (c) { return c.n + ' ' + c.h; }).join('\n') }), 'ancho'),
       el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla' }), tallas]),
       chk('Publicado (visible en la tienda)', 'f-vis', p.visible !== false), chk('Destacado en el inicio', 'f-dest', p.destacado),
@@ -87,8 +151,11 @@
         var m = /^(.+?)\s+(#[0-9a-fA-F]{6})$/.exec(l); if (!m) return false; colores.push({ n: m[1], h: m[2] }); return true;
       });
       if (!okColores) return msg('Cada color va como: Nombre #RRGGBB (ej. Negro #111111)', true);
-      var imgs = $('#f-imgs').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-      var prod = { id: $('#f-id').value.trim(), nombre: $('#f-nombre').value, precio: Number($('#f-precio').value), descripcion: $('#f-desc').value,
+      var imgs = IMGS.slice();
+      var id = p.id || slug($('#f-nombre').value);
+      if (!id) return msg('Escribe el nombre del producto', true);
+      if (nuevo && PRODS.some(function (x) { return x.id === id; })) id = id + '-' + Date.now().toString(36).slice(-4);
+      var prod = { id: id, nombre: $('#f-nombre').value, precio: Number($('#f-precio').value), descripcion: $('#f-desc').value,
         imagenes: imgs, imagen: imgs[0] || '', colores: colores, stock: stock, coleccion: $('#f-col').value, orden: parseInt($('#f-orden').value || '0', 10) || 0,
         visible: $('#f-vis').checked, destacado: $('#f-dest').checked };
       msg('Guardando…');
