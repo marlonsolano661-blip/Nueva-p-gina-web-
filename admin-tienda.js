@@ -166,6 +166,86 @@
   }
   function cargarProductos() { return api('admin-tienda?recurso=productos').then(function (d) { PRODS = d.productos || []; pintarProductos(); }); }
 
+    // Producto completo tal como lo pide el servidor, con los cambios indicados
+  function prodDe(p, cambios) {
+    var o = { id: p.id, nombre: p.nombre, precio: p.precio, descripcion: p.descripcion || '', imagenes: p.imagenes || [], imagen: p.imagen || '', colores: p.colores || [],
+      stock: p.stock || {}, coleccion: p.coleccion || '', orden: p.orden || 0, visible: p.visible !== false, destacado: !!p.destacado };
+    Object.keys(cambios || {}).forEach(function (k) { o[k] = cambios[k]; });
+    return o;
+  }
+  var guardarProd = function (o) { return api('admin-tienda', { method: 'POST', body: { recurso: 'producto', producto: o } }); };
+
+  // ---------- Colecciones: agrupar productos ----------
+  function guardarColecciones(lista) {
+    return api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: CONT.textos || {}, secciones: CONT.secciones || {}, colecciones: lista } } })
+      .then(function (r) { CONT = r.contenido; });
+  }
+  function cargarColecciones() {
+    return Promise.all([api('admin-tienda?recurso=contenido'), api('admin-tienda?recurso=productos')]).then(function (rs) {
+      CONT = rs[0].contenido || {}; PRODS = rs[1].productos || [];
+      var cols = CONT.colecciones || [];
+      var c = $('#p-colecciones'); c.textContent = '';
+      c.appendChild(el('p', { class: 'nota', text: 'Una colección agrupa varios productos (por ejemplo "Tacones" o "Sandalias"). En la tienda aparece un botón por cada colección visible para filtrar.' }));
+      var nombre = el('input', { id: 'f-ncol', placeholder: 'Nombre de la colección (ej. Tacones)', maxlength: '40', 'aria-label': 'Nombre de la nueva colección' });
+      var crear = el('button', { type: 'button', text: '+ Crear colección', onclick: function () {
+        var n = nombre.value.trim(); if (!n) return msg('Escribe el nombre de la colección', true);
+        var id = slug(n) || 'coleccion', base = id, i = 2;
+        while (cols.some(function (k) { return k.id === id; })) id = base + '-' + (i++);
+        msg('Guardando…');
+        guardarColecciones(cols.concat([{ id: id, nombre: n, visible: true }])).then(function () { msg('Colección "' + n + '" creada ✓ Ahora toca "Elegir productos".'); return cargarColecciones(); }).catch(falla);
+      } });
+      c.appendChild(el('div', { class: 'form' }, [el('label', {}, ['Nueva colección', nombre]), crear]));
+      c.appendChild(el('div', { id: 'edit-col' }));
+      if (!cols.length) c.appendChild(el('p', { class: 'nota', text: 'Todavía no tienes colecciones.' }));
+      cols.forEach(function (k, idx) {
+        var mios = PRODS.filter(function (p) { return p.coleccion === k.id; });
+        c.appendChild(el('article', { class: 'icard' }, [
+          el('h3', { text: k.nombre }),
+          el('p', { class: 'nota', text: mios.length + (mios.length === 1 ? ' producto' : ' productos') + ' · ' + (k.visible === false ? 'Oculta en la tienda' : 'Visible en la tienda') }),
+          el('div', { class: 'acc2' }, [
+            el('button', { type: 'button', text: 'Elegir productos', onclick: function () { elegirProductos(k); } }),
+            el('button', { type: 'button', class: 'claro', text: k.visible === false ? 'Mostrar' : 'Ocultar', onclick: function () {
+              var l = cols.map(function (x) { return x.id === k.id ? { id: x.id, nombre: x.nombre, visible: x.visible === false } : x; });
+              msg('Guardando…'); guardarColecciones(l).then(function () { msg('Listo ✓'); return cargarColecciones(); }).catch(falla); } }),
+            el('button', { type: 'button', class: 'claro', text: 'Renombrar', onclick: function () {
+              var n = (window.prompt('Nuevo nombre de la colección', k.nombre) || '').trim(); if (!n) return;
+              var l = cols.map(function (x) { return x.id === k.id ? { id: x.id, nombre: n, visible: x.visible !== false } : x; });
+              msg('Guardando…'); guardarColecciones(l).then(function () { msg('Nombre cambiado ✓'); return cargarColecciones(); }).catch(falla); } }),
+            el('button', { type: 'button', class: 'claro', text: 'Eliminar', onclick: function () {
+              if (!window.confirm('¿Eliminar la colección "' + k.nombre + '"? Los productos NO se borran, solo quedan sin colección.')) return;
+              msg('Guardando…');
+              mios.reduce(function (pr, p) { return pr.then(function () { return guardarProd(prodDe(p, { coleccion: '' })); }); }, Promise.resolve())
+                .then(function () { return guardarColecciones(cols.filter(function (x) { return x.id !== k.id; })); })
+                .then(function () { msg('Colección eliminada ✓'); return cargarColecciones(); }).catch(falla); } }),
+          ]),
+        ]));
+      });
+    });
+  }
+  function elegirProductos(k) {
+    var f = $('#edit-col'); f.textContent = '';
+    var nombres = {}; (CONT.colecciones || []).forEach(function (x) { nombres[x.id] = x.nombre; });
+    var filas = PRODS.map(function (p) {
+      var i = el('input', { type: 'checkbox', 'data-id': p.id }); i.checked = p.coleccion === k.id;
+      var otra = p.coleccion && p.coleccion !== k.id ? ' (ahora en ' + (nombres[p.coleccion] || p.coleccion) + ')' : '';
+      return el('label', { class: 'ck sel' }, [i, p.nombre + otra]);
+    });
+    var form = el('form', { class: 'form' }, [el('h3', { text: 'Productos de "' + k.nombre + '"' }), el('p', { class: 'nota', text: 'Marca los productos que van en esta colección. Si marcas uno que está en otra, se pasa a esta.' })].concat(filas, [
+      el('div', { class: 'barra' }, [el('button', { type: 'submit', text: 'Guardar colección' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),
+    ]));
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var cambios = PRODS.filter(function (p) {
+        var marcado = form.querySelector('[data-id="' + p.id.replace(/"/g, '') + '"]').checked;
+        return marcado ? p.coleccion !== k.id : p.coleccion === k.id;
+      }).map(function (p) { return guardarProd(prodDe(p, { coleccion: form.querySelector('[data-id="' + p.id.replace(/"/g, '') + '"]').checked ? k.id : '' })); });
+      if (!cambios.length) return msg('No cambiaste nada');
+      msg('Guardando…');
+      Promise.all(cambios).then(function () { msg('Colección "' + k.nombre + '" guardada ✓'); return cargarColecciones(); }).catch(falla);
+    });
+    f.appendChild(form); form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   // ---------- Inventario: pares por talla, con un solo toque para guardar ----------
   function cargarInventario() {
     return api('admin-tienda?recurso=productos').then(function (d) {
@@ -179,8 +259,7 @@
         var tarjeta = el('article', { class: 'icard' + (totalU(p) ? '' : ' agot') }, [el('h3', { text: p.nombre }), el('div', { class: 'tallas' }, campos)]);
         tarjeta.appendChild(el('button', { type: 'button', text: 'Guardar inventario', onclick: function () {
           var stock = {}; tarjeta.querySelectorAll('[data-t]').forEach(function (i) { stock[i.getAttribute('data-t')] = parseInt(i.value || '0', 10) || 0; });
-          var prod = { id: p.id, nombre: p.nombre, precio: p.precio, descripcion: p.descripcion || '', imagenes: p.imagenes || [], imagen: p.imagen || '', colores: p.colores || [],
-            stock: stock, coleccion: p.coleccion || '', orden: p.orden || 0, visible: p.visible !== false, destacado: !!p.destacado };
+          var prod = prodDe(p, { stock: stock });
           msg('Guardando…');
           api('admin-tienda', { method: 'POST', body: { recurso: 'producto', producto: prod } })
             .then(function () { msg('Inventario de "' + p.nombre + '" guardado ✓'); return cargarInventario(); }).catch(falla);
@@ -216,17 +295,15 @@
       var c = $('#p-contenido'); c.textContent = '';
       var campos = Object.keys(ETQ).map(function (k) { return campo(ETQ[k], el('input', { 'data-x': k, value: t[k] || '', maxlength: '200', placeholder: 'Vacío = texto original de la tienda' })); });
       var secs = [['band', 'Mostrar la banda "Pocas unidades por modelo"'], ['comunidad', 'Mostrar Comunidad Marlon'], ['valores', 'Mostrar los 3 valores (Alta calidad…)']].map(function (x) { return chk(x[1], 's-' + x[0], s[x[0]] !== false); });
-      var ta = el('textarea', { id: 'f-colecciones', text: (CONT.colecciones || []).map(function (k) { return k.id + ' | ' + k.nombre + (k.visible === false ? ' | oculta' : ''); }).join('\n') });
       var form = el('form', { class: 'form' }, campos.concat(secs, [
-        campo('Colecciones (una por línea: id | Nombre | oculta). Asigna cada producto a una colección en la pestaña Productos.', ta, 'ancho'),
-        el('p', { class: 'nota ancho', text: 'Los botones siguen haciendo su función (abrir la colección, comprar, agregar al carrito); aquí solo cambia lo comercial: textos, visibilidad y colecciones.' }),
+        el('p', { class: 'nota ancho', text: 'Los botones siguen haciendo su función (abrir la colección, comprar, agregar al carrito); aquí solo cambia lo comercial: textos y qué secciones se ven. Las colecciones se crean en el botón "Colecciones" del inicio.' }),
         el('div', { class: 'ancho' }, [el('button', { type: 'submit', text: 'Guardar contenido' })]),
       ]));
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var textos = {}; form.querySelectorAll('[data-x]').forEach(function (i) { if (i.value.trim()) textos[i.getAttribute('data-x')] = i.value.trim(); });
         var secciones = { band: $('#s-band').checked, comunidad: $('#s-comunidad').checked, valores: $('#s-valores').checked };
-        var colecciones = ta.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { var p = l.split('|').map(function (x) { return x.trim(); }); return { id: p[0], nombre: p[1] || '', visible: p[2] !== 'oculta' }; });
+        var colecciones = CONT.colecciones || [];
         msg('Guardando…');
         api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: textos, secciones: secciones, colecciones: colecciones } } })
           .then(function (r) { CONT = r.contenido; msg('Contenido guardado ✓ (la tienda lo muestra al recargar)'); }).catch(falla);
@@ -293,8 +370,8 @@
   }
 
   // ---------- Sesión ----------
-  var CARGA = { productos: cargarProductos, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
-  var TITULOS = { productos: 'Productos', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  var CARGA = { productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
+  var TITULOS = { productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
   function inicio() {
     $('#tabs').hidden = false; $('#volver').hidden = true;
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });

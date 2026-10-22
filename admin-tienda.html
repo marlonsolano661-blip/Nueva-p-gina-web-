@@ -98,6 +98,8 @@
   .icard { padding:1rem; margin:.7rem 0; } .icard h3 { font-size:1.35rem; margin-bottom:.6rem; }
   .icard .tallas { grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); gap:.5rem; margin:.6rem 0; }
   .icard .tallas label { display:grid; gap:.2rem; text-align:center; font-size:.85rem; font-weight:600; } .icard .tallas input { text-align:center; padding:.5rem .2rem; border-radius:.9rem; width:100%; }
+  .acc2 { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.7rem; } .acc2 button { min-height:2.7rem; padding:.5rem 1.1rem; }
+  .form label.sel { padding:.55rem 0; font-size:1rem; border-bottom:1px solid var(--g1); } .form label.ck input { width:1.4rem; height:1.4rem; min-height:0; }
   .agot { background:#fbe9e7; }
   .form { grid-template-columns:1fr; } .form input, .form select, .form textarea { border-radius:1rem; }
   .fotos { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
@@ -121,6 +123,7 @@
   <div id="app" hidden>
     <nav class="tabs" id="tabs">
       <button type="button" data-t="productos"><span class="ic">👟</span>Productos<small>Crear, editar y subir fotos</small></button>
+      <button type="button" data-t="colecciones"><span class="ic">🗂️</span>Colecciones<small>Agrupa tus productos</small></button>
       <button type="button" data-t="inventario"><span class="ic">📦</span>Inventario<small>Cuántos pares hay por talla</small></button>
       <button type="button" data-t="pedidos"><span class="ic">🧾</span>Pedidos<small>Pagos, guías y envíos</small></button>
       <button type="button" data-t="envio"><span class="ic">🚚</span>Envío<small>Tarifa de envío</small></button>
@@ -129,6 +132,7 @@
     </nav>
     <div class="volver" id="volver" hidden><button type="button" id="inicio" class="claro">← Inicio</button><h2 id="titulo"></h2></div>
     <section class="panel" id="p-productos"></section>
+    <section class="panel" id="p-colecciones"></section>
     <section class="panel" id="p-inventario"></section>
     <section class="panel" id="p-envio"></section>
     <section class="panel" id="p-contenido"></section>
