@@ -106,7 +106,9 @@
   .fotos { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
   .foto button { min-height:2.4rem; font-size:.85rem; padding:.3rem .5rem; }
   table { font-size:.85rem; display:block; overflow-x:auto; }
-  #msg:empty { display:none; } #msg { margin:.4rem 0; }
+  #msg:empty { display:none; }
+  #msg { position:fixed; left:.8rem; right:.8rem; bottom:calc(6rem + env(safe-area-inset-bottom,0px)); z-index:60; margin:0; padding:.9rem 1.1rem; border-radius:1rem; background:#0b0b0c; color:#fff; font-weight:600; text-align:center; box-shadow:0 12px 30px -12px #000a; }
+  #msg.ok { background:#1d5c45; color:#fff; } #msg.mal { background:#a3342f; color:#fff; }
   @media (min-width:700px) { nav.tabs { grid-template-columns:repeat(3,1fr); } }
 </style>
 </head>

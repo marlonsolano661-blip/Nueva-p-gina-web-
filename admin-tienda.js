@@ -22,7 +22,14 @@
     return n;
   }
   var peso = function (n) { return '$' + Number(n).toLocaleString('es-CO'); };
-  var msg = function (t, mal) { var m = $('#msg'); m.textContent = t || ''; m.className = mal ? 'mal' : (t ? 'ok' : ''); };
+  // Aviso flotante: se ve aunque la pantalla esté desplazada. Los de éxito se ocultan solos; los errores esperan un toque.
+  var msgT = 0;
+  var msg = function (t, mal) {
+    var m = $('#msg'); m.textContent = t || ''; m.className = mal ? 'mal' : (t ? 'ok' : '');
+    clearTimeout(msgT);
+    if (t && !mal && !/…$/.test(t)) msgT = setTimeout(function () { if (m.textContent === t) { m.textContent = ''; m.className = ''; } }, 6000);
+  };
+  document.addEventListener('DOMContentLoaded', function () { var m = $('#msg'); if (m) m.addEventListener('click', function () { m.textContent = ''; m.className = ''; }); });
 
   function api(ruta, opt) {
     opt = opt || {};
