@@ -108,7 +108,7 @@
       var archivos = Array.prototype.slice.call(entrada.files || []);
       entrada.value = '';
       if (!archivos.length || ocupado) return;
-      if (imgs.length + archivos.length > 12) return msg('Máximo 12 fotos por producto', true);
+      if (imgs.length + archivos.length > 30) return msg('Máximo 30 fotos por producto', true);
       ocupado = true; boton.disabled = true;
       var seguir = function (i) {
         if (i >= archivos.length) { ocupado = false; boton.disabled = false; return msg('Fotos listas ✓ Recuerda tocar "Guardar" abajo.'); }
@@ -123,6 +123,29 @@
     return g;
   }
   var slug = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50); };
+  // Colores: se elige tocando el cuadrito y escribiendo solo el nombre
+  function selectorColores(lista) {
+    var cont = el('div', { class: 'ancho' }), filas = el('div', { id: 'f-cols', class: 'colores' });
+    function fila(c) {
+      var sel = el('input', { type: 'color', value: /^#[0-9a-fA-F]{6}$/.test(c.h) ? c.h.toLowerCase() : '#111111', 'aria-label': 'Elegir color' });
+      var nom = el('input', { type: 'text', value: c.n || '', maxlength: '30', placeholder: 'Nombre (ej. Negro)', 'aria-label': 'Nombre del color' });
+      var f = el('div', { class: 'color' }, [sel, nom, el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { f.remove(); } })]);
+      return f;
+    }
+    (lista || []).forEach(function (c) { filas.appendChild(fila(c)); });
+    cont.appendChild(el('p', { class: 'nota', text: 'Colores disponibles (opcional). Toca el cuadrito para elegir el color y escribe su nombre.' }));
+    cont.appendChild(filas);
+    cont.appendChild(el('button', { type: 'button', class: 'claro', text: '+ Agregar color', onclick: function () { var f = fila({}); filas.appendChild(f); f.querySelector('input[type=text]').focus(); } }));
+    return cont;
+  }
+  function leerColores() {
+    var out = [], mal = false;
+    document.querySelectorAll('#f-cols .color').forEach(function (f) {
+      var n = f.querySelector('input[type=text]').value.trim(), h = f.querySelector('input[type=color]').value;
+      if (!n) { mal = true; return; } out.push({ n: n, h: h });
+    });
+    return mal ? null : out;
+  }
   function formProducto(p) {
     var nuevo = !p; p = p || { stock: {}, imagenes: [], colores: [], visible: true, orden: 0 };
     var IMGS = (p.imagenes || []).slice();
@@ -138,7 +161,7 @@
       campo('Orden en la tienda (menor primero)', el('input', { id: 'f-orden', type: 'number', step: '1', value: p.orden || 0 })),
       campo('Descripción', el('textarea', { id: 'f-desc', maxlength: '1500', text: p.descripcion || '' }), 'ancho'),
       galeria(IMGS),
-      campo('Colores (uno por línea: Nombre #RRGGBB)', el('textarea', { id: 'f-cols', text: (p.colores || []).map(function (c) { return c.n + ' ' + c.h; }).join('\n') }), 'ancho'),
+      selectorColores(p.colores),
       el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla' }), tallas]),
       chk('Publicado (visible en la tienda)', 'f-vis', p.visible !== false), chk('Destacado en el inicio', 'f-dest', p.destacado),
       el('div', { class: 'ancho barra' }, [el('button', { type: 'submit', text: nuevo ? 'Crear producto' : 'Guardar cambios' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),
@@ -146,11 +169,8 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var stock = {}; form.querySelectorAll('[data-t]').forEach(function (i) { stock[i.getAttribute('data-t')] = parseInt(i.value || '0', 10) || 0; });
-      var colores = [];
-      var okColores = $('#f-cols').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean).every(function (l) {
-        var m = /^(.+?)\s+(#[0-9a-fA-F]{6})$/.exec(l); if (!m) return false; colores.push({ n: m[1], h: m[2] }); return true;
-      });
-      if (!okColores) return msg('Cada color va como: Nombre #RRGGBB (ej. Negro #111111)', true);
+      var colores = leerColores();
+      if (!colores) return msg('Escribe el nombre de cada color o toca "Quitar"', true);
       var imgs = IMGS.slice();
       var id = p.id || slug($('#f-nombre').value);
       if (!id) return msg('Escribe el nombre del producto', true);
