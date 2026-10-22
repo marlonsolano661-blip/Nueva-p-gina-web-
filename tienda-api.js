@@ -20,6 +20,7 @@
     var b = e.target && e.target.closest ? e.target.closest('[data-cf]') : null;
     if (!b) return;
     window.MF_COL = b.getAttribute('data-cf') || '';
+    try { Q = ''; } catch (e) { /* sin buscador */ }
     if (typeof draw === 'function') draw();
   });
 
