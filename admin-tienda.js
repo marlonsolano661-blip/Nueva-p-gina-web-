@@ -44,20 +44,20 @@
   function chk(etq, id, on) { var i = el('input', { type: 'checkbox', id: id }); i.checked = !!on; return el('label', { class: 'ck' }, [i, etq]); }
 
   // ---------- Productos ----------
+  function totalU(p) { return Object.keys(p.stock || {}).reduce(function (t, k) { return t + (+p.stock[k] || 0); }, 0); }
   function pintarProductos() {
     var cont = $('#p-productos'); cont.textContent = '';
-    cont.appendChild(el('div', { class: 'barra' }, [el('button', { type: 'button', text: 'Nuevo producto', onclick: function () { formProducto(null); } })]));
-    var tb = el('tbody');
+    cont.appendChild(el('button', { type: 'button', text: '+ Nuevo producto', onclick: function () { formProducto(null); } }));
+    cont.appendChild(el('div', { id: 'form-prod' }));
+    if (!PRODS.length) cont.appendChild(el('p', { class: 'nota', text: 'Todavía no hay productos. Toca "Nuevo producto".' }));
     PRODS.forEach(function (p) {
-      var u = Object.keys(p.stock || {}).reduce(function (s, k) { return s + (+p.stock[k] || 0); }, 0);
-      tb.appendChild(el('tr', {}, [
-        el('td', { text: p.nombre }), el('td', { text: peso(p.precio) }), el('td', { text: String(u) + ' u.' }),
-        el('td', { text: p.visible ? 'Publicado' : 'Oculto' }), el('td', { text: p.coleccion || '—' }),
-        el('td', {}, [el('button', { type: 'button', class: 'claro', text: 'Editar', onclick: function () { formProducto(p); } })]),
+      var u = totalU(p), foto = (p.imagenes && p.imagenes[0]) || p.imagen;
+      cont.appendChild(el('article', { class: 'pcard' }, [
+        foto ? el('img', { src: foto, alt: '', loading: 'lazy' }) : el('div', { class: 'sinfoto', text: 'Sin foto' }),
+        el('div', {}, [el('b', { text: p.nombre }), el('div', { class: 'meta' }, [peso(p.precio) + ' · ', el('span', { class: u ? 'est-ok' : 'est-no', text: u ? u + ' pares' : 'Agotado' }), ' · ' + (p.visible ? 'Publicado' : 'Oculto')])]),
+        el('div', { class: 'acc' }, [el('button', { type: 'button', text: 'Editar', onclick: function () { formProducto(p); } })]),
       ]));
     });
-    cont.appendChild(el('table', {}, [el('thead', {}, [el('tr', {}, ['Producto', 'Precio', 'Inventario', 'Estado', 'Colección', ''].map(function (t) { return el('th', { text: t }); }))]), tb]));
-    cont.appendChild(el('div', { id: 'form-prod' }));
   }
 
   // ---------- Fotos: se eligen desde el teléfono, se reducen y se suben solas ----------
@@ -166,6 +166,30 @@
   }
   function cargarProductos() { return api('admin-tienda?recurso=productos').then(function (d) { PRODS = d.productos || []; pintarProductos(); }); }
 
+  // ---------- Inventario: pares por talla, con un solo toque para guardar ----------
+  function cargarInventario() {
+    return api('admin-tienda?recurso=productos').then(function (d) {
+      PRODS = d.productos || [];
+      var c = $('#p-inventario'); c.textContent = '';
+      c.appendChild(el('p', { class: 'nota', text: 'Escribe cuántos pares hay de cada talla y toca "Guardar". La tienda se actualiza al instante. Los pedidos pagados descuentan solos.' }));
+      if (!PRODS.length) c.appendChild(el('p', { class: 'nota', text: 'Todavía no hay productos.' }));
+      PRODS.forEach(function (p) {
+        var tallas = TALLAS.slice(); Object.keys(p.stock || {}).forEach(function (t) { if (tallas.indexOf(t) < 0) tallas.push(t); });
+        var campos = tallas.map(function (t) { return el('label', {}, ['Talla ' + t, el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '9999', 'data-t': t, value: p.stock && p.stock[t] != null ? p.stock[t] : 0 })]); });
+        var tarjeta = el('article', { class: 'icard' + (totalU(p) ? '' : ' agot') }, [el('h3', { text: p.nombre }), el('div', { class: 'tallas' }, campos)]);
+        tarjeta.appendChild(el('button', { type: 'button', text: 'Guardar inventario', onclick: function () {
+          var stock = {}; tarjeta.querySelectorAll('[data-t]').forEach(function (i) { stock[i.getAttribute('data-t')] = parseInt(i.value || '0', 10) || 0; });
+          var prod = { id: p.id, nombre: p.nombre, precio: p.precio, descripcion: p.descripcion || '', imagenes: p.imagenes || [], imagen: p.imagen || '', colores: p.colores || [],
+            stock: stock, coleccion: p.coleccion || '', orden: p.orden || 0, visible: p.visible !== false, destacado: !!p.destacado };
+          msg('Guardando…');
+          api('admin-tienda', { method: 'POST', body: { recurso: 'producto', producto: prod } })
+            .then(function () { msg('Inventario de "' + p.nombre + '" guardado ✓'); return cargarInventario(); }).catch(falla);
+        } }));
+        c.appendChild(tarjeta);
+      });
+    });
+  }
+
   // ---------- Envío ----------
   function cargarEnvio() {
     return api('admin-tienda?recurso=envio').then(function (d) {
@@ -269,11 +293,17 @@
   }
 
   // ---------- Sesión ----------
-  var CARGA = { productos: cargarProductos, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
+  var CARGA = { productos: cargarProductos, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
+  var TITULOS = { productos: 'Productos', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  function inicio() {
+    $('#tabs').hidden = false; $('#volver').hidden = true;
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
+    msg(''); window.scrollTo(0, 0);
+  }
   function abrir(t) {
-    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === t); });
+    $('#tabs').hidden = true; $('#volver').hidden = false; $('#titulo').textContent = TITULOS[t] || '';
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-' + t); });
-    msg(''); CARGA[t]().catch(falla);
+    msg(''); window.scrollTo(0, 0); CARGA[t]().catch(falla);
   }
   function entrar() {
     token = $('#token').value.trim() || token;
@@ -283,7 +313,7 @@
       CONT = d.contenido || {};
       try { sessionStorage.setItem('mf_admin_token', token); } catch (e) {}
       $('#app').hidden = false; $('#salir').hidden = false; $('#entrar').hidden = true; $('#token').hidden = true; $('#token').value = '';
-      abrir('productos');
+      inicio();
     }).catch(falla);
   }
   function salir() {
@@ -293,6 +323,7 @@
   $('#entrar').addEventListener('click', entrar);
   $('#token').addEventListener('keydown', function (e) { if (e.key === 'Enter') entrar(); });
   $('#salir').addEventListener('click', function () { salir(); msg('Sesión cerrada'); });
+  $('#inicio').addEventListener('click', inicio);
   $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (b) abrir(b.getAttribute('data-t')); });
   if (token) entrar();
 })();
