@@ -18,7 +18,7 @@
       else if (k.slice(0, 2) === 'on') n.addEventListener(k.slice(2), attrs[k]);
       else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k] === true ? '' : attrs[k]);
     });
-    (kids || []).forEach(function (c) { n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    (kids || []).forEach(function (c) { if (c == null || c === false) return; n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return n;
   }
   var peso = function (n) { return '$' + Number(n).toLocaleString('es-CO'); };
@@ -204,7 +204,7 @@
 
   // ---------- Colecciones: agrupar productos ----------
   function guardarColecciones(lista) {
-    return api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: CONT.textos || {}, secciones: CONT.secciones || {}, colecciones: lista } } })
+    return api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: CONT.textos || {}, secciones: CONT.secciones || {}, colecciones: lista, hero_foto: CONT.hero_foto || '' } } })
       .then(function (r) { CONT = r.contenido; });
   }
   function cargarColecciones() {
@@ -228,15 +228,31 @@
         var mios = PRODS.filter(function (p) { return p.coleccion === k.id; });
         c.appendChild(el('article', { class: 'icard' }, [
           el('h3', { text: k.nombre }),
+          k.portada ? el('img', { class: 'portada', src: k.portada, alt: 'Portada de ' + k.nombre }) : el('p', { class: 'nota', text: 'Sin portada propia: en la tienda se usa la foto de su primer producto.' }),
           el('p', { class: 'nota', text: mios.length + (mios.length === 1 ? ' producto' : ' productos') + ' · ' + (k.visible === false ? 'Oculta en la tienda' : 'Visible en la tienda') }),
           el('div', { class: 'acc2' }, [
             el('button', { type: 'button', text: 'Elegir productos', onclick: function () { elegirProductos(k); } }),
+            el('button', { type: 'button', class: 'claro', text: k.portada ? 'Cambiar portada' : 'Subir portada', onclick: function () {
+              var e = el('input', { type: 'file', accept: 'image/*', class: 'oculto', 'data-portada': k.id });
+              e.onchange = function () {
+                var f = e.files && e.files[0]; if (!f) return;
+                msg('Subiendo portada…');
+                subirFoto(f).then(function (u) {
+                  var l = cols.map(function (x) { return x.id === k.id ? Object.assign({}, x, { portada: u }) : x; });
+                  return guardarColecciones(l);
+                }).then(function () { msg('Portada de "' + k.nombre + '" guardada ✓'); return cargarColecciones(); }).catch(falla);
+              };
+              document.body.appendChild(e); e.click();
+            } }),
+            k.portada ? el('button', { type: 'button', class: 'claro', text: 'Quitar portada', onclick: function () {
+              var l = cols.map(function (x) { if (x.id !== k.id) return x; var y = Object.assign({}, x); delete y.portada; return y; });
+              msg('Guardando…'); guardarColecciones(l).then(function () { msg('Portada quitada ✓'); return cargarColecciones(); }).catch(falla); } }) : null,
             el('button', { type: 'button', class: 'claro', text: k.visible === false ? 'Mostrar' : 'Ocultar', onclick: function () {
-              var l = cols.map(function (x) { return x.id === k.id ? { id: x.id, nombre: x.nombre, visible: x.visible === false } : x; });
+              var l = cols.map(function (x) { return x.id === k.id ? Object.assign({}, x, { visible: x.visible === false }) : x; });
               msg('Guardando…'); guardarColecciones(l).then(function () { msg('Listo ✓'); return cargarColecciones(); }).catch(falla); } }),
             el('button', { type: 'button', class: 'claro', text: 'Renombrar', onclick: function () {
               var n = (window.prompt('Nuevo nombre de la colección', k.nombre) || '').trim(); if (!n) return;
-              var l = cols.map(function (x) { return x.id === k.id ? { id: x.id, nombre: n, visible: x.visible !== false } : x; });
+              var l = cols.map(function (x) { return x.id === k.id ? Object.assign({}, x, { nombre: n }) : x; });
               msg('Guardando…'); guardarColecciones(l).then(function () { msg('Nombre cambiado ✓'); return cargarColecciones(); }).catch(falla); } }),
             el('button', { type: 'button', class: 'claro', text: 'Eliminar', onclick: function () {
               if (!window.confirm('¿Eliminar la colección "' + k.nombre + '"? Los productos NO se borran, solo quedan sin colección.')) return;
@@ -322,7 +338,30 @@
       var c = $('#p-contenido'); c.textContent = '';
       var campos = Object.keys(ETQ).map(function (k) { return campo(ETQ[k], el('input', { 'data-x': k, value: t[k] || '', maxlength: '200', placeholder: 'Vacío = texto original de la tienda' })); });
       var secs = [['band', 'Mostrar la banda "Pocas unidades por modelo"'], ['comunidad', 'Mostrar Comunidad Marlon'], ['valores', 'Mostrar los 3 valores (Alta calidad…)']].map(function (x) { return chk(x[1], 's-' + x[0], s[x[0]] !== false); });
-      var form = el('form', { class: 'form' }, campos.concat(secs, [
+      var heroBox = el('div', { class: 'ancho' });
+      function pintarHero() {
+        heroBox.textContent = '';
+        heroBox.appendChild(el('h3', { text: 'Foto de la portada principal' }));
+        heroBox.appendChild(CONT.hero_foto ? el('img', { class: 'portada', src: CONT.hero_foto, alt: 'Foto de la portada principal' }) : el('p', { class: 'nota', text: 'Sin foto propia: la tienda usa la foto de uno de tus productos destacados.' }));
+        var guardarHero = function (v) {
+          var o = { textos: CONT.textos || {}, secciones: CONT.secciones || {}, colecciones: CONT.colecciones || [], hero_foto: v };
+          return api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: o } }).then(function (r) { CONT = r.contenido; pintarHero(); });
+        };
+        heroBox.appendChild(el('div', { class: 'acc2' }, [
+          el('button', { type: 'button', text: CONT.hero_foto ? 'Cambiar foto' : 'Subir foto', onclick: function () {
+            var e = el('input', { type: 'file', accept: 'image/*', class: 'oculto', 'data-hero': '1' });
+            e.onchange = function () {
+              var f = e.files && e.files[0]; if (!f) return;
+              msg('Subiendo foto…');
+              subirFoto(f).then(guardarHero).then(function () { msg('Foto de portada guardada ✓'); }).catch(falla);
+            };
+            document.body.appendChild(e); e.click();
+          } }),
+          CONT.hero_foto ? el('button', { type: 'button', class: 'claro', text: 'Quitar foto', onclick: function () { msg('Guardando…'); guardarHero('').then(function () { msg('Foto quitada ✓'); }).catch(falla); } }) : null,
+        ]));
+      }
+      pintarHero();
+      var form = el('form', { class: 'form' }, [heroBox].concat(campos, secs, [
         el('p', { class: 'nota ancho', text: 'Los botones siguen haciendo su función (abrir la colección, comprar, agregar al carrito); aquí solo cambia lo comercial: textos y qué secciones se ven. Las colecciones se crean en el botón "Colecciones" del inicio.' }),
         el('div', { class: 'ancho' }, [el('button', { type: 'submit', text: 'Guardar contenido' })]),
       ]));
@@ -332,7 +371,7 @@
         var secciones = { band: $('#s-band').checked, comunidad: $('#s-comunidad').checked, valores: $('#s-valores').checked };
         var colecciones = CONT.colecciones || [];
         msg('Guardando…');
-        api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: textos, secciones: secciones, colecciones: colecciones } } })
+        api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: textos, secciones: secciones, colecciones: colecciones, hero_foto: CONT.hero_foto || '' } } })
           .then(function (r) { CONT = r.contenido; msg('Contenido guardado ✓ (la tienda lo muestra al recargar)'); }).catch(falla);
       });
       c.appendChild(form);
