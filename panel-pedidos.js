@@ -41,7 +41,7 @@
     var cli = p.cliente || {};
     var tel = String(cli.tel || '').replace(/\D/g, '');
     var sel = el('select', { 'aria-label': 'Estado de envío' });
-    [['PREPARANDO', 'Preparando'], ['EN_CAMINO', 'En camino'], ['ENTREGADO', 'Entregado'], ['DEVUELTO', 'Devuelto']].forEach(function (o) {
+    [['PREPARANDO', 'Preparando'], ['EN_CAMINO', 'Enviado (en camino)'], ['EN_DESTINO', 'En destino (llegó a la ciudad)'], ['ENTREGADO', 'Entregado'], ['DEVUELTO', 'Devuelto']].forEach(function (o) {
       var op = el('option', { value: o[0], text: o[1] }); if (o[0] === p.estado_envio) op.selected = true; sel.appendChild(op);
     });
     var transp = el('input', { type: 'text', placeholder: 'Transportadora', maxlength: '40', 'aria-label': 'Transportadora' }); transp.value = p.transportadora || '';
