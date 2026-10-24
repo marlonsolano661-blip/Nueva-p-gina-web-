@@ -214,14 +214,22 @@
       var c = $('#p-colecciones'); c.textContent = '';
       c.appendChild(el('p', { class: 'nota', text: 'Una colección agrupa varios productos (por ejemplo "Tacones" o "Sandalias"). En la tienda aparece un botón por cada colección visible para filtrar.' }));
       var nombre = el('input', { id: 'f-ncol', placeholder: 'Nombre de la colección (ej. Tacones)', maxlength: '40', 'aria-label': 'Nombre de la nueva colección' });
+      var mensajeN = el('input', { id: 'f-mcol', placeholder: 'Mensaje corto (ej. Elegancia en altura)', maxlength: '120', 'aria-label': 'Mensaje de la nueva colección' });
+      var fotoN = el('input', { id: 'f-pcol', type: 'file', accept: 'image/*', 'aria-label': 'Imagen de portada de la nueva colección' });
       var crear = el('button', { type: 'button', text: '+ Crear colección', onclick: function () {
         var n = nombre.value.trim(); if (!n) return msg('Escribe el nombre de la colección', true);
         var id = slug(n) || 'coleccion', base = id, i = 2;
         while (cols.some(function (k) { return k.id === id; })) id = base + '-' + (i++);
-        msg('Guardando…');
-        guardarColecciones(cols.concat([{ id: id, nombre: n, visible: true }])).then(function () { msg('Colección "' + n + '" creada ✓ Ahora toca "Elegir productos".'); return cargarColecciones(); }).catch(falla);
+        var m = mensajeN.value.trim(), f = fotoN.files && fotoN.files[0];
+        msg(f ? 'Subiendo portada…' : 'Guardando…');
+        (f ? subirFoto(f) : Promise.resolve('')).then(function (u) {
+          var nueva = { id: id, nombre: n, visible: true };
+          if (m) nueva.mensaje = m;
+          if (u) nueva.portada = u;
+          return guardarColecciones(cols.concat([nueva]));
+        }).then(function () { msg('Colección "' + n + '" creada ✓ Ahora toca "Elegir productos".'); return cargarColecciones(); }).catch(falla);
       } });
-      c.appendChild(el('div', { class: 'form' }, [el('label', {}, ['Nueva colección', nombre]), crear]));
+      c.appendChild(el('div', { class: 'form' }, [el('label', {}, ['Nueva colección', nombre]), el('label', {}, ['Mensaje (opcional)', mensajeN]), el('label', {}, ['Imagen de portada (opcional)', fotoN]), crear]));
       c.appendChild(el('div', { id: 'edit-col' }));
       if (!cols.length) c.appendChild(el('p', { class: 'nota', text: 'Todavía no tienes colecciones.' }));
       cols.forEach(function (k, idx) {
@@ -229,6 +237,13 @@
         c.appendChild(el('article', { class: 'icard' }, [
           el('h3', { text: k.nombre }),
           k.portada ? el('img', { class: 'portada', src: k.portada, alt: 'Portada de ' + k.nombre }) : el('p', { class: 'nota', text: 'Sin portada propia: en la tienda se usa la foto de su primer producto.' }),
+          (function () {
+            var im = el('input', { type: 'text', maxlength: '120', value: k.mensaje || '', placeholder: 'Mensaje que se ve en la tienda', 'data-mensaje': k.id, 'aria-label': 'Mensaje de ' + k.nombre });
+            return el('div', { class: 'form' }, [el('label', {}, ['Mensaje de la colección', im]), el('button', { type: 'button', class: 'claro', text: 'Guardar mensaje', onclick: function () {
+              var v = im.value.trim();
+              var l = cols.map(function (x) { if (x.id !== k.id) return x; var y = Object.assign({}, x); if (v) y.mensaje = v; else delete y.mensaje; return y; });
+              msg('Guardando…'); guardarColecciones(l).then(function () { msg('Mensaje de "' + k.nombre + '" guardado ✓'); return cargarColecciones(); }).catch(falla); } })]);
+          })(),
           el('p', { class: 'nota', text: mios.length + (mios.length === 1 ? ' producto' : ' productos') + ' · ' + (k.visible === false ? 'Oculta en la tienda' : 'Visible en la tienda') }),
           el('div', { class: 'acc2' }, [
             el('button', { type: 'button', text: 'Elegir productos', onclick: function () { elegirProductos(k); } }),
@@ -271,7 +286,9 @@
     var filas = PRODS.map(function (p) {
       var i = el('input', { type: 'checkbox', 'data-id': p.id }); i.checked = p.coleccion === k.id;
       var otra = p.coleccion && p.coleccion !== k.id ? ' (ahora en ' + (nombres[p.coleccion] || p.coleccion) + ')' : '';
-      return el('label', { class: 'ck sel' }, [i, p.nombre + otra]);
+      var foto = (p.imagenes && p.imagenes[0]) || p.imagen || '';
+      var mini = foto ? el('img', { class: 'mini', src: foto, alt: '', loading: 'lazy' }) : el('span', { class: 'mini vacia', text: 'Sin foto' });
+      return el('label', { class: 'ck sel' }, [i, mini, el('span', { class: 'nm' }, [p.nombre + otra])]);
     });
     var form = el('form', { class: 'form' }, [el('h3', { text: 'Productos de "' + k.nombre + '"' }), el('p', { class: 'nota', text: 'Marca los productos que van en esta colección. Si marcas uno que está en otra, se pasa a esta.' })].concat(filas, [
       el('div', { class: 'barra' }, [el('button', { type: 'submit', text: 'Guardar colección' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),
