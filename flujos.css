@@ -1,0 +1,122 @@
+/* Lenguaje visual de los flujos de compra (bolsa, datos, pago, pedido recibido) en blanco y negro.
+   Solo estilos: no cambia ninguna lógica, ids, atributos data-* ni textos. Se carga al final del <head> de index.html. */
+:root{--fk:#0a0a0a;--fw:#fff;--fs:#f3f3f1;--fl:#dcdcd8;--fm:#767672;--fer:#b3261e}
+
+/* ---------- Títulos y textos de los flujos ---------- */
+body .wrap.narrow .pt,body .drh h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;letter-spacing:-.01em;text-transform:none;color:var(--fk)}
+body .wrap.narrow .pt{font-size:clamp(36px,8vw,52px);line-height:1;margin:.4rem 0 1.4rem}
+body .wrap.narrow{font-family:Jost,system-ui,sans-serif;font-weight:300}
+body .wrap.narrow h3.sb{font:400 .72rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--fm);margin:2rem 0 .9rem}
+body .ds{color:var(--fm);font-size:13px;letter-spacing:.04em;line-height:1.7}
+
+/* ---------- Botones: negro sólido, esquinas rectas, barrido de luz ---------- */
+body .wrap.narrow .btn,body .dr .btn,body .com .btn{position:relative;overflow:hidden;min-height:3.6rem;border-radius:0;border:1px solid var(--fk);background:var(--fk);color:var(--fw);font:400 .74rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase;transition:background .3s,color .3s,transform .2s}
+body .wrap.narrow .btn::after,body .dr .btn:not(.o):not(.wa)::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-20deg);transition:left .9s;pointer-events:none}
+@media(hover:hover){body .wrap.narrow .btn:hover::after,body .dr .btn:not(.o):not(.wa):hover::after{left:130%}}
+body .wrap.narrow .btn:hover,body .dr .btn:hover,body .com .btn:hover{background:var(--fw);color:var(--fk);transform:none}
+body .wrap.narrow .btn.o,body .dr .btn.o{background:var(--fw);color:var(--fk)}
+body .wrap.narrow .btn.o:hover,body .dr .btn.o:hover{background:var(--fk);color:var(--fw)}
+body .wrap.narrow .btn:active,body .dr .btn:active{transform:scale(.985)}
+body .wrap.narrow .btn:disabled,body .dr .btn:disabled{opacity:.4}
+body .wrap.narrow .btn.wide{width:100%}
+body .lk{font:400 .7rem Jost,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--fm);text-decoration:none;padding:.7rem 0;position:relative}
+body .lk:hover{color:var(--fk)}
+body .dr .lk{margin-top:.4rem}
+
+/* ---------- Bolsa lateral ---------- */
+body .dro{background:rgba(0,0,0,.5)}
+body .dr{background:var(--fw);width:min(450px,100%);transition:transform .6s cubic-bezier(.77,0,.18,1),visibility .6s}
+body .drh{padding:1.4rem 1.5rem .9rem;align-items:center}
+body .drh h2{font-size:30px;line-height:1}
+body .drh p{font:300 .8rem Jost,sans-serif;letter-spacing:.05em;color:var(--fm);margin:.4rem 0 0}
+body .x{width:2.4rem;height:2.4rem;border:0;border-radius:0;background:none;color:var(--fk)}
+body .x:hover{background:none;color:var(--fk);transform:rotate(90deg)}
+body .x svg{stroke-width:1.2}
+body .drb{padding:.2rem 1.5rem 1rem;gap:0;border-top:1px solid var(--fl)}
+body .bl{display:grid;grid-template-columns:84px 1fr;gap:1rem;background:none;border-radius:0;border-bottom:1px solid var(--fl);padding:1.25rem 0}
+body .bl .im.sm{width:84px;height:84px;border-radius:0;border:1px solid var(--fl);background:var(--fw);align-self:start}
+body .bl .im.sm img{width:100%;height:100%;object-fit:cover}
+body .bl h3{font:500 1.35rem/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:0;text-transform:none}
+body .bl p{font:300 .68rem Jost,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--fm);margin:.35rem 0 .8rem}
+body .qs{gap:0}
+body .bl .qs{display:inline-flex;border:1px solid var(--fl)}
+body .qs button,body .bl .qs button{width:2.2rem;height:2.2rem;border:0;border-radius:0;background:none;font-size:1.1rem;color:var(--fk)}
+body .bl .qs button:hover,body .qs button:active{background:var(--fk);color:var(--fw)}
+body .bl .qs b{min-width:1.9rem;font-weight:300;font-size:.85rem}
+body .lp{font:300 .9rem Jost,sans-serif;letter-spacing:.06em}
+body .bi .rm,body .qs .rm{font:300 .62rem Jost,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--fm);text-decoration:underline;text-underline-offset:4px}
+body .drf{background:var(--fw);border-top:1px solid var(--fl);padding:1.1rem 1.5rem calc(1.3rem + env(safe-area-inset-bottom,0px));text-align:left}
+body .drf .cta{gap:.7rem;margin:0}
+body .drf .tt{font:400 1.05rem Jost,sans-serif;letter-spacing:.06em;padding:.2rem 0 1rem}
+body .drf .ds{margin:0;font-size:.72rem;letter-spacing:.08em}
+body .drf .tt b,body .drf .tt span:last-child{font-weight:500}
+body .dr .btn.wa{border-radius:0;padding:.8rem 1.2rem;letter-spacing:.04em;text-transform:none;font-size:.85rem}
+body .dr .btn.wa b{font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:.7rem}
+body .dr .btn.wa small{letter-spacing:.02em;text-transform:none}
+body .dr .empty{padding:4rem 0;font:300 .85rem Jost,sans-serif;color:var(--fm)}
+body .dr .empty p{font:500 1.9rem "Cormorant Garamond",Georgia,serif;color:var(--fk);margin-bottom:1.4rem}
+body .agt{background:var(--fk);border-radius:0}
+
+/* ---------- Carrito, datos y pago (páginas) ---------- */
+body .wrap.narrow{max-width:620px;padding-left:22px;padding-right:22px}
+body .ln{display:grid;grid-template-columns:84px 1fr auto;gap:1rem;align-items:start;padding:1.25rem 0;border-bottom:1px solid var(--fl)}
+body .ln .im.sm{width:84px;border-radius:0;border:1px solid var(--fl);background:var(--fw)}
+body .ln .im.sm img{width:100%;height:100%;object-fit:cover}
+body .li h3{font:500 1.4rem/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:0;text-transform:none}
+body .li p{font:300 .68rem Jost,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--fm);margin:.35rem 0 .8rem}
+body .ln>b{font:300 .95rem Jost,sans-serif;letter-spacing:.06em}
+body .qs b{font-weight:300}
+body .tt{font:400 1.05rem Jost,sans-serif;letter-spacing:.06em;padding:1rem 0}
+body .tt span:last-child{font-weight:500}
+body .wrap.narrow .cta{gap:.8rem;margin:.4rem 0 1rem}
+body .wrap.narrow .empty{padding:4rem 0}
+body .wrap.narrow .empty p{font:500 1.9rem "Cormorant Garamond",Georgia,serif;color:var(--fk);margin-bottom:1.4rem}
+
+/* Pasos del pedido */
+body .stp{display:flex;align-items:center;gap:.7rem;margin:1.1rem 0 1.6rem;padding:0;counter-reset:s}
+body .stp li{flex:0 0 auto;display:flex;align-items:center;gap:.55rem;border:0;padding:0;font:300 .68rem Jost,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--fm);counter-increment:s;transition:color .4s}
+body .stp li::before{content:counter(s);width:1.65rem;height:1.65rem;border:1px solid var(--fl);border-radius:50%;display:grid;place-items:center;font-size:.68rem;letter-spacing:0;transition:.5s}
+body .stp li.on{color:var(--fk);font-weight:400}
+body .stp li.on::before{background:var(--fk);color:var(--fw);border-color:var(--fk)}
+body .stp li:first-child{flex:1}
+body .stp li:first-child::after{content:"";flex:1;height:1px;background:var(--fl);margin-left:.4rem}
+body .stp li.on+li.on{color:var(--fk)}
+
+/* Campos */
+body .fg{gap:0 18px}
+body .fg .f{margin-bottom:1.15rem}
+body .fg label{font:300 .66rem Jost,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--fm);margin:0 0 .35rem}
+body input[type=text],body input[type=tel],body input[type=email],body textarea{border:0;border-bottom:1px solid var(--fl);border-radius:0;padding:.7rem 0;font:300 16px Jost,sans-serif;background:transparent;color:var(--fk);transition:border-color .3s}
+body input[type=text]:focus,body input[type=tel]:focus,body input[type=email]:focus,body textarea:focus{border-color:var(--fk)}
+body .f .opt{letter-spacing:.1em;text-transform:none}
+body .f .sub{font:300 .78rem Jost,sans-serif;color:var(--fm)}
+
+/* Medios de pago */
+body .pays{gap:.8rem}
+body .pay{border:1px solid var(--fl);border-radius:0;padding:1.1rem 1.2rem;gap:1rem;align-items:center;transition:border-color .4s,box-shadow .4s}
+body .pay b{font:500 1.3rem/1.1 "Cormorant Garamond",Georgia,serif;display:block}
+body .pay small{font:300 .66rem Jost,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--fm);margin-top:.3rem}
+body .pay:has(input:checked){border-color:var(--fk);box-shadow:inset 0 0 0 1px var(--fk);background:var(--fw)}
+body .pay input{accent-color:#0a0a0a;margin:0;width:1.1rem;height:1.1rem}
+
+/* Resumen */
+body .sum{background:var(--fw);border:1px solid var(--fl);border-radius:0;padding:.9rem 1.2rem;margin:1.5rem 0}
+body .sum p{font:300 .85rem Jost,sans-serif;letter-spacing:.04em;margin:.45rem 0}
+body .sum p b{font-weight:400}
+body .sum .tt{border-top:1px solid var(--fl);font-size:1.05rem;padding:.9rem 0 .2rem;margin-top:.7rem}
+body .sum .dd{font-size:.82rem;line-height:1.8;color:var(--fm)}
+
+/* ---------- Pedido recibido ---------- */
+body .ctr{text-align:center}
+body .ok{width:5.5rem;height:5.5rem;border-radius:50%;background:none;border:1px solid var(--fk);color:var(--fk);font-size:2rem;margin:1.2rem auto 1.4rem;animation:fkpop .8s cubic-bezier(.2,.9,.2,1) both}
+@keyframes fkpop{from{opacity:0;transform:scale(.6)}}
+body .ctr .pt{font-size:clamp(42px,11vw,72px)}
+body .ctr h1+.ds b{display:inline-block;border:1px solid var(--fk);padding:.55rem 1rem;margin-left:.4rem;font:500 1.3rem "Cormorant Garamond",Georgia,serif;letter-spacing:.08em;color:var(--fk)}
+body .ctr .sum{text-align:left}
+body .ctr .sum .tt{font-size:1.05rem}
+
+/* Aviso */
+body #toast{border-radius:0;background:var(--fk);font:300 .72rem Jost,sans-serif;letter-spacing:.2em;text-transform:uppercase;padding:.95rem 1.6rem}
+body #toast button{border-radius:0}
+
+@media(prefers-reduced-motion:reduce){body .ok{animation:none}body .wrap.narrow .btn::after,body .dr .btn::after{display:none}}
