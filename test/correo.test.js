@@ -10,7 +10,7 @@ const admin = (body) => adminPedidos({ method: 'POST', headers: { Authorization:
 
 describe('correos', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
   let b;
-  beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); process.env.RESEND_API_KEY = 're_prueba'; process.env.MAIL_FROM = 'MF Col <pedidos@mfcol.com>'; process.env.OWNER_EMAIL = 'duena@mfcol.com'; });
+  beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); process.env.RESEND_API_KEY = 're_prueba'; process.env.MAIL_FROM = 'Tienda de prueba <correos@tienda-prueba.test>'; process.env.OWNER_EMAIL = 'duena@tienda-prueba.test'; });
   afterEach(() => b.terminar());
   async function pedido() {
     const r = await crearPedido({ method: 'POST', headers: {}, query: {}, body: { items: [{ id: 'plataforma-luna', talla: '36', cant: 2 }], cliente: { ...CLIENTE_OK, nombre: 'Ana <b>Pérez</b>' }, consent_wa: true } });
@@ -33,7 +33,7 @@ describe('correos', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
     assert.match(c.html, /Plataforma Luna/);
     assert.ok(!c.html.includes('<b>Pérez'), 'debe escapar HTML del cliente');
     assert.match(c.html, new RegExp('https://tienda.test/gracias.html\\?t='));
-    assert.deepEqual(d.to, ['duena@mfcol.com']);
+    assert.deepEqual(d.to, ['duena@tienda-prueba.test']);
     assert.ok((await b.pedido(p.ref)).notificado.pago_correo);
   });
   it('un evento repetido no duplica el correo', async () => {
