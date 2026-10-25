@@ -1,0 +1,34 @@
+/* Banners del inicio (los diseña la dueña desde el panel). Solo estilos: los textos y botones los pone banners.js.
+   Todo se mide en % del banner, así se ve igual de bien en celular y en computador. */
+.bnw{container-type:inline-size;width:100%}
+.mfb{--e:cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden;aspect-ratio:4/5;background:var(--bg,#111);color:#fff;isolation:isolate}
+@container (min-width:700px){.mfb{aspect-ratio:16/9}}
+.bn-ph{position:absolute;inset:0}
+.bn-ph img{display:block;width:100%;height:100%;object-fit:cover}
+.bn-ov{position:absolute;inset:0;background:#000;opacity:var(--ov,.25);pointer-events:none}
+.bn-l{position:absolute;left:var(--x);top:var(--y);translate:-50% -50%;width:var(--w);margin:0;font-size:calc(var(--s)*1vw);font-size:calc(var(--s)*1cqw);line-height:1.08;white-space:pre-line;overflow-wrap:anywhere;color:var(--c);text-align:var(--a);font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;text-shadow:0 1px 22px rgba(0,0,0,.18)}
+.bn-l.sans{font-family:Jost,Helvetica,Arial,sans-serif;font-weight:400;line-height:1.2}
+.bn-l.it{font-style:italic}.bn-l.gr{font-weight:700}.bn-l.mx{text-transform:uppercase;letter-spacing:.14em}
+@container (min-width:700px){.bn-l{font-size:calc(var(--s)*.55cqw)}}
+@supports not (container-type:inline-size){@media(min-width:700px){.mfb{aspect-ratio:16/9}.bn-l{font-size:calc(var(--s)*.55vw)}}}
+.bn-b{position:absolute;left:var(--x);top:var(--y);translate:-50% -50%;max-width:92%;font:500 .74rem Jost,Helvetica,Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;white-space:nowrap;text-decoration:none;text-align:center;padding:1.05rem 2rem;border:1px solid #fff;border-radius:0;cursor:pointer;transition:background .35s,color .35s,border-color .35s;overflow:hidden;text-overflow:ellipsis}
+.bn-b.claro{background:#fff;color:#0a0a0a}.bn-b.oscuro{background:#0a0a0a;color:#fff;border-color:#0a0a0a}.bn-b.borde{background:transparent;color:#fff}
+.bn-b.claro:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}.bn-b.oscuro:hover{background:#fff;color:#0a0a0a;border-color:#fff}.bn-b.borde:hover{background:#fff;color:#0a0a0a}
+.bn-b:focus-visible{outline:3px solid #b08d57;outline-offset:3px}
+
+/* Carrusel de la tienda: se desliza con el dedo, cambia solo y no se mueve si el celular pide menos animación */
+.bns{position:relative;background:#111}
+.bns-t{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.bns-t::-webkit-scrollbar{display:none}
+.bn-s{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+.bns-d{position:absolute;left:0;right:0;bottom:.5rem;display:flex;justify-content:center;z-index:3}
+.bns-d button{width:2rem;height:2rem;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+.bns-d button::before{content:"";width:.5rem;height:.5rem;border-radius:999px;background:rgba(255,255,255,.55);transition:width .4s var(--e,ease),background .3s}
+.bns-d button.on::before{width:1.6rem;background:#fff}
+.bn-s .bn-ph img{scale:1.1;transition:scale 7s cubic-bezier(.2,.8,.2,1)}
+.bn-s.on .bn-ph img{scale:1}
+.bn-s .bn-l,.bn-s .bn-b{opacity:0;transition:opacity .9s ease,margin-top .9s cubic-bezier(.2,.8,.2,1);margin-top:1.4rem;transition-delay:calc(.14s*var(--i,0))}
+.bn-s.on .bn-l,.bn-s.on .bn-b{opacity:1;margin-top:0}
+/* Sin JavaScript o con "reducir movimiento": todo visible y quieto */
+.bns:not(.js) .bn-l,.bns:not(.js) .bn-b{opacity:1;margin-top:0}
+@media(prefers-reduced-motion:reduce){.bn-s .bn-ph img{scale:1;transition:none}.bn-s .bn-l,.bn-s .bn-b{opacity:1;margin-top:0;transition:none}}

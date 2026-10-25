@@ -1,0 +1,36 @@
+/* Diseñador de inicio (panel). La vista previa usa banners.css: lo que ves aquí es lo que sale en la tienda. */
+.ib-lista{display:flex;flex-wrap:wrap;gap:.5rem;margin:.4rem 0 1rem;align-items:center}
+.ib-lista button.ib-t{background:#fff;color:#0a0a0a;position:relative;padding:.5rem 1rem}
+.ib-lista button.ib-t.on{background:#0a0a0a;color:#fff}
+.ib-lista button.ib-t.off{opacity:.55;text-decoration:line-through}
+.ib-barra{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0}
+.ib-barra button{padding:.45rem 1rem;min-height:2.5rem}
+.ib-vista{display:inline-flex;border:1.5px solid #0a0a0a;border-radius:999px;overflow:hidden}
+.ib-vista button{border:0;border-radius:0;background:#fff;color:#0a0a0a;padding:.45rem 1.1rem}
+.ib-vista button.on{background:#0a0a0a;color:#fff}
+.ib-fit{width:100%;margin:.4rem auto 0;position:relative;overflow:hidden;border-radius:.8rem;background:#e9e9e6}
+.ib-sc{transform-origin:top left;position:absolute;left:0;top:0}
+.ib-stage .mfb{user-select:none;-webkit-user-select:none;touch-action:pan-y;cursor:grab}
+.ib-stage .bn-l,.ib-stage .bn-b{cursor:move;touch-action:none;outline:1px dashed rgba(255,255,255,.0)}
+.ib-stage .bn-l:hover,.ib-stage .bn-b:hover{outline:1px dashed rgba(255,255,255,.7);outline-offset:4px}
+.ib-stage .bn-l.sel,.ib-stage .bn-b.sel{outline:2px dashed #b08d57;outline-offset:6px}
+.ib-stage .bn-b{pointer-events:auto}
+.ib-h{position:absolute;right:-14px;bottom:-14px;width:22px;height:22px;border-radius:50%;background:#b08d57;border:2px solid #fff;cursor:nwse-resize;touch-action:none;z-index:5}
+.ib-g{position:absolute;background:#b08d57;pointer-events:none;opacity:0;transition:opacity .15s;z-index:4}
+.ib-g.v{left:50%;top:0;bottom:0;width:1px}.ib-g.h{top:50%;left:0;right:0;height:1px}.ib-g.on{opacity:.9}
+.ib-ayuda{font-size:.85rem;color:#6b6b66;margin:.5rem 0}
+.ib-panel{border:1px solid #d9d9d4;border-radius:1.2rem;padding:1rem;margin:1rem 0;display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.ib-panel h3{grid-column:1/-1;margin:0;font-size:1.05rem}
+.ib-panel label{display:grid;gap:.25rem;font-weight:500;font-size:.9rem}
+.ib-panel .ancho{grid-column:1/-1}
+.ib-panel textarea,.ib-panel input[type=text],.ib-panel select{width:100%;border:1.5px solid #d9d9d4;border-radius:1rem;padding:.6rem .95rem;font:inherit;background:#fff}
+.ib-panel input[type=range]{width:100%;accent-color:#0a0a0a}
+.ib-panel input[type=color]{width:3.2rem;height:2.8rem;padding:.15rem;border-radius:.8rem}
+.ib-fila{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.ib-fila button{padding:.4rem .9rem;min-height:2.4rem}
+.ib-fila button.on{background:#0a0a0a;color:#fff}
+.ib-fila button.claro:not(.on){background:#fff;color:#0a0a0a}
+.ib-sw{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;border:1.5px solid #0a0a0a!important}
+.ib-guardar{position:sticky;bottom:calc(.8rem + env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:.6rem;align-items:center;justify-content:space-between;background:#0a0a0a;color:#fff;border-radius:1.2rem;padding:.7rem .9rem;margin-top:1.2rem}
+.ib-guardar button{background:#fff;color:#0a0a0a;border-color:#fff}
+.ib-guardar span{font-size:.88rem}
