@@ -5,7 +5,11 @@
 :root{--pk:#0a0a0a;--pw:#fff;--ps:#ecebe7;--pl:#d9d9d4;--pm:#767672;--pe:cubic-bezier(.2,.8,.2,1)}
 
 /* ---------- Volver ---------- */
-body .pd{margin-top:.4rem}
+body .pd{margin-top:.4rem;grid-template-columns:minmax(0,1fr)}
+@media(min-width:800px){body .pd{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+body .pd>*{min-width:0}
+body .pd .th{max-width:100%}
+html,body{overflow-x:clip}
 body section.wrap>.lk[data-p="col"]{font:400 .68rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--pm);padding:.5rem 0 1.1rem;transition:color .3s,letter-spacing .4s var(--pe)}
 body section.wrap>.lk[data-p="col"]:hover{color:var(--pk);letter-spacing:.4em}
 
