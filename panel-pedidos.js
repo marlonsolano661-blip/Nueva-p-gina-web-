@@ -53,10 +53,36 @@
     boton.onclick = function () {
       boton.disabled = true;
       llamar('/api/admin-pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, estado_envio: sel.value, transportadora: transp.value, guia: guia.value, link_rastreo: link.value }) })
-        .then(function () { aviso('Envío actualizado (' + p.referencia + ')', 'ok'); })
+        .then(function () {
+          p.estado_envio = sel.value; p.transportadora = transp.value; p.guia = guia.value; p.link_rastreo = link.value;
+          mostrarReenvio(); aviso('Envío actualizado (' + p.referencia + ')', 'ok');
+        })
         .catch(function (e) { aviso(e.message, 'mal'); })
         .then(function () { boton.disabled = false; });
     };
+
+    // Reenviar correo de envío: solo si el pedido ya fue enviado, tiene datos de seguimiento y la clienta dejó correo.
+    var reenviar = el('button', { type: 'button', class: 'reenviar', text: 'Reenviar correo de envío' });
+    function mostrarReenvio() {
+      var enviado = ['EN_CAMINO', 'EN_DESTINO', 'ENTREGADO'].indexOf(p.estado_envio) >= 0;
+      var datos = !!(p.guia || p.transportadora || p.link_rastreo);
+      reenviar.hidden = !(aprobado && enviado && datos && (p.cliente || {}).email);
+    }
+    reenviar.onclick = function () {
+      if (!window.confirm('¿Reenviar el correo de envío a ' + ((p.cliente || {}).email || 'la clienta') + '?')) return;
+      reenviar.disabled = true;
+      llamar('/api/admin-pedidos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, accion: 'reenviar_envio' }) })
+        .then(function (d) {
+          var r = d && d.correo;
+          if (r === 'enviado') aviso('Correo reenviado (' + p.referencia + ')', 'ok');
+          else if (r === 'sin_correo') aviso('Este pedido no tiene un correo válido', 'mal');
+          else if (r === 'omitido') aviso('El envío de correos no está configurado', 'mal');
+          else aviso('No se pudo reenviar el correo (' + (r || 'sin respuesta') + ')', 'mal');
+        })
+        .catch(function (e) { aviso(e.message, 'mal'); })
+        .then(function () { reenviar.disabled = false; });
+    };
+    mostrarReenvio();
 
     var items = (p.items || []).map(function (i) { return i.cant + ' × ' + i.nombre + ' (talla ' + i.talla + ')'; }).join(' · ');
     var contacto = el('p', {}, [
@@ -76,6 +102,7 @@
       el('p', { class: 'suave', text: (cli.direccion || '') + (cli.nota ? ' · Nota: ' + cli.nota : '') }),
       el('p', { text: items }),
       el('div', { class: 'envio' }, [sel, transp, guia, link, boton]),
+      reenviar,
     ]);
   }
 
