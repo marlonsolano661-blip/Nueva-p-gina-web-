@@ -27,6 +27,7 @@
 
   function aplicar(d) {
     if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
+    window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // ya respondió el servidor: se muestra la portada definitiva
     window.MF_CATALOGO_PRODUCTOS = d.productos;
     window.MF_ENVIO = d.envio && Number.isInteger(d.envio.tarifa) ? d.envio.tarifa : undefined;
     window.MF_CONTENIDO = d.contenido || {};
@@ -45,6 +46,10 @@
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(aplicar)
-    .catch(function (e) { if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message); })
+    .catch(function (e) {
+      if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
+      window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre
+      if (typeof draw === 'function') draw();
+    })
     .then(function () { clearTimeout(t); });
 })();

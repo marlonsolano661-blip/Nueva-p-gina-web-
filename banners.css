@@ -32,3 +32,6 @@
 /* Sin JavaScript o con "reducir movimiento": todo visible y quieto */
 .bns:not(.js) .bn-l,.bns:not(.js) .bn-b{opacity:1;margin-top:0}
 @media(prefers-reduced-motion:reduce){.bn-s .bn-ph img{scale:1;transition:none}.bn-s .bn-l,.bn-s .bn-b{opacity:1;margin-top:0;transition:none}}
+
+/* Mientras llega el contenido del servidor se oculta la portada de respaldo, para no ver un instante el diseño de antes (se quita en tienda-api.js) */
+html.mf-espera .hs,html.mf-espera .rh{visibility:hidden}
