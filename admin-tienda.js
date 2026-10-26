@@ -456,8 +456,9 @@
   var cargarInicio = function () { return window.mfAdminInicio ? window.mfAdminInicio.abrir() : Promise.reject(new Error('El diseñador de inicio no cargó: revisa que admin-banners.js esté subido')); };
   var cargarDescuentos = function () { return window.mfAdminDescuentos ? window.mfAdminDescuentos.abrir() : Promise.reject(new Error('Descuentos no cargó: revisa que admin-descuentos.js esté subido')); };
   window.mfAdmin = { api: api, el: el, msg: msg, falla: falla, subirFoto: subirFoto };
-  var CARGA = { descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
-  var TITULOS = { descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  var cargarComunidad = function () { return window.mfAdminComunidad ? window.mfAdminComunidad.abrir() : Promise.reject(new Error('Comunidad no cargó: revisa que admin-comunidad.js esté subido')); };
+  var CARGA = { comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
+  var TITULOS = { comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
   function inicio() {
     $('#tabs').hidden = false; $('#volver').hidden = true;
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
