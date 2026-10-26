@@ -1,5 +1,5 @@
 /* Descuentos: códigos de porcentaje sobre los productos (el envío siempre se cobra completo).
-   Cada código: nombre, porcentaje, activo, "anunciar en la tienda" y una nota interna. Cada correo puede usar un código una sola vez.
+   Cada código: nombre, porcentaje, activo, "anunciar en la tienda", una foto opcional para el banner y una nota interna. Cada correo puede usar un código una sola vez.
    Todo se valida de nuevo en el servidor al guardar. */
 (function () {
   'use strict';
@@ -14,6 +14,18 @@
     var act = el('input', { type: 'checkbox', 'aria-label': 'Activo' }); act.checked = d.activo !== false;
     var anu = el('input', { type: 'checkbox', 'aria-label': 'Anunciar en la tienda' }); anu.checked = d.anuncio === true;
     var del = el('button', { type: 'button', class: 'claro', text: 'Quitar' });
+    var archivo = el('input', { type: 'file', accept: 'image/*', 'aria-label': 'Foto del banner', style: 'display:none' });
+    var miniatura = d.foto ? el('img', { src: d.foto, alt: 'Foto del banner de ' + (d.codigo || 'este código'), style: 'width:100%;max-height:9rem;object-fit:cover;border-radius:.6rem' }) : el('p', { class: 'nota', text: 'Sin foto: el banner se verá sin imagen.' });
+    var subir = el('button', { type: 'button', class: 'claro', text: d.foto ? 'Cambiar foto' : 'Agregar foto' });
+    var quitarFoto = el('button', { type: 'button', class: 'claro', text: 'Quitar foto' });
+    subir.addEventListener('click', function () { archivo.click(); });
+    archivo.addEventListener('change', function () {
+      var f = archivo.files && archivo.files[0]; if (!f) return;
+      subir.disabled = true; A.msg('Subiendo foto…');
+      A.subirFoto(f).then(function (u) { d.foto = u; sucio = true; pintar(); A.msg('Foto lista ✓ Recuerda tocar "Guardar descuentos".'); })
+        .catch(function (e) { subir.disabled = false; A.falla(e); });
+    });
+    quitarFoto.addEventListener('click', function () { delete d.foto; sucio = true; pintar(); });
     cod.addEventListener('input', function () { cod.value = cod.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''); d.codigo = cod.value; sucio = true; });
     pct.addEventListener('input', function () { d.pct = parseInt(pct.value, 10) || 0; sucio = true; });
     nota.addEventListener('input', function () { d.nota = nota.value; sucio = true; });
@@ -30,6 +42,10 @@
       nota,
       el('label', { style: 'display:flex;gap:.5rem;align-items:center' }, [act, 'Activo (la clienta puede usarlo)']),
       el('label', { style: 'display:flex;gap:.5rem;align-items:center' }, [anu, 'Anunciarlo en el inicio de la tienda']),
+      el('p', { class: 'nota', text: 'Foto del banner (opcional): se ve arriba del aviso que sale en la tienda.' }),
+      miniatura,
+      el('div', { style: 'display:flex;gap:.6rem;flex-wrap:wrap' }, d.foto ? [subir, quitarFoto] : [subir]),
+      archivo,
       del,
     ]);
     return tarjeta;

@@ -1,4 +1,4 @@
-/* Código de descuento en la tienda: caja en la bolsa y en el pago, y aviso con foto en el inicio (si el panel anuncia un código).
+/* Código de descuento en la tienda: caja en la bolsa y en el pago, y aviso flotante que pide el correo (si el panel anuncia un código).
    El descuento que se ve aquí es solo informativo: el servidor lo calcula y lo valida de nuevo al crear el pedido. */
 (function () {
   'use strict';
@@ -50,21 +50,53 @@
     if (c) { var cod = c.getAttribute('data-dcopy'); try { navigator.clipboard.writeText(cod).then(function () { if (typeof toast === 'function') toast('Código ' + cod + ' copiado'); }); } catch (x) { if (typeof toast === 'function') toast('Tu código: ' + cod); } }
   });
 
-  /* Aviso en el inicio (solo si el panel anuncia un código) */
-  function promo() {
+  /* Aviso flotante: pide el correo y, solo después, el servidor entrega el código (/api/bienvenida).
+     Aparece si el panel anuncia un código. No se muestra en el pago, si ya hay un código aplicado o si la clienta lo cerró en esta visita. */
+  var CERRADO = 'mf_promo_cerrado', fl = null, RE_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, enviando = false;
+  function visto() { try { return sessionStorage.getItem(CERRADO) === '1'; } catch (e) { return false; } }
+  function marcar() { try { sessionStorage.setItem(CERRADO, '1'); } catch (e) { /* nada */ } }
+  function enPago() { try { return pg === 'out'; } catch (e) { return false; } }
+  function cerrar() { var f = fl; fl = null; marcar(); if (!f) return; f.classList.remove('on'); setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 500); }
+  function pintar(h) { if (fl) fl.querySelector('.mfb-c').innerHTML = h; }
+  function paso1(pct, msg) {
+    pintar('<h2>' + pct + ' % menos en tu primer par.</h2><p>Déjanos tu correo y te enviamos el código de bienvenida.</p>' +
+      '<form class="mfb-f" novalidate><input type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo electrónico" aria-label="Tu correo electrónico"><button type="submit" class="btn">Recibir mi código</button></form>' +
+      '<p class="mfb-e" role="status">' + E(msg || '') + '</p><p class="mfb-n">Un uso por correo. El envío se cobra completo.</p>');
+  }
+  function paso2(d, email) {
+    var c = E(d.codigo);
+    pintar('<h2>Tu código está listo.</h2>' + (d.enviado ? '<p class="mfb-ok">También lo enviamos a ' + E(email) + '.</p>' : '') +
+      '<strong class="mfb-cod">' + c + '</strong><div class="mfb-a"><button type="button" class="btn" data-dcopy="' + c + '">Copiar código</button><button type="button" class="btn o" data-dapply="' + c + '">Aplicar en mi bolsa</button></div>' +
+      '<p class="mfb-n">' + Number(d.pct) + ' % de descuento en productos. Válido una sola vez con este correo.</p>');
+  }
+  function pedir(pct, email) {
+    if (enviando) return; enviando = true;
+    fetch(API + '/api/bienvenida', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos enviar tu código. Intenta de nuevo.'); return d; }); })
+      .then(function (d) { if (d.ok) { marcar(); paso2(d, email); } else paso1(pct, d.error || 'Ese descuento no está disponible'); })
+      .catch(function (e) { paso1(pct, (e && e.message) || 'No pudimos enviar tu código. Intenta de nuevo.'); })
+      .then(function () { enviando = false; });
+  }
+  var RE_FOTO = /^(https:\/\/[^\s"'<>]{4,480}|assets\/[\w./-]{1,200})$/;
+  function mostrar(pct, foto) {
+    if (fl || visto() || S.codigo || enPago()) return;
+    fl = document.createElement('aside'); fl.className = 'mfb'; fl.setAttribute('role', 'dialog'); fl.setAttribute('aria-label', 'Descuento de bienvenida');
+    var conFoto = typeof foto === 'string' && RE_FOTO.test(foto);
+    if (conFoto) fl.classList.add('fo');
+    fl.innerHTML = '<button type="button" class="mfb-x" data-mfx aria-label="Cerrar">×</button>' + (conFoto ? '<img class="mfb-img" src="' + E(foto) + '" alt="" decoding="async">' : '') + '<div class="mfb-c"></div>';
+    fl.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target : null; if (!t) return; if (t.closest('[data-mfx]') || t.closest('[data-dapply]')) cerrar(); });
+    fl.addEventListener('submit', function (e) {
+      e.preventDefault(); var m = String((fl.querySelector('input[name=email]') || {}).value || '').trim().toLowerCase();
+      if (!RE_MAIL.test(m)) return paso1(pct, 'Escribe un correo válido, por ejemplo nombre@correo.com.');
+      pedir(pct, m);
+    });
+    document.body.appendChild(fl); paso1(pct);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { if (fl) fl.classList.add('on'); }); });
+  }
+  function esperar(n) {
     var p = window.MF_CONTENIDO && window.MF_CONTENIDO.promo;
-    if (!p || !RE.test(String(p.codigo || '')) || !(p.pct >= 1 && p.pct <= 90)) return '';
-    return '<section class="dpr" aria-label="Descuento"><img src="assets/promo-descuento.jpg" alt="" loading="lazy" decoding="async"><div class="dpr-v"></div><div class="dpr-t"><small>Para ti</small><h2>' + p.pct + '% de descuento</h2><p>en tu compra con el código</p><b class="dpr-c">' + E(p.codigo) + '</b><div class="dpr-b"><button type="button" class="btn inv" data-dapply="' + E(p.codigo) + '">Aplicar en mi bolsa</button><button type="button" class="btn o inv" data-dcopy="' + E(p.codigo) + '">Copiar código</button></div></div></section>';
+    if (p && p.correo === true && p.pct >= 1 && p.pct <= 90) { setTimeout(function () { mostrar(p.pct, p.foto); }, 2500); return; }
+    if (n < 20) setTimeout(function () { esperar(n + 1); }, 500);
   }
-  function engancha() {
-    var R = window.mfRef; if (!R || !R.home || R.__dc) return;
-    var h0 = R.home;
-    R.home = function () {
-      var s = h0();
-      try { var h = promo(); if (h) { var i = s.indexOf('</section>'); if (i >= 0) return s.slice(0, i + 10) + h + s.slice(i + 10); } } catch (e) { /* sin aviso */ }
-      return s;
-    };
-    R.__dc = 1;
-  }
-  engancha();
+  esperar(0);
 })();
