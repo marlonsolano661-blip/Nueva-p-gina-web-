@@ -92,11 +92,12 @@ describe('descuentos', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
     assert.equal(ultimo.status, 429);
   });
 
-  it('el catálogo público solo publica el código marcado para anunciar', async () => {
+  it('el catálogo público avisa del descuento anunciado pero no publica ningún código', async () => {
     await crear([{ codigo: 'SECRETO', pct: 30 }, { codigo: 'VISIBLE', pct: 15, anuncio: true }]);
     const r = await catalogo({ method: 'GET', headers: {}, query: {} });
-    assert.deepEqual(r.json.contenido.promo, { codigo: 'VISIBLE', pct: 15 });
+    assert.deepEqual(r.json.contenido.promo, { pct: 15, correo: true });
     assert.ok(!JSON.stringify(r.json).includes('SECRETO'));
+    assert.ok(!JSON.stringify(r.json).includes('VISIBLE'));
     await crear([{ codigo: 'SECRETO', pct: 30 }]);
     assert.equal((await catalogo({ method: 'GET', headers: {}, query: {} })).json.contenido.promo, undefined);
   });
