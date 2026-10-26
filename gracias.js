@@ -133,6 +133,10 @@
     var fil = [];
     if (p.subtotal_centavos != null) fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Productos' }), el('span', { text: pesos(p.subtotal_centavos) })]));
     if (p.envio_centavos != null) fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Envío' }), el('span', { text: pesos(p.envio_centavos) })]));
+    // Descuento: los productos valen más que el subtotal guardado (que ya viene con el descuento)
+    var bruto = (p.items || []).reduce(function (t, i) { return t + (Number(i.precio) || 0) * (Number(i.cant) || 0) * 100; }, 0);
+    var desc = (p.subtotal_centavos != null && bruto > Number(p.subtotal_centavos)) ? bruto - Number(p.subtotal_centavos) : 0;
+    if (desc > 0) { fil.length = 0; fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Productos' }), el('span', { text: pesos(bruto) })])); fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Descuento' }), el('span', { text: '−' + pesos(desc) })])); if (p.envio_centavos != null) fil.push(el('div', { class: 'fila-r' }, [el('span', { text: 'Envío' }), el('span', { text: pesos(p.envio_centavos) })])); }
     fil.forEach(function (f) { tarjeta.appendChild(f); });
     tarjeta.appendChild(el('div', { class: 'total' }, [el('span', { text: 'Total' }), el('span', { text: pesos(p.amount_in_cents) })]));
     if (p.payment_method_type) tarjeta.appendChild(el('p', { class: 'suave', text: 'Medio de pago: ' + ({ CARD: 'Tarjeta', NEQUI: 'Nequi', PSE: 'PSE', BANCOLOMBIA_TRANSFER: 'Bancolombia', BANCOLOMBIA_COLLECT: 'Bancolombia' }[p.payment_method_type] || p.payment_method_type) }));

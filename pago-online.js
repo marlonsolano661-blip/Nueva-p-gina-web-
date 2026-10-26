@@ -13,7 +13,7 @@
 
   // Clave de idempotencia: misma compra (mismo carrito y datos) = misma clave, así un reintento no crea otro pedido
   function clave(items, c) {
-    var h = JSON.stringify([items, c.tel, c.dir, c.ciudad]);
+    var h = JSON.stringify([items, c.tel, c.dir, c.ciudad, window.mfCodigo ? window.mfCodigo() : '']);
     try {
       var g = JSON.parse(sessionStorage.getItem('mf_clave') || 'null');
       if (g && g.h === h) return g.k;
@@ -76,11 +76,11 @@
 
     var lineas = CART.map(function (l) { var x = { id: l.id, talla: l.talla, cant: l.q != null ? l.q : l.cant }; if (l.color) x.color = l.color; return x; });
     // total que la clienta vio (productos + envío); el servidor lo recalcula y avisa si cambió
-    var esperado = (typeof total === 'function' && typeof window.MF_ENVIO === 'number') ? total() + window.MF_ENVIO : undefined;
+    var esperado = (typeof total === 'function' && typeof window.MF_ENVIO === 'number') ? total() - (window.mfDescuento ? window.mfDescuento() : 0) + window.MF_ENVIO : undefined;
     fetch(API + '/api/crear-pedido', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
       body: JSON.stringify({
-        items: lineas, clave: clave(lineas, c) || undefined, total_esperado: esperado,
+        items: lineas, clave: clave(lineas, c) || undefined, total_esperado: esperado, codigo: (window.mfCodigo && window.mfCodigo()) || undefined,
         consent_wa: WA_OK,
         meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
         cliente: { nombre: c.nombre, documento: c.doc || '', tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
