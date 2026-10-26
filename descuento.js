@@ -57,17 +57,17 @@
   function marcar() { try { sessionStorage.setItem(CERRADO, '1'); } catch (e) { /* nada */ } }
   function enPago() { try { return pg === 'out'; } catch (e) { return false; } }
   function cerrar() { var f = fl; fl = null; marcar(); if (!f) return; f.classList.remove('on'); setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 500); }
-  function pintar(h) { if (fl) fl.querySelector('.mfb-c').innerHTML = h; }
+  function pintar(h) { if (fl) fl.querySelector('.mfp-c').innerHTML = h; }
   function paso1(pct, msg) {
     pintar('<h2>' + pct + ' % menos en tu primer par.</h2><p>Déjanos tu correo y te enviamos el código de bienvenida.</p>' +
-      '<form class="mfb-f" novalidate><input type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo electrónico" aria-label="Tu correo electrónico"><button type="submit" class="btn">Recibir mi código</button></form>' +
-      '<p class="mfb-e" role="status">' + E(msg || '') + '</p><p class="mfb-n">Un uso por correo. El envío se cobra completo.</p>');
+      '<form class="mfp-f" novalidate><input type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo electrónico" aria-label="Tu correo electrónico"><button type="submit" class="btn">Recibir mi código</button></form>' +
+      '<p class="mfp-e" role="status">' + E(msg || '') + '</p><p class="mfp-n">Un uso por correo. El envío se cobra completo.</p>');
   }
   function paso2(d, email) {
     var c = E(d.codigo);
-    pintar('<h2>Tu código está listo.</h2>' + (d.enviado ? '<p class="mfb-ok">También lo enviamos a ' + E(email) + '.</p>' : '') +
-      '<strong class="mfb-cod">' + c + '</strong><div class="mfb-a"><button type="button" class="btn" data-dcopy="' + c + '">Copiar código</button><button type="button" class="btn o" data-dapply="' + c + '">Aplicar en mi bolsa</button></div>' +
-      '<p class="mfb-n">' + Number(d.pct) + ' % de descuento en productos. Válido una sola vez con este correo.</p>');
+    pintar('<h2>Tu código está listo.</h2>' + (d.enviado ? '<p class="mfp-ok">También lo enviamos a ' + E(email) + '.</p>' : '') +
+      '<strong class="mfp-cod">' + c + '</strong><div class="mfp-a"><button type="button" class="btn" data-dcopy="' + c + '">Copiar código</button><button type="button" class="btn o" data-dapply="' + c + '">Aplicar en mi bolsa</button></div>' +
+      '<p class="mfp-n">' + Number(d.pct) + ' % de descuento en productos. Válido una sola vez con este correo.</p>');
   }
   function pedir(pct, email) {
     if (enviando) return; enviando = true;
@@ -80,10 +80,10 @@
   var RE_FOTO = /^(https:\/\/[^\s"'<>]{4,480}|assets\/[\w./-]{1,200})$/;
   function mostrar(pct, foto) {
     if (fl || visto() || S.codigo || enPago()) return;
-    fl = document.createElement('aside'); fl.className = 'mfb'; fl.setAttribute('role', 'dialog'); fl.setAttribute('aria-label', 'Descuento de bienvenida');
+    fl = document.createElement('aside'); fl.className = 'mfp'; fl.setAttribute('role', 'dialog'); fl.setAttribute('aria-label', 'Descuento de bienvenida');
     var conFoto = typeof foto === 'string' && RE_FOTO.test(foto);
     if (conFoto) fl.classList.add('fo');
-    fl.innerHTML = '<button type="button" class="mfb-x" data-mfx aria-label="Cerrar">×</button>' + (conFoto ? '<img class="mfb-img" src="' + E(foto) + '" alt="" decoding="async">' : '') + '<div class="mfb-c"></div>';
+    fl.innerHTML = '<button type="button" class="mfp-x" data-mfx aria-label="Cerrar">×</button>' + (conFoto ? '<img class="mfp-img" src="' + E(foto) + '" alt="" decoding="async">' : '') + '<div class="mfp-c"></div>';
     fl.addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target : null; if (!t) return; if (t.closest('[data-mfx]') || t.closest('[data-dapply]')) cerrar(); });
     fl.addEventListener('submit', function (e) {
       e.preventDefault(); var m = String((fl.querySelector('input[name=email]') || {}).value || '').trim().toLowerCase();
