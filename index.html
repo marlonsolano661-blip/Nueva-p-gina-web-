@@ -390,7 +390,7 @@ function payPg(){if(!CART.length)return col();if(!['nombre','tel','ciudad','dir'
  ${sumH()}
  <div class="sum"><p><b>Entrega</b><button class="lk" data-n="go" data-p="out">Editar</button></p><p class="dd">${esc(FRM.nombre)} · ${esc(FRM.tel)}<br>${esc(FRM.dir)}, ${esc(FRM.ciudad)}<br>${esc(FRM.email)}</p></div>
  <button class="btn wide" data-n="submit">Confirmar pedido</button></section>`}
-const cartMsg=()=>`Hola Marlon Footwear! Quiero asesoría personalizada con este carrito:\n\n${CART.map(l=>`• ${l.name}${l.color?' · '+l.color:''} · talla ${l.talla} · x${l.q} — ${fmt(l.price*l.q)}`).join('\n')}\n\nTotal: ${fmt(total())}`;
+const cartMsg=()=>`Hola Marlon Footwear, quiero comprar:\n\n${CART.map(l=>`• ${l.q} x ${l.name}${l.color?' · '+l.color:''} · talla ${l.talla} — ${fmt(l.price*l.q)}`).join('\n')}\n\nTotal: ${fmt(total())}\n¿Cómo hago el pago?`;
 const msg=L=>`Hola Marlon Footwear! Quiero hacer este pedido (${L.num}):\n\n${L.lines.map(l=>`• ${l.name}${l.color?' · '+l.color:''} · talla ${l.talla} · x${l.q} — ${fmt(l.price*l.q)}`).join('\n')}\n\nTotal: ${fmt(L.total)}\n\nNombre: ${L.c.nombre}\nTeléfono: ${L.c.tel}\nCiudad: ${L.c.ciudad}\nDirección: ${L.c.dir}${L.c.nota?'\nNotas: '+L.c.nota:''}\nMedio de pago: ${L.c.pay}`;
 function done(){if(!LAST)return home();const L=LAST,W=L.mode==='wa',py=CFG.pagos.find(p=>p.n===L.c.pay);
  return `<section class="wrap narrow ctr"><div class="ok">✓</div><h1 class="pt">${W?'Tu pedido va por WhatsApp':'¡Pedido recibido!'}</h1><p class="ds">Número de pedido <b>${L.num}</b></p><div class="sum">${L.lines.map(l=>`<p><span>${esc(l.name)}${l.color?' · '+esc(l.color):''} · ${esc(l.talla)} · x${l.q}</span><b>${fmt(l.price*l.q)}</b></p>`).join('')}<p class="tt"><span>Total</span><span>${fmt(L.total)}</span></p></div>
@@ -498,5 +498,5 @@ addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remov
 $('#sf').addEventListener('submit',e=>{e.preventDefault();Q=$('#sq').value;$('#sq').value='';$('#sq').blur();nav('col')});
 try{history.replaceState({p:'home',a:null,m:mode},'')}catch(e){}
 draw();
-</script><script src="tienda-api.js"></script><script src="categoria.js"></script><script src="pago-online.js"></script><script src="producto.js"></script><script src="banners.js"></script><script src="descuento.js"></script><script src="meta-pixel.js"></script>
+</script><script src="tienda-api.js"></script><script src="categoria.js"></script><script src="pago-online.js"></script><script src="producto.js"></script><script src="banners.js"></script><script src="descuento.js"></script><script src="meta-pixel.js"></script><script src="catalogo-vista.js"></script>
 </body></html>
