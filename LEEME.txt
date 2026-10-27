@@ -1,0 +1,3 @@
+Sube los 2 archivos en la RAIZ del repo (rama productos):
+  catalogo-vista.js  (nuevo)
+  index.html         (reemplaza; solo cambia una linea: agrega el script catalogo-vista.js al final)

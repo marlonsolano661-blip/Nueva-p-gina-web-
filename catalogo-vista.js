@@ -14,6 +14,7 @@
     /* ---- Encabezado: logo + nombre de la marca siempre visibles ---- */
     'body.cat .wm,body .wm{display:inline-block;font:600 .95rem Figtree,Jost,system-ui,sans-serif;letter-spacing:.18em;color:#000;white-space:nowrap}',
     '@media(max-width:380px){body .wm{font-size:.8rem;letter-spacing:.12em}}',
+    '@media(min-width:800px){body .bar .sp{display:block;flex:1}body .bar{gap:1.2rem;padding-left:2rem;padding-right:2rem}}',
     '.pc .pr,.pr.big{color:#000}',
     '.pbox{background:#f7f7f7}',
     /* ---- Cabecera compacta de la colección ---- */
