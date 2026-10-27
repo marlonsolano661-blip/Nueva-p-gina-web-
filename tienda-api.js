@@ -40,6 +40,19 @@
       }
     } catch (e) { /* sin carrito */ }
     if (typeof draw === 'function') draw();
+    abrirEnlace(d.productos);
+  }
+
+  // Enlace directo a un producto (/?producto=<id>): lo usan los anuncios y el catálogo de Meta. Solo si el producto existe; se abre una sola vez.
+  var enlaceUsado = false;
+  function abrirEnlace(productos) {
+    if (enlaceUsado) return; enlaceUsado = true;
+    try {
+      var m = /[?&]producto=([^&#]+)/.exec(location.search); if (!m) return;
+      var id = decodeURIComponent(m[1]);
+      var p = productos.filter(function (x) { return String(x.id) === id; })[0];
+      if (p && typeof nav === 'function') nav('prod', p.id);
+    } catch (e) { /* enlace inválido: se queda en la portada */ }
   }
 
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
