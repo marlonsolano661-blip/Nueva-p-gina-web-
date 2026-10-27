@@ -7,7 +7,7 @@
   'use strict';
   var ID = '1092821839891082';
   var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'];
-  var COMPRA = false; // ponlo en true cuando los pagos sean reales (con Wompi en pruebas las compras de prueba contarían como ventas)
+  var COMPRA = true; // Purchase se envía solo tras APPROVED; en Preview el Pixel requiere ?mfpixel=1.
 
   var host = String(location.hostname || '').toLowerCase();
   var activo = DOMINIOS.indexOf(host) >= 0;
