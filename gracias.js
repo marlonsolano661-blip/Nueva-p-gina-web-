@@ -100,6 +100,7 @@
     vaciar();
     var pago = p.estado_pago;
     var ok = pago === 'APPROVED';
+    if (ok && window.mfPx) window.mfPx.compra(p); // Píxel de Meta (apagado hasta activar COMPRA en meta-pixel.js)
     var mal = pago === 'DECLINED' || pago === 'ERROR' || pago === 'VOIDED';
     tarjeta.className = 'tarjeta ' + (ok ? 'estado-ok' : mal ? 'estado-mal' : '');
 
