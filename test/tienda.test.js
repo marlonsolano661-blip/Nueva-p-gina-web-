@@ -21,6 +21,9 @@ const pedidos = (method, { query = {}, body } = {}) => adminPedidos({ method, he
 const items = (n = 1) => [{ id: 'plataforma-luna', talla: '36', cant: n }];
 const NUEVO = { id: 'bota-nueva', nombre: 'Bota Nueva', precio: 300000, stock: { 36: 2, 37: 1 }, descripcion: 'Bota de prueba', imagenes: ['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg'], colores: [{ n: 'Negro', h: '#111111' }], coleccion: 'botas', destacado: true, orden: 1, visible: true };
 
+const JPG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64, 1)]);
+const foto = (datos) => adminTienda({ method: 'POST', headers: { Authorization: 'Bearer ' + ENV_PRUEBA.ADMIN_TOKEN }, query: {}, body: { recurso: 'foto', datos } });
+
 describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
   let b;
   beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); });
@@ -31,6 +34,45 @@ describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () =
     return webhook({ method: 'POST', headers: {}, query: {}, body: eventoWompi({ id, status: 'APPROVED', reference: ref, monto }) });
   };
   const eventos = async (tipo) => b.filas(`select * from eventos where tipo = '${tipo}' order by id`);
+
+  describe('fotos desde el panel', () => {
+    it('exige la clave de administrador', async () => {
+      const r = await tienda('POST', { token: null, body: { recurso: 'foto', datos: JPG.toString('base64') } });
+      assert.equal(r.status, 401);
+      assert.equal(b.storage.objetos.size, 0);
+    });
+    it('sube una foto válida: crea el bucket la primera vez y devuelve la URL pública', async () => {
+      const r = await foto(JPG.toString('base64'));
+      assert.equal(r.status, 200);
+      assert.match(r.json.url, /^https:\/\/supa\.test\/storage\/v1\/object\/public\/productos\/\d+-[0-9a-f]{12}\.jpg$/);
+      assert.equal(b.storage.bucket, true);
+      const nombre = r.json.url.split('/').pop();
+      assert.equal(b.storage.objetos.get(nombre).tipo, 'image/jpeg');
+      assert.deepEqual(b.storage.objetos.get(nombre).bytes, JPG);
+    });
+    it('rechaza lo que no es imagen (aunque venga con otro nombre) y fotos demasiado grandes', async () => {
+      const malo = await foto(Buffer.from('<script>alert(1)</script>').toString('base64'));
+      assert.equal(malo.status, 400);
+      const grande = await foto(Buffer.concat([JPG, Buffer.alloc(3 * 1024 * 1024)]).toString('base64'));
+      assert.equal(grande.status, 400);
+      assert.equal((await foto('')).status, 400);
+      assert.equal(b.storage.objetos.size, 0);
+    });
+    it('un producto con 16 fotos (como Luxury del catálogo original) se puede guardar; más de 30 se rechaza', async () => {
+      const f = (n) => Array.from({ length: n }, (_, i) => `https://cdn.shopify.com/s/files/1/0712/3019/3831/files/IMG-${i}.jpg?v=1755128043`);
+      const ok = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, id: 'luxury-16', imagenes: f(16), imagen: f(16)[0] } } });
+      assert.equal(ok.status, 200);
+      const mal = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, id: 'luxury-31', imagenes: f(31), imagen: f(31)[0] } } });
+      assert.equal(mal.status, 400);
+    });
+    it('la URL de la foto sirve como imagen del producto en el catálogo', async () => {
+      const u = (await foto(JPG.toString('base64'))).json.url;
+      const r = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, imagenes: [u], imagen: u } } });
+      assert.equal(r.status, 200);
+      const cat = (await verCatalogo()).json;
+      assert.ok(JSON.stringify(cat).includes(u));
+    });
+  });
 
   describe('envío fijo de $17.500', () => {
     it('total = subtotal + envío, guardado en el pedido y enviado igual al checkout', async () => {
@@ -185,6 +227,16 @@ describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () =
       const adm = (await tienda('GET', { query: { recurso: 'productos' } })).json.productos.find((x) => x.id === 'bota-nueva');
       assert.equal(Number(adm.precio), 280000);
     });
+    it('cada color puede ligarse a una de las fotos del producto (y solo a esas)', async () => {
+      const ok = { ...NUEVO, colores: [{ n: 'Negro', h: '#111111', img: 'https://cdn.test/b.jpg' }, { n: 'Café', h: '#552200' }] };
+      assert.equal((await tienda('POST', { body: { recurso: 'producto', producto: ok } })).status, 200);
+      const fila = (await b.filas("select colores from productos where id = 'bota-nueva'"))[0];
+      assert.deepEqual(fila.colores, ok.colores);
+      const cat = (await tienda('GET', { query: { recurso: 'productos' } })).json.productos.find((x) => x.id === 'bota-nueva');
+      assert.equal(cat.colores[0].img, 'https://cdn.test/b.jpg');
+      const mal = { ...NUEVO, colores: [{ n: 'Negro', h: '#111111', img: 'https://cdn.test/otra.jpg' }] };
+      assert.equal((await tienda('POST', { body: { recurso: 'producto', producto: mal } })).status, 400);
+    });
     it('ocultar retira del catálogo público y de la compra; publicar lo devuelve', async () => {
       await tienda('POST', { body: { recurso: 'producto', producto: NUEVO } });
       await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, visible: false } } });
@@ -234,6 +286,68 @@ describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () =
       assert.deepEqual(pub.secciones, { band: false, comunidad: true });
       assert.equal(pub.colecciones.length, 2);
       assert.equal((await tienda('POST', { body: { recurso: 'contenido', contenido: { colecciones: [{ id: 'a', nombre: 'A' }, { id: 'a', nombre: 'B' }] } } })).status, 400);
+    });
+    it('contenido: foto de portada principal y portada de colección solo aceptan https:// o assets/', async () => {
+      const ok = await tienda('POST', { body: { recurso: 'contenido', contenido: { hero_foto: 'https://x.supabase.co/storage/v1/object/public/productos/h.jpg', colecciones: [{ id: 'botas', nombre: 'Botas', portada: 'assets/botas.jpg' }] } } });
+      assert.equal(ok.status, 200);
+      const pub = (await verCatalogo()).json.contenido;
+      assert.equal(pub.hero_foto, 'https://x.supabase.co/storage/v1/object/public/productos/h.jpg');
+      assert.equal(pub.colecciones[0].portada, 'assets/botas.jpg');
+      const m = await tienda('POST', { body: { recurso: 'contenido', contenido: { colecciones: [{ id: 'sand', nombre: 'Sandalias', mensaje: '  Ligeras y con estilo  ' }, { id: 'vacia', nombre: 'Vacía', mensaje: '   ' }] } } });
+      assert.equal(m.status, 200);
+      const c2 = (await verCatalogo()).json.contenido.colecciones;
+      assert.equal(c2[0].mensaje, 'Ligeras y con estilo'); assert.equal('mensaje' in c2[1], false);
+      assert.equal((await tienda('POST', { body: { recurso: 'contenido', contenido: { hero_foto: 'javascript:alert(1)' } } })).status, 400);
+      assert.equal((await tienda('POST', { body: { recurso: 'contenido', contenido: { colecciones: [{ id: 'a', nombre: 'A', portada: 'http://inseguro/x.jpg' }] } } })).status, 400);
+    });
+  });
+
+  describe('banners del inicio (diseñador)', () => {
+    const banner = (o) => ({ id: 'b1', foto: 'https://x.supabase.co/storage/v1/object/public/productos/b.jpg', fx: 40, fy: 60, oscuro: 30, fondo: '#111111', visible: true,
+      capas: [{ t: 'Pasos únicos', x: 50, y: 30, tam: 9, ancho: 80, color: '#ffffff', fuente: 'serif', cursiva: true }],
+      boton: { texto: 'Ver tacones', destino: { tipo: 'col', id: 'tacones' }, x: 50, y: 80, estilo: 'claro' }, ...o });
+    const guardar = (banners) => tienda('POST', { body: { recurso: 'banners', banners } });
+    it('guarda los banners, normaliza los valores y la tienda solo recibe los visibles', async () => {
+      const r = await guardar([banner({ capas: [{ t: '  Hola  ', x: 500, y: -4, tam: 99, color: 'rojo', fuente: 'raro' }, { t: '   ' }] }), banner({ id: 'b2', visible: false })]);
+      assert.equal(r.status, 200);
+      const c = r.json.banners[0].capas;
+      assert.equal(c.length, 1); assert.equal(c[0].t, 'Hola'); assert.equal(c[0].x, 100); assert.equal(c[0].y, 0); assert.equal(c[0].tam, 16);
+      assert.equal(c[0].color, '#ffffff'); assert.equal(c[0].fuente, 'serif');
+      const pub = (await verCatalogo()).json.contenido;
+      assert.equal(pub.banners.length, 1); assert.equal(pub.banners[0].id, 'b1');
+      const lista = await tienda('GET', { query: { recurso: 'banners' } });
+      assert.equal(lista.json.banners.length, 2); // el panel ve también los ocultos
+    });
+    it('guardar el contenido de la tienda no borra los banners', async () => {
+      await guardar([banner()]);
+      assert.equal((await tienda('POST', { body: { recurso: 'contenido', contenido: { textos: { hero_titulo: 'X' } } } })).status, 200);
+      assert.equal((await verCatalogo()).json.contenido.banners.length, 1);
+    });
+    it('rechaza fotos, enlaces y destinos inseguros o inválidos', async () => {
+      assert.equal((await guardar([banner({ foto: 'javascript:alert(1)' })])).status, 400);
+      assert.equal((await guardar([banner({ foto: 'http://inseguro/x.jpg' })])).status, 400);
+      assert.equal((await guardar([banner({ boton: { texto: 'Ir', destino: { tipo: 'url', url: 'javascript:alert(1)' } } })])).status, 400);
+      assert.equal((await guardar([banner({ boton: { texto: 'Ir', destino: { tipo: 'url', url: 'http://x.com' } } })])).status, 400);
+      assert.equal((await guardar([banner({ boton: { texto: 'Ir', destino: { tipo: 'prod', id: '' } } })])).status, 400);
+      assert.equal((await guardar([banner({ boton: { texto: 'Ir', destino: { tipo: 'col', id: 'a b<' } } })])).status, 400);
+      assert.equal((await guardar([banner({ boton: { texto: 'Ir', destino: { tipo: 'otro' } } })])).status, 400);
+      assert.equal((await guardar([banner({ id: 'mal id' })])).status, 400);
+      assert.equal((await guardar([banner(), banner()])).status, 400); // id repetido
+      assert.equal((await tienda('POST', { body: { recurso: 'banners', banners: 'x' } })).status, 400);
+    });
+    it('respeta los límites (6 banners, 6 textos) y acepta un botón sin texto como "sin botón"', async () => {
+      assert.equal((await guardar(Array.from({ length: 7 }, (_, i) => banner({ id: 'b' + i })))).status, 400);
+      assert.equal((await guardar([banner({ capas: Array.from({ length: 7 }, () => ({ t: 'a' })) })])).status, 400);
+      const r = await guardar([banner({ boton: { texto: '  ', destino: { tipo: 'go' } } })]);
+      assert.equal(r.status, 200); assert.equal('boton' in r.json.banners[0], false);
+    });
+    it('sin clave del panel no se pueden leer ni guardar', async () => {
+      assert.equal((await tienda('POST', { body: { recurso: 'banners', banners: [] }, token: 'incorrecta' })).status, 401);
+    });
+    it('vaciar los banners vuelve a la portada de siempre', async () => {
+      await guardar([banner()]);
+      assert.equal((await guardar([])).status, 200);
+      assert.equal('banners' in (await verCatalogo()).json.contenido, false);
     });
   });
 
