@@ -109,6 +109,7 @@
         ]);
         rejilla.appendChild(t);
       });
+      document.querySelectorAll('#f-cols select.cfoto').forEach(function (s) { if (s.refrescar) { s.refrescar(); s.dispatchEvent(new Event('change')); } });
       if (!imgs.length) rejilla.appendChild(el('p', { class: 'nota', text: 'Todavía no hay fotos. La primera que agregues será la principal.' }));
     }
     entrada.addEventListener('change', function () {
@@ -131,12 +132,23 @@
   }
   var slug = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50); };
   // Colores: se elige tocando el cuadrito y escribiendo solo el nombre
-  function selectorColores(lista) {
+  function selectorColores(lista, imgs) {
     var cont = el('div', { class: 'ancho' }), filas = el('div', { id: 'f-cols', class: 'colores' });
     function fila(c) {
       var sel = el('input', { type: 'color', value: /^#[0-9a-fA-F]{6}$/.test(c.h) ? c.h.toLowerCase() : '#111111', 'aria-label': 'Elegir color' });
       var nom = el('input', { type: 'text', value: c.n || '', maxlength: '30', placeholder: 'Nombre (ej. Negro)', 'aria-label': 'Nombre del color' });
-      var f = el('div', { class: 'color' }, [sel, nom, el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { f.remove(); } })]);
+      var fo = el('select', { class: 'cfoto', 'aria-label': 'Foto de este color' });
+      fo.refrescar = function () {
+        var v = fo.dataset.listo ? fo.value : (c.img || ''); fo.dataset.listo = '1'; fo.textContent = '';
+        fo.appendChild(el('option', { value: '', text: '— foto del color —' }));
+        imgs.forEach(function (u, i) { fo.appendChild(el('option', { value: u, text: 'Foto ' + (i + 1) })); });
+        fo.value = imgs.indexOf(v) >= 0 ? v : '';
+      };
+      fo.refrescar();
+      var mini = el('img', { class: 'cmini', alt: '', width: '40', height: '40' });
+      fo.addEventListener('change', function () { mini.src = fo.value; mini.style.display = fo.value ? '' : 'none'; });
+      mini.src = fo.value; mini.style.display = fo.value ? '' : 'none';
+      var f = el('div', { class: 'color' }, [sel, nom, fo, mini, el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { f.remove(); } })]);
       return f;
     }
     (lista || []).forEach(function (c) { filas.appendChild(fila(c)); });
@@ -149,7 +161,8 @@
     var out = [], mal = false;
     document.querySelectorAll('#f-cols .color').forEach(function (f) {
       var n = f.querySelector('input[type=text]').value.trim(), h = f.querySelector('input[type=color]').value;
-      if (!n) { mal = true; return; } out.push({ n: n, h: h });
+      if (!n) { mal = true; return; }
+      var im = f.querySelector('select.cfoto'), c = { n: n, h: h }; if (im && im.value) c.img = im.value; out.push(c);
     });
     return mal ? null : out;
   }
@@ -168,7 +181,7 @@
       campo('Orden en la tienda (menor primero)', el('input', { id: 'f-orden', type: 'number', step: '1', value: p.orden || 0 })),
       campo('Descripción', el('textarea', { id: 'f-desc', maxlength: '1500', text: p.descripcion || '' }), 'ancho'),
       galeria(IMGS),
-      selectorColores(p.colores),
+      selectorColores(p.colores, IMGS),
       el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla' }), tallas]),
       chk('Publicado (visible en la tienda)', 'f-vis', p.visible !== false), chk('Destacado en el inicio', 'f-dest', p.destacado),
       el('div', { class: 'ancho barra' }, [el('button', { type: 'submit', text: nuevo ? 'Crear producto' : 'Guardar cambios' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),

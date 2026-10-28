@@ -403,7 +403,7 @@ function submit(){const c=FRM;{const er=frmOk();if(er)return toast(er)}if(!c.pay
  LAST={mode,num:'MF-'+String(Date.now()).slice(-6),c:{...c},lines:CART.slice(),total:total()};saveOrder(LAST);CART=[];saveCart();nav('done');
  if(mode==='wa')window.open(waLink(msg(LAST)),'_blank')}
 function add(id){const p=catalog().find(x=>String(x.id)===String(id));if(!p)return false;if(!selT){toast('Elige tu talla');return false}
- const cn=(p.colors[selC]||{}).n||'',l=CART.find(x=>String(x.id)===String(id)&&x.talla===selT&&(x.color||'')===cn);if(l)l.q++;else CART.push({id:p.id,name:p.name,price:p.price,img:p.img,talla:selT,color:cn,q:1});saveCart();return true}
+ const cn=(p.colors[selC]||{}).n||'',l=CART.find(x=>String(x.id)===String(id)&&x.talla===selT&&(x.color||'')===cn);if(l)l.q++;else CART.push({id:p.id,name:p.name,price:p.price,img:(p.colors[selC]||{}).img||p.img,talla:selT,color:cn,q:1});saveCart();return true}
 const PG={home,col,prod,cart,out,pay:payPg,done};
 
 
@@ -467,17 +467,19 @@ document.addEventListener('pointermove',e=>{const r=e.target.closest&&e.target.c
 document.addEventListener('pointerleave',()=>{const t=$('#sds');if(t){t.style.setProperty('--ry','0deg');t.style.setProperty('--rx','0deg')}},true);
 function pgFx(){const a=$('#app');a.classList.remove('pgin');void a.offsetWidth;a.classList.add('pgin')}
 addEventListener('scroll',()=>{const h=document.documentElement,m=h.scrollHeight-innerHeight;$('#spg').style.transform='scaleX('+(m>0?Math.min(1,scrollY/m):0)+')'},{passive:true});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-n="gi"]');if(b){gi=+b.dataset.i;draw()}});
+function colorIdx(p,u){return(p.colors||[]).findIndex(k=>k.img&&k.img===u)}
+function imgIdx(p,k){return k&&k.img?(p.imgs||[]).indexOf(k.img):-1}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-n="gi"]');if(b){gi=+b.dataset.i;const p=catalog().find(x=>String(x.id)===String(arg)),ci=p?colorIdx(p,(p.imgs||[])[gi]):-1;if(ci>=0)selC=ci;draw()}});
 const IO='IntersectionObserver'in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');IO.unobserve(e.target)}}),{threshold:.12}):null;
 function reveal(){if(!IO)return;document.querySelectorAll('#app .pc,#app .lc,#app .vals>div,#app .band>div,#app .mf>*:not(.seal),#app .sd').forEach((el,i)=>{el.classList.add('rv');el.style.transitionDelay=(i%3)*70+'ms';IO.observe(el)})}
 function draw(){$('#app').innerHTML=PG[pg]();$('#cnt').textContent=CART.reduce((s,l)=>s+l.q,0);renderBag();reveal();heroInit();window.mfCatInit&&window.mfCatInit()}
-function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',pg==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+location.search)}catch(e){}draw();pgFx();scrollTo(0,0)}
+function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false;try{const q=catalog().find(x=>String(x.id)===String(arg)),j=q?imgIdx(q,q.colors[0]):-1;if(j>0)gi=j}catch(_){}}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',pg==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+location.search)}catch(e){}draw();pgFx();scrollTo(0,0)}
 addEventListener('popstate',e=>{if(e.state){pg=e.state.p;arg=e.state.a;mode=e.state.m||mode;draw()}});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-n]');if(!a)return;const d=a.dataset;
  switch(d.n){
  case'go':if(d.p==='out'&&CART.some(agotada)){openBag();toast('Quita lo agotado de tu bolsa para continuar');break}nav(d.p,null,d.m);break;case'rmsold':CART=CART.filter(l=>!agotada(l));saveCart();draw();renderBag();break;case'prod':nav('prod',d.id);break;
  case'gt':guideOpen=!guideOpen;draw();break;
- case'color':selC=+d.i;draw();break;
+ case'color':{selC=+d.i;const p=catalog().find(x=>String(x.id)===String(arg)),j=p?imgIdx(p,p.colors[selC]):-1;if(j>=0)gi=j;draw();break}
  case'cm':{guideT=d.t;const p=catalog().find(x=>String(x.id)===String(arg));if(p&&p.tallas.includes(d.t)){selT=d.t;toast('Talla '+d.t+' seleccionada')}draw();break}
  case'talla':selT=d.t;draw();break;
  case'add':if(add(d.id)){draw();bagBump();toast('Agregado a tu bolsa','Ver bolsa',()=>nav('cart'))}break;
