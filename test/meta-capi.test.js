@@ -71,5 +71,16 @@ describe('webhook + Meta CAPI', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, (
     const e = envios[0].data[0];
     assert.equal(e.event_id, ref); assert.equal(e.user_data.client_user_agent, 'UA-prueba'); assert.equal(e.user_data.fbp, 'fb.1.9.9');
     assert.equal((await b.filas(`select tipo from eventos where referencia='${ref}' and tipo='meta_purchase_enviado'`)).length, 1);
+    // El Registro del panel muestra con qué datos salió (sin datos personales ni credenciales)
+    const det = (await b.filas(`select detalle from eventos where referencia='${ref}' and tipo='meta_purchase_enviado'`))[0].detalle;
+    assert.equal(det.action_source, 'website'); assert.equal(det.con_agente_usuario, true); assert.equal(det.con_fbp, true);
+    assert.ok(!JSON.stringify(det).includes('tok'));
+  });
+  it('sin credenciales de Meta, el pago queda aprobado y el Registro anota que se omitió', async () => {
+    delete process.env.META_CAPI_ACCESS_TOKEN;
+    const { ref, res } = await pagar();
+    assert.equal(res.status, 200);
+    assert.equal((await b.pedido(ref)).estado_pago, 'APPROVED');
+    assert.equal((await b.filas(`select tipo from eventos where referencia='${ref}' and tipo='meta_purchase_omitido'`)).length, 1);
   });
 });
