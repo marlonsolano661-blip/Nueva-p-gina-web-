@@ -437,6 +437,23 @@
           .then(function () { msg('Despacho guardado ✓'); return listar(); }).catch(falla);
       } });
       kids.push(el('div', { class: 'envio' }, [el('label', { class: 'ck' }, [prep, ' Preparado']), est, tr, gu, inc, nota, b]));
+      // Reenviar el correo de envío: solo con pedido ya enviado, con transportadora o guía guardadas y correo de la clienta.
+      var yaEnviado = ['EN_CAMINO', 'EN_DESTINO', 'ENTREGADO'].indexOf(p.estado_envio) >= 0;
+      if (yaEnviado && (p.guia || p.transportadora || p.link_rastreo) && cl.email) {
+        kids.push(el('button', { type: 'button', class: 'claro', text: 'Reenviar correo de envío', onclick: function () {
+          if (!window.confirm('¿Reenviar el correo de envío a ' + cl.email + '?')) return;
+          msg('Enviando…');
+          api('admin-pedidos', { method: 'POST', body: { id: p.id, accion: 'reenviar_envio' } }).then(function (r) {
+            var x = r && r.correo;
+            if (x === 'enviado') msg('Correo reenviado ✓');
+            else if (x === 'sin_correo') msg('Este pedido no tiene un correo válido', true);
+            else if (x === 'omitido') msg('El envío de correos no está configurado', true);
+            else msg('No se pudo reenviar el correo (' + (x || 'sin respuesta') + ')', true);
+          }).catch(falla);
+        } }));
+      } else if (p.estado_envio !== 'PREPARANDO' && p.estado_envio !== 'DEVUELTO') {
+        kids.push(el('p', { class: 'nota', text: 'Para reenviar el correo de envío, guarda primero la transportadora o la guía' + (cl.email ? '.' : ' (y este pedido no tiene correo de la clienta).') }));
+      }
       kids.push(el('p', { class: 'nota', text: 'Las guías y transportadoras las escribes tú; no hay consulta automática a la transportadora. Pagado no significa despachado.' + (p.enviado_en ? ' Despachado: ' + new Date(p.enviado_en).toLocaleString('es-CO') : '') }));
     }
     return el('article', { class: 'pedido' }, kids);
