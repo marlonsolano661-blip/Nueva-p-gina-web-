@@ -1,0 +1,27 @@
+/* Páginas informativas: envíos, cambios y devoluciones, términos, privacidad y preguntas frecuentes */
+:root{--k:#0a0a0a;--w:#fff;--g:#6b6b66;--l:#e4e4e0;--bg:#f6f6f4;--o:#b08d57}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--k);font:400 1.02rem/1.75 Figtree,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--k);text-decoration-color:var(--o);text-underline-offset:3px}
+.top{background:var(--w);border-bottom:1px solid var(--l);padding:.8rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.top img{height:2.1rem;width:auto;display:block}
+.top a.v{font:500 .72rem Jost,Helvetica,sans-serif;letter-spacing:.22em;text-transform:uppercase;text-decoration:none}
+main{max-width:46rem;margin:0 auto;padding:2.2rem 1.2rem 3rem}
+.k{font:500 .7rem Jost,Helvetica,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--o);margin:0 0 .6rem}
+h1{font:500 clamp(2.2rem,8vw,3.4rem)/1.05 "Cormorant Garamond",Georgia,serif;margin:0 0 .6rem}
+h2{font:600 1.55rem/1.15 "Cormorant Garamond",Georgia,serif;margin:2.2rem 0 .5rem}
+p,li{color:#2c2c29}ul{padding-left:1.2rem}li{margin:.35rem 0}
+.lead{font-size:1.1rem;color:var(--g);margin:.2rem 0 1.4rem}
+.fecha{font-size:.85rem;color:var(--g)}
+.aviso{background:var(--w);border-left:3px solid var(--o);padding:1rem 1.2rem;margin:1.4rem 0}
+.aviso p{margin:.3rem 0}
+.cta{display:inline-block;margin:.6rem .4rem 0 0;padding:.9rem 1.6rem;background:var(--k);color:var(--w);text-decoration:none;font:500 .74rem Jost,Helvetica,sans-serif;letter-spacing:.24em;text-transform:uppercase;border:1px solid var(--k)}
+.cta.o{background:transparent;color:var(--k)}
+details{background:var(--w);border:1px solid var(--l);margin:.6rem 0}
+summary{cursor:pointer;list-style:none;padding:1.05rem 1.2rem;font-weight:600;display:flex;justify-content:space-between;gap:1rem;align-items:center}
+summary::-webkit-details-marker{display:none}summary::after{content:"+";font-size:1.5rem;font-weight:300;line-height:1}
+details[open] summary::after{content:"–"}details>div{padding:0 1.2rem 1.1rem}details>div p{margin:.4rem 0}
+nav.pie{border-top:1px solid var(--l);background:var(--w);padding:1.6rem 1.2rem 2.4rem;text-align:center}
+nav.pie a{display:inline-block;margin:.3rem .7rem;font-size:.92rem}
+nav.pie small{display:block;margin-top:1rem;color:var(--g)}
+table{border-collapse:collapse;width:100%;background:var(--w);font-size:.95rem}td,th{border:1px solid var(--l);padding:.6rem .8rem;text-align:left;vertical-align:top}

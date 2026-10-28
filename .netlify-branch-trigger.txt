@@ -1,0 +1,2 @@
+Commit de activación para solicitar una nueva construcción de la rama productos en Netlify.
+No modifica el código de la tienda, el panel, los pagos ni la configuración de producción.
