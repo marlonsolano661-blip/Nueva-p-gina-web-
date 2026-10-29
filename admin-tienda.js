@@ -185,6 +185,39 @@
     cont.appendChild(el('p', { class: 'nota', text: 'Colores agregados (puedes cambiar el nombre o el código y elegir la foto de cada uno):' }));
     cont.appendChild(filas);
     cont.appendChild(el('button', { type: 'button', class: 'claro', text: '+ Otro color (escribir código)', onclick: function () { var f = fila({}); filas.appendChild(f); f.querySelector('input.cnom').focus(); } }));
+    // Propone la foto de cada color según el tono de la imagen; solo llena los colores que aún no tienen foto y la persona revisa antes de guardar
+    function leerPixeles(u) {
+      return new Promise(function (ok, no) {
+        var im = new Image(); im.crossOrigin = 'anonymous';
+        im.onload = function () {
+          try { var c = document.createElement('canvas'); c.width = 64; c.height = 64; var x = c.getContext('2d'); x.drawImage(im, 0, 0, 64, 64); ok(MFSugerirColor.dominantes(x.getImageData(0, 0, 64, 64).data, 64, 64)); } catch (e) { no(e); }
+        };
+        im.onerror = function () { no(new Error('foto')); };
+        im.src = u;
+      });
+    }
+    var sug = el('button', { type: 'button', class: 'claro', text: 'Sugerir fotos según el color', onclick: function () {
+      if (!window.MFSugerirColor) return msg('La sugerencia no está disponible en esta página', true);
+      var filasLibres = [], ocupadas = {};
+      filas.querySelectorAll('.color').forEach(function (f) { var v = f.querySelector('select.cfoto').value; if (v) ocupadas[v] = true; else filasLibres.push(f); });
+      var fotosLibres = []; imgs.forEach(function (u, i) { if (!ocupadas[u]) fotosLibres.push(i); });
+      if (!imgs.length) return msg('Primero agrega las fotos del producto', true);
+      if (!filasLibres.length) return msg('Todos los colores ya tienen foto asignada');
+      if (!fotosLibres.length) return msg('No quedan fotos sin asignar');
+      sug.disabled = true; msg('Mirando las fotos…');
+      Promise.all(fotosLibres.map(function (i) { return leerPixeles(imgs[i]); })).then(function (doms) {
+        var hexes = filasLibres.map(function (f) { return f.querySelector('input.chex').value.trim(); });
+        var r = MFSugerirColor.asignar(hexes, doms), n = 0;
+        Object.keys(r).forEach(function (ci) {
+          var f = filasLibres[ci], fo = f.querySelector('select.cfoto');
+          fo.value = imgs[fotosLibres[r[ci]]]; fo.dispatchEvent(new Event('change')); f.classList.add('sug'); n++;
+        });
+        sug.disabled = false;
+        msg(n ? 'Sugerí foto para ' + n + ' de ' + filasLibres.length + ' colores (marcados en verde). Revísalos y toca "Guardar cambios".' : 'Ninguna foto se parece claramente a esos colores. Elígelas a mano.', !n);
+      }).catch(function () { sug.disabled = false; msg('No pude leer las fotos para compararlas. Elige las fotos de cada color a mano.', true); });
+    } });
+    filas.addEventListener('change', function (e) { if (e.isTrusted && e.target.classList && e.target.classList.contains('cfoto')) e.target.closest('.color').classList.remove('sug'); });
+    cont.appendChild(sug);
     return cont;
   }
   function leerColores() {
