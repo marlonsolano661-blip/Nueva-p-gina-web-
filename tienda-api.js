@@ -59,10 +59,18 @@
   // y se actualiza en segundo plano con lo que responda el servidor (nunca se inventan datos: es lo último que mandó el servidor).
   var CLAVE = 'mf_cat_v1', VIDA = 7 * 24 * 3600 * 1000, textoGuardado = '', yaMostrado = false;
   function guardarCopia(txt) { try { localStorage.setItem(CLAVE, JSON.stringify({ t: Date.now(), d: txt })); } catch (e) { /* sin espacio o sin almacenamiento */ } }
+  // Se aplica cuando TODOS los scripts de la página ya cargaron (categoria.js, banners.js, producto.js… cambian cómo se dibuja la portada);
+  // si se dibujara antes, saldría el diseño viejo hasta tocar el logo.
+  var copia = null;
   try {
     var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
-    if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) { aplicar(JSON.parse(g.d)); textoGuardado = g.d; yaMostrado = true; }
+    if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) copia = g;
   } catch (e) { /* copia dañada: se ignora */ }
+  function usarCopia() {
+    if (!copia || window.MF_API_OK) return;
+    try { aplicar(JSON.parse(copia.d)); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', usarCopia); else usarCopia();
 
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
