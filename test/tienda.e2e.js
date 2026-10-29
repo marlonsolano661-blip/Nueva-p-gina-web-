@@ -147,7 +147,7 @@ async function prueba(nombre, fn) {
     await ir('envio');
     await admin.fill('#f-tarifa', '20000'); await admin.click('#p-envio button[type=submit]');
     await esperarMsg(/Tarifa guardada: \$20\.000/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     assert.equal(await tienda.evaluate(() => window.MF_ENVIO), 20000);
     assert.equal(Number((await b.filas('select envio_centavos from pedidos'))[0].envio_centavos), 1750000);
   });
@@ -166,7 +166,7 @@ async function prueba(nombre, fn) {
     await esperarMsg(/Colección "Botas" guardada/);
     assert.equal((await b.filas("select coleccion from productos where id='bota-nueva'"))[0].coleccion, 'botas');
     assert.match(await admin.locator('#p-colecciones').innerText(), /1 producto/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     assert.match(await tienda.locator('.rh h1').innerText(), /colección de otoño/i);
     // Portada propia: se sube desde el panel, se guarda en la colección y la tienda la usa
     await ir('colecciones');
@@ -174,7 +174,7 @@ async function prueba(nombre, fn) {
     await fc.setFiles({ name: 'p.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64') });
     await esperarMsg(/Portada de "Botas" guardada/);
     assert.match(JSON.stringify((await b.filas("select valor from ajustes where clave='contenido'")).map((r) => r.valor)), /portada/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     await tienda.evaluate(() => { nav('home'); });
     // (la imagen de prueba no existe en la red, por eso se comprueba el dato que usa la tarjeta)
     assert.match(await tienda.evaluate(() => window.MF_CONTENIDO.colecciones.find((k) => k.id === 'botas').portada), /storage\/v1\/object\/public\/productos\//);
@@ -183,7 +183,7 @@ async function prueba(nombre, fn) {
     await admin.fill('#f-ncol', 'Sandalias'); await admin.fill('#f-mcol', 'Ligeras y con estilo');
     await admin.setInputFiles('#f-pcol', { name: 'p.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64') });
     await admin.click('text=+ Crear colección'); await esperarMsg(/creada/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     const sand = await tienda.evaluate(() => window.MF_CONTENIDO.colecciones.find((k) => k.id === 'sandalias'));
     assert.equal(sand.mensaje, 'Ligeras y con estilo'); assert.match(sand.portada, /storage\/v1\/object\/public\/productos\//);
     await admin.fill('[data-mensaje="sandalias"]', 'Para cada ocasión');
@@ -199,7 +199,7 @@ async function prueba(nombre, fn) {
     await fh.setFiles({ name: 'h.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64') });
     await esperarMsg(/Foto de portada guardada/);
     assert.match(JSON.stringify((await b.filas("select valor from ajustes where clave='contenido'")).map((r) => r.valor)), /hero_foto/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     assert.match(await tienda.locator('.rh-ph img').getAttribute('src'), /storage\/v1\/object\/public\/productos\//);
     // Inicio: portada principal + portadas de colección apiladas, sin carrusel
     assert.equal(await tienda.locator('.cs, .cv2').count(), 0);
@@ -234,7 +234,7 @@ async function prueba(nombre, fn) {
     const f = (await b.filas("select coleccion from productos where id='bota-nueva'"))[0];
     assert.equal(f.coleccion || '', '');
     assert.equal((await b.filas("select id from productos where id='bota-nueva'")).length, 1);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     await tienda.evaluate(() => nav('col'));
     assert.equal(await tienda.locator('[data-cf="botas"]').count(), 0);
   });
@@ -242,7 +242,7 @@ async function prueba(nombre, fn) {
     await ir('productos'); await admin.waitForSelector('#p-productos .pcard');
     await admin.locator('#p-productos .pcard', { hasText: 'Bota Nueva' }).locator('button').click();
     await admin.uncheck('#f-vis'); await admin.click('#form-prod button[type=submit]'); await esperarMsg(/guardado en el servidor/);
-    await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
+    await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     await tienda.evaluate(() => nav('col'));
     assert.equal(await tienda.locator('article.pc[data-id="bota-nueva"]').count(), 0);
   });

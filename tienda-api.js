@@ -25,7 +25,7 @@
     if (typeof draw === 'function') draw();
   });
 
-  function aplicar(d) {
+  function aplicar(d, sinDibujar) {
     if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
     window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // ya respondió el servidor: se muestra la portada definitiva
     window.MF_CATALOGO_PRODUCTOS = d.productos;
@@ -39,7 +39,7 @@
         if (typeof saveCart === 'function') saveCart();
       }
     } catch (e) { /* sin carrito */ }
-    if (typeof draw === 'function') draw();
+    if (typeof draw === 'function' && !sinDibujar) draw();
     abrirEnlace(d.productos);
   }
 
@@ -55,10 +55,26 @@
     } catch (e) { /* enlace inválido: se queda en la portada */ }
   }
 
+  // Copia del último catálogo en el navegador: en las visitas siguientes la tienda se pinta al instante con esa copia
+  // y se actualiza en segundo plano con lo que responda el servidor (nunca se inventan datos: es lo último que mandó el servidor).
+  var CLAVE = 'mf_cat_v1', VIDA = 7 * 24 * 3600 * 1000, textoGuardado = '', yaMostrado = false;
+  function guardarCopia(txt) { try { localStorage.setItem(CLAVE, JSON.stringify({ t: Date.now(), d: txt })); } catch (e) { /* sin espacio o sin almacenamiento */ } }
+  try {
+    var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
+    if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) { aplicar(JSON.parse(g.d)); textoGuardado = g.d; yaMostrado = true; }
+  } catch (e) { /* copia dañada: se ignora */ }
+
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(aplicar)
+    .then(function (d) {
+      if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
+      var txt = JSON.stringify(d);
+      if (txt === textoGuardado) { clearTimeout(t); return; } // igual a lo que ya se mostró: no se redibuja nada
+      guardarCopia(txt);
+      // Si la persona está pagando, los datos se actualizan sin redibujar (no se pierde lo que está escribiendo)
+      aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out');
+    })
     .catch(function (e) {
       if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
       window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre

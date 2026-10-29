@@ -143,7 +143,7 @@
     window.MF_COL = id || '';
     try { Q = ''; } catch (e) { /* sin buscador */ }
     try { history.replaceState(history.state, '', id ? '#' + id : location.pathname + location.search); } catch (e) { /* sin historial */ }
-    draw(); window.scrollTo(0, 0);
+    draw(); (window.mfTop || function () { window.scrollTo(0, 0); })();
   }
 
   window.mfRef = { ok: function () { try { return catalog().length > 0; } catch (e) { return false; } }, home: home, col: col, chip: chip };
@@ -161,7 +161,7 @@
   /* Si cambian el # de la dirección con la tienda abierta, se abre esa colección */
   addEventListener('hashchange', function () {
     var h = decodeURIComponent((location.hash || '').slice(1));
-    if (h && visibles().some(function (k) { return k.id === h; }) && (window.MF_COL !== h || pg !== 'col')) { window.MF_COL = h; pg = 'col'; draw(); window.scrollTo(0, 0); }
+    if (h && visibles().some(function (k) { return k.id === h; }) && (window.MF_COL !== h || pg !== 'col')) { window.MF_COL = h; pg = 'col'; draw(); (window.mfTop || function () { window.scrollTo(0, 0); })(); }
   });
 
   /* Estado de la colección en el historial (botón "atrás") */
