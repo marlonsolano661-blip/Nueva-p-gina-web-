@@ -473,7 +473,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-n="gi"]');
 const IO='IntersectionObserver'in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');IO.unobserve(e.target)}}),{threshold:.12}):null;
 function reveal(){if(!IO)return;document.querySelectorAll('#app .pc,#app .lc,#app .vals>div,#app .band>div,#app .mf>*:not(.seal),#app .sd').forEach((el,i)=>{el.classList.add('rv');el.style.transitionDelay=(i%3)*70+'ms';IO.observe(el)})}
 function draw(){$('#app').innerHTML=PG[pg]();$('#cnt').textContent=CART.reduce((s,l)=>s+l.q,0);renderBag();reveal();heroInit();window.mfCatInit&&window.mfCatInit()}
-function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false;try{const q=catalog().find(x=>String(x.id)===String(arg)),j=q?imgIdx(q,q.colors[0]):-1;if(j>0)gi=j}catch(_){}}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',pg==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+location.search)}catch(e){}draw();pgFx();scrollTo(0,0)}
+/* Sube al inicio de golpe (sin la animación suave de la página, que en iPhone se corta y deja al pie) y lo repite tras el siguiente cuadro por si cargan imágenes */
+window.mfTop=function(){const e=document.documentElement;e.style.scrollBehavior='auto';scrollTo(0,0);requestAnimationFrame(()=>{scrollTo(0,0);setTimeout(()=>{scrollTo(0,0);e.style.scrollBehavior=''},120)})};
+function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false;try{const q=catalog().find(x=>String(x.id)===String(arg)),j=q?imgIdx(q,q.colors[0]):-1;if(j>0)gi=j}catch(_){}}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',pg==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+location.search)}catch(e){}draw();pgFx();mfTop()}
 addEventListener('popstate',e=>{if(e.state){pg=e.state.p;arg=e.state.a;mode=e.state.m||mode;draw()}});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-n]');if(!a)return;const d=a.dataset;
  switch(d.n){
