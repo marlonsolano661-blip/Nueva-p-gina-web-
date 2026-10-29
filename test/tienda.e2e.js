@@ -76,7 +76,7 @@ async function prueba(nombre, fn) {
     await admin.setInputFiles('#f-file', { name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') });
     await esperarMsg(/Fotos listas/);
     assert.equal(await admin.locator('#form-prod .foto img').count(), 1);
-    await admin.click('text=+ Agregar color'); await admin.fill('#f-cols input[type=text]', 'Negro'); await admin.locator('#f-cols input[type=color]').fill('#111111');
+    await admin.click('button.pal[data-n="Negro"]'); assert.equal(await admin.locator('#f-cols input.chex').inputValue(), '#111111'); assert.equal(await admin.locator('#f-cols input.cnom').inputValue(), 'Negro');
     await admin.fill('[data-t="36"]', '2'); await admin.check('#f-dest');
     await admin.click('#form-prod button[type=submit]');
     await esperarMsg(/guardado en el servidor/);

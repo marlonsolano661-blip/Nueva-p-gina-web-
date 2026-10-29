@@ -132,11 +132,30 @@
   }
   var slug = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50); };
   // Colores: se elige tocando el cuadrito y escribiendo solo el nombre
+  // Paleta de colores listos: un toque agrega el color con su nombre y su código (sin selector con lupa)
+  var PALETA = [
+    ['Negro', '#111111'], ['Blanco', '#FFFFFF'], ['Beige', '#D8C3A5'], ['Nude', '#E0B89E'], ['Camel', '#B98550'], ['Habano', '#8B5A2B'],
+    ['Café', '#5C3A21'], ['Chocolate', '#3B2314'], ['Gris', '#8A8A8A'], ['Plata', '#C0C0C0'], ['Dorado', '#C9A227'], ['Bronce', '#A8743A'],
+    ['Rojo', '#C00000'], ['Vinotinto', '#6D1A2B'], ['Rosado', '#F4A6B8'], ['Fucsia', '#D81B7A'], ['Naranja', '#F28C28'], ['Amarillo', '#F5D000'],
+    ['Verde', '#2E7D32'], ['Verde oliva', '#6B7B3A'], ['Azul', '#1F4FA3'], ['Azul oscuro', '#14213D'], ['Celeste', '#8EC5E8'], ['Morado', '#6A3D9A'],
+    ['Transparente', '#E8F1F5'],
+  ];
+  var RE_HEX = /^#[0-9a-fA-F]{6}$/;
   function selectorColores(lista, imgs) {
-    var cont = el('div', { class: 'ancho' }), filas = el('div', { id: 'f-cols', class: 'colores' });
+    var cont = el('div', { class: 'ancho' }), filas = el('div', { id: 'f-cols', class: 'colores' }), paleta = el('div', { class: 'paleta' });
+    function marcarPaleta() {
+      var usados = {};
+      filas.querySelectorAll('.color').forEach(function (f) { usados[f.querySelector('input.cnom').value.trim().toLowerCase() + '|' + f.querySelector('input.chex').value.trim().toLowerCase()] = true; });
+      paleta.querySelectorAll('button.pal').forEach(function (b) { b.classList.toggle('on', !!usados[b.getAttribute('data-n').toLowerCase() + '|' + b.getAttribute('data-h').toLowerCase()]); });
+    }
     function fila(c) {
-      var sel = el('input', { type: 'color', value: /^#[0-9a-fA-F]{6}$/.test(c.h) ? c.h.toLowerCase() : '#111111', 'aria-label': 'Elegir color' });
-      var nom = el('input', { type: 'text', value: c.n || '', maxlength: '30', placeholder: 'Nombre (ej. Negro)', 'aria-label': 'Nombre del color' });
+      var punto = el('span', { class: 'punto', 'aria-hidden': 'true' });
+      var nom = el('input', { type: 'text', class: 'cnom', value: c.n || '', maxlength: '30', placeholder: 'Nombre (ej. Negro)', 'aria-label': 'Nombre del color' });
+      var hex = el('input', { type: 'text', class: 'chex', value: RE_HEX.test(c.h) ? c.h.toUpperCase() : '#111111', maxlength: '7', placeholder: '#RRGGBB', 'aria-label': 'Código del color', autocapitalize: 'characters', spellcheck: 'false' });
+      function pintarPunto() { punto.style.background = RE_HEX.test(hex.value.trim()) ? hex.value.trim() : 'transparent'; punto.classList.toggle('mal', !RE_HEX.test(hex.value.trim())); }
+      hex.addEventListener('input', function () { pintarPunto(); marcarPaleta(); });
+      nom.addEventListener('input', marcarPaleta);
+      pintarPunto();
       var fo = el('select', { class: 'cfoto', 'aria-label': 'Foto de este color' });
       fo.refrescar = function () {
         var v = fo.dataset.listo ? fo.value : (c.img || ''); fo.dataset.listo = '1'; fo.textContent = '';
@@ -148,21 +167,65 @@
       var mini = el('img', { class: 'cmini', alt: '', width: '40', height: '40' });
       fo.addEventListener('change', function () { mini.src = fo.value; mini.style.display = fo.value ? '' : 'none'; });
       mini.src = fo.value; mini.style.display = fo.value ? '' : 'none';
-      var f = el('div', { class: 'color' }, [sel, nom, fo, mini, el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { f.remove(); } })]);
+      var f = el('div', { class: 'color' }, [punto, nom, hex, fo, mini, el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { f.remove(); marcarPaleta(); } })]);
       return f;
     }
+    PALETA.forEach(function (p) {
+      paleta.appendChild(el('button', { type: 'button', class: 'pal', 'data-n': p[0], 'data-h': p[1], title: p[0] + ' ' + p[1], onclick: function () {
+        var ya = false;
+        filas.querySelectorAll('.color').forEach(function (f) { if (f.querySelector('input.cnom').value.trim().toLowerCase() === p[0].toLowerCase()) ya = true; });
+        if (ya) return msg('"' + p[0] + '" ya está en la lista', true);
+        filas.appendChild(fila({ n: p[0], h: p[1] })); marcarPaleta();
+      } }, [el('i', { style: 'background:' + p[1] }), el('span', { text: p[0] }), el('small', { text: p[1] })]));
+    });
     (lista || []).forEach(function (c) { filas.appendChild(fila(c)); });
-    cont.appendChild(el('p', { class: 'nota', text: 'Colores disponibles (opcional). Toca el cuadrito para elegir el color y escribe su nombre.' }));
+    marcarPaleta();
+    cont.appendChild(el('p', { class: 'nota', text: 'Colores disponibles (opcional). Toca un color de la lista para agregarlo: ya trae su nombre y su código.' }));
+    cont.appendChild(paleta);
+    cont.appendChild(el('p', { class: 'nota', text: 'Colores agregados (puedes cambiar el nombre o el código y elegir la foto de cada uno):' }));
     cont.appendChild(filas);
-    cont.appendChild(el('button', { type: 'button', class: 'claro', text: '+ Agregar color', onclick: function () { var f = fila({}); filas.appendChild(f); f.querySelector('input[type=text]').focus(); } }));
+    cont.appendChild(el('button', { type: 'button', class: 'claro', text: '+ Otro color (escribir código)', onclick: function () { var f = fila({}); filas.appendChild(f); f.querySelector('input.cnom').focus(); } }));
+    // Propone la foto de cada color según el tono de la imagen; solo llena los colores que aún no tienen foto y la persona revisa antes de guardar
+    function leerPixeles(u) {
+      return new Promise(function (ok, no) {
+        var im = new Image(); im.crossOrigin = 'anonymous';
+        im.onload = function () {
+          try { var c = document.createElement('canvas'); c.width = 64; c.height = 64; var x = c.getContext('2d'); x.drawImage(im, 0, 0, 64, 64); ok(MFSugerirColor.dominantes(x.getImageData(0, 0, 64, 64).data, 64, 64)); } catch (e) { no(e); }
+        };
+        im.onerror = function () { no(new Error('foto')); };
+        im.src = u;
+      });
+    }
+    var sug = el('button', { type: 'button', class: 'claro', text: 'Sugerir fotos según el color', onclick: function () {
+      if (!window.MFSugerirColor) return msg('La sugerencia no está disponible en esta página', true);
+      var filasLibres = [], ocupadas = {};
+      filas.querySelectorAll('.color').forEach(function (f) { var v = f.querySelector('select.cfoto').value; if (v) ocupadas[v] = true; else filasLibres.push(f); });
+      var fotosLibres = []; imgs.forEach(function (u, i) { if (!ocupadas[u]) fotosLibres.push(i); });
+      if (!imgs.length) return msg('Primero agrega las fotos del producto', true);
+      if (!filasLibres.length) return msg('Todos los colores ya tienen foto asignada');
+      if (!fotosLibres.length) return msg('No quedan fotos sin asignar');
+      sug.disabled = true; msg('Mirando las fotos…');
+      Promise.all(fotosLibres.map(function (i) { return leerPixeles(imgs[i]); })).then(function (doms) {
+        var hexes = filasLibres.map(function (f) { return f.querySelector('input.chex').value.trim(); });
+        var r = MFSugerirColor.asignar(hexes, doms), n = 0;
+        Object.keys(r).forEach(function (ci) {
+          var f = filasLibres[ci], fo = f.querySelector('select.cfoto');
+          fo.value = imgs[fotosLibres[r[ci]]]; fo.dispatchEvent(new Event('change')); f.classList.add('sug'); n++;
+        });
+        sug.disabled = false;
+        msg(n ? 'Sugerí foto para ' + n + ' de ' + filasLibres.length + ' colores (marcados en verde). Revísalos y toca "Guardar cambios".' : 'Ninguna foto se parece claramente a esos colores. Elígelas a mano.', !n);
+      }).catch(function () { sug.disabled = false; msg('No pude leer las fotos para compararlas. Elige las fotos de cada color a mano.', true); });
+    } });
+    filas.addEventListener('change', function (e) { if (e.isTrusted && e.target.classList && e.target.classList.contains('cfoto')) e.target.closest('.color').classList.remove('sug'); });
+    cont.appendChild(sug);
     return cont;
   }
   function leerColores() {
     var out = [], mal = false;
     document.querySelectorAll('#f-cols .color').forEach(function (f) {
-      var n = f.querySelector('input[type=text]').value.trim(), h = f.querySelector('input[type=color]').value;
-      if (!n) { mal = true; return; }
-      var im = f.querySelector('select.cfoto'), c = { n: n, h: h }; if (im && im.value) c.img = im.value; out.push(c);
+      var n = f.querySelector('input.cnom').value.trim(), h = f.querySelector('input.chex').value.trim();
+      if (!n || !RE_HEX.test(h)) { mal = true; return; }
+      var im = f.querySelector('select.cfoto'), c = { n: n, h: h.toLowerCase() }; if (im && im.value) c.img = im.value; out.push(c);
     });
     return mal ? null : out;
   }
@@ -190,7 +253,7 @@
       e.preventDefault();
       var stock = {}; form.querySelectorAll('[data-t]').forEach(function (i) { stock[i.getAttribute('data-t')] = parseInt(i.value || '0', 10) || 0; });
       var colores = leerColores();
-      if (!colores) return msg('Escribe el nombre de cada color o toca "Quitar"', true);
+      if (!colores) return msg('Revisa los colores: cada uno necesita nombre y un código válido (#RRGGBB), o toca "Quitar"', true);
       var imgs = IMGS.slice();
       var id = p.id || slug($('#f-nombre').value);
       if (!id) return msg('Escribe el nombre del producto', true);
