@@ -35,3 +35,4 @@
 
 /* Mientras llega el contenido del servidor se oculta la portada de respaldo, para no ver un instante el diseño de antes (se quita en tienda-api.js) */
 html.mf-espera .hs,html.mf-espera .rh{visibility:hidden}
+html.mf-espera .ann,html.mf-espera .sq{visibility:hidden}
