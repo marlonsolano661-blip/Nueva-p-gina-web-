@@ -65,6 +65,17 @@ describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () =
       const mal = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, id: 'luxury-31', imagenes: f(31), imagen: f(31)[0] } } });
       assert.equal(mal.status, 400);
     });
+    it('el catálogo público se guarda 30 s en la CDN y el navegador siempre revalida', async () => {
+      const r = await verCatalogo();
+      assert.equal(r.status, 200);
+      assert.equal(r.headers['Cache-Control'], 'public, max-age=0, must-revalidate');
+      assert.match(r.headers['Netlify-CDN-Cache-Control'], /s-maxage=30/);
+    });
+    it('un error del catálogo nunca se guarda en caché', async () => {
+      const r = await catalogo({ method: 'POST', headers: {}, query: {} });
+      assert.equal(r.status, 405);
+      assert.equal(r.headers['Cache-Control'], 'no-store');
+    });
     it('la URL de la foto sirve como imagen del producto en el catálogo', async () => {
       const u = (await foto(JPG.toString('base64'))).json.url;
       const r = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, imagenes: [u], imagen: u } } });
