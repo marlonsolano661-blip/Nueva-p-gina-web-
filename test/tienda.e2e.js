@@ -142,6 +142,23 @@ async function prueba(nombre, fn) {
     assert.equal((await b.filas('select id from pedidos')).length, 1);
   });
 
+  await prueba('el pago se abre en el widget de Wompi sin salir de la tienda y, si se cierra sin pagar, se puede reintentar', async () => {
+    await tienda.evaluate(() => {
+      window.MF_REDIRECT = undefined; window.__w = null; window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      window.WidgetCheckout = function (cfg) { window.__w = cfg; this.open = function (cb) { cb({}); }; };
+    });
+    await tienda.click('[data-n="topay"]');
+    await tienda.waitForFunction(() => window.__w);
+    const w = await tienda.evaluate(() => window.__w);
+    const p = (await b.filas("select * from pedidos order by id desc limit 1"))[0];
+    assert.equal(w.reference, p.referencia); assert.equal(w.amountInCents, 31750000); assert.equal(w.currency, 'COP');
+    assert.match(w.signature.integrity, /^[0-9a-f]{64}$/); assert.match(w.redirectUrl, /\/gracias\.html$/);
+    assert.equal(w.customerData.fullName, 'Ana Pérez'); assert.equal(w.customerData.phoneNumberPrefix, '+57');
+    await tienda.waitForFunction(() => { const x = document.querySelector('[data-n="topay"]'); return x && !x.disabled; });
+    assert.equal((await b.filas('select id from pedidos')).length, 1);
+    await tienda.evaluate(() => { delete window.WidgetCheckout; window.MF_REDIRECT = (u) => { window.__r = u; }; });
+  });
+
   console.log('administración → tienda');
   await prueba('cambiar la tarifa de envío en el panel se refleja en la tienda; el pedido anterior conserva $17.500', async () => {
     await ir('envio');
