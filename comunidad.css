@@ -1,0 +1,27 @@
+/* Comunidad Marlon: tarjetas de looks tipo galería.
+   Solo estilos (no cambia ids, atributos data-*, textos ni la lógica). Se carga después de descuento.css.
+   Cada foto se recorta en vertical 4:5 y lleva un marco fino interior, como una foto enmarcada con paspartú;
+   debajo, la frase de la clienta entre comillas, su nombre en versalitas y su Instagram en champagne. */
+body .com{position:relative;isolation:isolate;padding-top:4.5rem;padding-bottom:4.5rem}
+body .com::before{content:"";position:absolute;inset:0 -100vw;background:#f4f2ee;z-index:-1}
+body .com .st{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:clamp(2.3rem,7vw,3.6rem);line-height:1.02;letter-spacing:-.01em;text-transform:none;text-align:center}
+body .com .st::after{content:"";display:block;width:2.2rem;height:2px;background:#b79b6b;margin:1.1rem auto 0}
+body .com .ds{font:400 .72rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#767672;margin-top:1rem}
+body .com .ds.sm{font:300 .88rem Jost,sans-serif;letter-spacing:0;text-transform:none}
+
+body .lks{gap:1.1rem;padding:2.2rem 1.2rem 2.4rem;margin:0 -1.2rem;scroll-padding-inline:1.2rem;scrollbar-width:none}
+body .lks::-webkit-scrollbar{display:none}
+@media(min-width:900px){body .lks{justify-content:safe center;margin:0;padding-inline:.4rem}}
+
+body .lc{flex:0 0 min(80%,19.5rem);display:flex;flex-direction:column;align-items:stretch;padding:.85rem .85rem 1.5rem;background:#fff;border:1px solid #e4e0d8;border-radius:0;box-shadow:0 22px 40px -28px rgba(10,10,10,.45);text-align:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+@media(hover:hover){body .lc:hover{transform:translateY(-6px);box-shadow:0 30px 46px -26px rgba(10,10,10,.5)}}
+body .lc .im{position:relative;aspect-ratio:4/5;overflow:hidden;display:grid;place-items:center;background:#ecebe7;border-radius:0;color:#767672;font:400 .72rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase}
+body .lc .im img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+@media(hover:hover){body .lc:hover .im img{transform:scale(1.04)}}
+body .lc .im::after{content:"";position:absolute;inset:.6rem;border:1px solid rgba(255,255,255,.78);pointer-events:none}
+body .lc p{position:relative;margin:1.5rem .5rem .9rem;font:italic 500 1.3rem/1.3 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-wrap:balance}
+body .lc p:not(:empty)::before{content:"\201C";display:block;font:500 2.6rem/.6 "Cormorant Garamond",Georgia,serif;color:#b79b6b;margin-bottom:.35rem}
+body .lc p:not(:empty)::after{content:"\201D"}
+body .lc .lkn{gap:.45rem;font:500 .74rem Jost,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#0a0a0a}
+body .lc small{margin-top:.35rem;font:400 .82rem Jost,sans-serif;letter-spacing:.06em;color:#8a6f3f}
+@media(prefers-reduced-motion:reduce){body .lc,body .lc .im img{transition:none}body .lc:hover{transform:none}body .lc:hover .im img{transform:none}}
