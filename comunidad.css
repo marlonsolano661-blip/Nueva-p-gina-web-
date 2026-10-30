@@ -1,6 +1,6 @@
 /* Comunidad Marlon: tarjetas de looks tipo galería.
    Solo estilos (no cambia ids, atributos data-*, textos ni la lógica). Se carga después de descuento.css.
-   Cada foto se recorta en vertical 4:5 y lleva un marco fino interior, como una foto enmarcada con paspartú;
+   Cada foto se recorta en vertical 4:5 y queda dentro de un marco delicado: tarjeta crema con filete champagne y un segundo filete suave alrededor de la foto;
    debajo, la frase de la clienta entre comillas, su nombre en versalitas y su Instagram en champagne. */
 body .com{position:relative;isolation:isolate;padding-top:4.5rem;padding-bottom:4.5rem}
 body .com::before{content:"";position:absolute;inset:0 -100vw;background:#f4f2ee;z-index:-1}
@@ -13,13 +13,12 @@ body .lks{gap:1.1rem;padding:2.2rem 1.2rem 2.4rem;margin:0 -1.2rem;scroll-paddin
 body .lks::-webkit-scrollbar{display:none}
 @media(min-width:900px){body .lks{justify-content:safe center;margin:0;padding-inline:.4rem}}
 
-body .lc{flex:0 0 min(80%,19.5rem);display:flex;flex-direction:column;align-items:stretch;padding:.85rem .85rem 1.5rem;background:#fff;border:1px solid #e4e0d8;border-radius:0;box-shadow:0 22px 40px -28px rgba(10,10,10,.45);text-align:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
-@media(hover:hover){body .lc:hover{transform:translateY(-6px);box-shadow:0 30px 46px -26px rgba(10,10,10,.5)}}
-body .lc .im{position:relative;aspect-ratio:4/5;overflow:hidden;display:grid;place-items:center;background:#ecebe7;border-radius:0;color:#767672;font:400 .72rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase}
+body .lc{flex:0 0 min(80%,19.5rem);display:flex;flex-direction:column;align-items:stretch;padding:1.15rem 1.15rem 1.6rem;background:#fffdfa;border:1px solid #eadfca;border-radius:.5rem;box-shadow:0 18px 38px -26px rgba(138,111,63,.45);text-align:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+@media(hover:hover){body .lc:hover{transform:translateY(-6px);box-shadow:0 26px 44px -26px rgba(138,111,63,.55)}}
+body .lc .im{position:relative;aspect-ratio:4/5;overflow:hidden;display:grid;place-items:center;background:#f1ece3;border-radius:.25rem;outline:1px solid #d9c7a3;outline-offset:.45rem;color:#8a6f3f;font:400 .72rem Jost,sans-serif;letter-spacing:.3em;text-transform:uppercase}
 body .lc .im img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
 @media(hover:hover){body .lc:hover .im img{transform:scale(1.04)}}
-body .lc .im::after{content:"";position:absolute;inset:.6rem;border:1px solid rgba(255,255,255,.78);pointer-events:none}
-body .lc p{position:relative;margin:1.5rem .5rem .9rem;font:italic 500 1.3rem/1.3 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-wrap:balance}
+body .lc p{position:relative;margin:1.9rem .5rem .9rem;font:italic 500 1.3rem/1.3 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-wrap:balance}
 body .lc p:not(:empty)::before{content:"\201C";display:block;font:500 2.6rem/.6 "Cormorant Garamond",Georgia,serif;color:#b79b6b;margin-bottom:.35rem}
 body .lc p:not(:empty)::after{content:"\201D"}
 body .lc .lkn{gap:.45rem;font:500 .74rem Jost,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#0a0a0a}
