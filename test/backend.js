@@ -135,6 +135,8 @@ async function iniciar() {
         cuerpoSql += ' returning *';
       } else if (method === 'PATCH') {
         cuerpoSql = `update ${tabla} set ${Object.keys(body).map((k) => `${ident(k)} = ${lit(body[k])}`).join(', ')}${donde} returning *`;
+      } else if (method === 'DELETE') {
+        cuerpoSql = `delete from ${tabla}${donde} returning *`;
       } else throw new Error('método no soportado ' + method);
       const filas = JSON.parse(await psql(`with r as (${cuerpoSql}) select coalesce(json_agg(r), '[]'::json) from r;`));
       return prefer.includes('return=representation') ? jsonRes(method === 'POST' ? 201 : 200, filas) : new Response(null, { status: method === 'POST' ? 201 : 204 });
