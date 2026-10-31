@@ -1,6 +1,4 @@
 /* Pedidos por WhatsApp y Finanzas (panel). Solo estilos; usa los colores del panel. */
-nav.tabs .grupo{grid-column:1/-1;margin:.9rem 0 -.2rem;font:700 .8rem/1 Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--g3)}
-nav.tabs .grupo:first-child{margin-top:0}
 .chip{min-height:2.4rem;padding:.4rem 1.1rem}
 .chip.on{background:var(--k);border-color:var(--k);color:#fff}
 .wa-filtros{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 .4rem}
