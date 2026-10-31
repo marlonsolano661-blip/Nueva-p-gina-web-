@@ -116,6 +116,7 @@
 </style>
 <link rel="stylesheet" href="banners.css">
 <link rel="stylesheet" href="admin-banners.css">
+<link rel="stylesheet" href="admin-ventas.css">
 </head>
 <body>
 <header>
@@ -130,15 +131,21 @@
   <p id="msg" role="status"></p>
   <div id="app" hidden>
     <nav class="tabs" id="tabs">
+      <h3 class="grupo">Ventas y dinero</h3>
+      <button type="button" data-t="pedidos"><span class="ic">🧾</span>Pedidos<small>Pagos, guías y envíos de la tienda</small></button>
+      <button type="button" data-t="whatsapp"><span class="ic">💬</span>Pedidos WhatsApp<small>Anota los pedidos que te llegan por chat</small></button>
+      <button type="button" data-t="finanzas"><span class="ic">💰</span>Finanzas<small>Cuánto vendiste y cada compra</small></button>
+      <h3 class="grupo">Productos</h3>
+      <button type="button" data-t="productos"><span class="ic">👟</span>Productos<small>Crear, editar y subir fotos</small></button>
+      <button type="button" data-t="inventario"><span class="ic">📦</span>Inventario<small>Cuántos pares hay por talla</small></button>
+      <button type="button" data-t="colecciones"><span class="ic">🗂️</span>Colecciones<small>Agrupa tus productos</small></button>
+      <button type="button" data-t="descuentos"><span class="ic">🏷️</span>Descuentos<small>Códigos de descuento</small></button>
+      <h3 class="grupo">Diseño de la tienda</h3>
       <button type="button" data-t="inicio"><span class="ic">🎨</span>Diseñador de inicio<small>Banners con fotos, textos y botón</small></button>
       <button type="button" data-t="comunidad"><span class="ic">📸</span>Comunidad<small>Aprobar fotos de clientas</small></button>
-      <button type="button" data-t="descuentos"><span class="ic">🏷️</span>Descuentos<small>Códigos de descuento</small></button>
-      <button type="button" data-t="productos"><span class="ic">👟</span>Productos<small>Crear, editar y subir fotos</small></button>
-      <button type="button" data-t="colecciones"><span class="ic">🗂️</span>Colecciones<small>Agrupa tus productos</small></button>
-      <button type="button" data-t="inventario"><span class="ic">📦</span>Inventario<small>Cuántos pares hay por talla</small></button>
-      <button type="button" data-t="pedidos"><span class="ic">🧾</span>Pedidos<small>Pagos, guías y envíos</small></button>
-      <button type="button" data-t="envio"><span class="ic">🚚</span>Envío<small>Tarifa de envío</small></button>
       <button type="button" data-t="contenido"><span class="ic">✏️</span>Contenido<small>Textos y colecciones</small></button>
+      <h3 class="grupo">Ajustes</h3>
+      <button type="button" data-t="envio"><span class="ic">🚚</span>Envío<small>Tarifa de envío</small></button>
       <button type="button" data-t="registro"><span class="ic">🕘</span>Registro<small>Qué ha pasado en la tienda</small></button>
     </nav>
     <div class="volver" id="volver" hidden><button type="button" id="inicio" class="claro">← Inicio</button><h2 id="titulo"></h2></div>
@@ -151,6 +158,8 @@
     <section class="panel" id="p-envio"></section>
     <section class="panel" id="p-contenido"></section>
     <section class="panel" id="p-pedidos"></section>
+    <section class="panel" id="p-whatsapp"></section>
+    <section class="panel" id="p-finanzas"></section>
     <section class="panel" id="p-registro"></section>
   </div>
 </main>
@@ -160,5 +169,6 @@
 <script src="admin-banners.js"></script>
 <script src="admin-descuentos.js"></script>
 <script src="admin-comunidad.js"></script>
+<script src="admin-ventas.js"></script>
 </body>
 </html>

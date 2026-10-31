@@ -1,0 +1,37 @@
+/* Pedidos por WhatsApp y Finanzas (panel). Solo estilos; usa los colores del panel. */
+nav.tabs .grupo{grid-column:1/-1;margin:.9rem 0 -.2rem;font:700 .8rem/1 Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--g3)}
+nav.tabs .grupo:first-child{margin-top:0}
+.chip{min-height:2.4rem;padding:.4rem 1.1rem}
+.chip.on{background:var(--k);border-color:var(--k);color:#fff}
+.wa-filtros{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 .4rem}
+.wa-resumen{margin:.6rem 0;font-weight:600}
+.wa-form{display:grid;grid-template-columns:1fr;gap:.8rem;padding:1.1rem;margin:1rem 0}
+.wa-form h3{font-size:1.5rem}.wa-form h4{margin:.4rem 0 0;font-size:1rem}
+.wa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.7rem}
+.wa-lineas{display:grid;gap:.7rem}
+.wa-linea{display:grid;gap:.5rem;padding:.8rem;border:1.5px solid var(--g2);border-radius:1.1rem;background:var(--g1)}
+.wa-mini{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.wa-mini input:nth-child(3),.wa-mini input:nth-child(4){grid-column:auto}
+.wa-total{padding:.8rem 1rem;border-radius:1.1rem;background:var(--gs)}
+.wa-hint{margin:.2rem 0 .4rem}@media(min-width:760px){.wa-hint{display:none}}
+.wa-scroll{overflow-x:auto;margin:0 -.2rem}.tabla-wa{display:table;min-width:44rem}.tabla-wa td,.tabla-wa th{vertical-align:top}
+.tabla-wa select{padding:.35rem .7rem;font-size:.85rem;max-width:9rem}
+.tabla-wa select.pg-PAGADO{color:var(--gr);font-weight:600}.tabla-wa select.pg-PENDIENTE{color:var(--warn);font-weight:600}.tabla-wa select.pg-CANCELADO{color:var(--bad);font-weight:600}
+td.num,th.num{text-align:right;white-space:nowrap}
+.acc-wa{display:flex;flex-direction:column;gap:.35rem}.acc-wa button{min-height:0;padding:.35rem .9rem;font-size:.85rem}
+.fin-cards{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1rem 0}
+.fin-card{display:grid;gap:.2rem;align-content:start;padding:1rem;border-radius:1.2rem;background:#fff;box-shadow:0 10px 30px -24px #7d3f4f}
+.fin-card strong{font:700 1.55rem/1.1 'Cormorant Garamond',Georgia,serif}
+.fin-card .fin-t{font-size:.8rem;font-weight:600;color:var(--g3);text-transform:uppercase;letter-spacing:.08em}
+.fin-card.grande{grid-column:1/-1;background:var(--gs)}.fin-card.grande strong{font-size:2.4rem;color:var(--gr)}
+.fin-card.aviso{background:var(--warn-bg)}.fin-card.aviso strong{color:var(--warn)}
+.fin-h{margin:1.6rem 0 .6rem;font-size:1.5rem}
+.fin-top{margin:0;padding-left:1.3rem}.fin-top li{display:flex;justify-content:space-between;gap:1rem;padding:.3rem 0;border-bottom:1px solid var(--g2)}
+.compra{background:#fff;border-radius:1.2rem;margin:.5rem 0;box-shadow:0 10px 30px -24px #7d3f4f}
+.compra summary{display:grid;grid-template-columns:1fr auto;grid-template-areas:'cn ct' 'cm cm';gap:.25rem .8rem;align-items:center;padding:.8rem 1rem;cursor:pointer;list-style:none}
+.compra .cn{grid-area:cn;font-weight:600}.compra .ct{grid-area:ct}.compra .cm{grid-area:cm;display:flex;gap:.6rem;align-items:center}
+.compra summary::-webkit-details-marker{display:none}
+.compra .cf{font-size:.85rem;color:var(--g3);white-space:nowrap}
+.canal{padding:.1rem .6rem;border-radius:999px;font-size:.72rem;font-weight:700}.canal.on{background:var(--g1);color:var(--k)}.canal.wa{background:#e3f4e8;color:#1d5c45}
+.compra-det{padding:0 1rem 1rem;display:grid;gap:.25rem}
+@media(min-width:700px){.compra summary{grid-template-columns:auto 1fr auto;grid-template-areas:'cm cn ct'}.fin-cards{grid-template-columns:repeat(4,1fr)}.fin-card.grande{grid-column:span 2}}

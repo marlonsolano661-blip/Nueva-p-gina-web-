@@ -550,8 +550,10 @@
   var cargarDescuentos = function () { return window.mfAdminDescuentos ? window.mfAdminDescuentos.abrir() : Promise.reject(new Error('Descuentos no cargó: revisa que admin-descuentos.js esté subido')); };
   window.mfAdmin = { api: api, el: el, msg: msg, falla: falla, subirFoto: subirFoto };
   var cargarComunidad = function () { return window.mfAdminComunidad ? window.mfAdminComunidad.abrir() : Promise.reject(new Error('Comunidad no cargó: revisa que admin-comunidad.js esté subido')); };
-  var CARGA = { comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
-  var TITULOS = { comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  var cargarWhatsapp = function () { return window.mfAdminVentas ? window.mfAdminVentas.abrir() : Promise.reject(new Error('Pedidos WhatsApp no cargó: revisa que admin-ventas.js esté subido')); };
+  var cargarFinanzas = function () { return window.mfAdminFinanzas ? window.mfAdminFinanzas.abrir() : Promise.reject(new Error('Finanzas no cargó: revisa que admin-ventas.js esté subido')); };
+  var CARGA = { whatsapp: cargarWhatsapp, finanzas: cargarFinanzas, comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
+  var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
   function inicio() {
     $('#tabs').hidden = false; $('#volver').hidden = true;
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
