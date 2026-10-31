@@ -60,3 +60,73 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .ayuda .ay-c{padding:0 0 1rem}.ayuda .ay-sirve{margin:0 0 .6rem}
 .ayuda ol{margin:.2rem 0 .7rem;padding-left:1.3rem}.ayuda li{margin:.25rem 0}
 .ayuda .ay-ojo{background:var(--warn-bg);color:var(--warn);border-radius:.9rem;padding:.6rem .8rem;font-size:.92rem}
+
+/* ===== Pedidos WhatsApp: aspecto de hoja de Excel en verde WhatsApp ===== */
+#p-whatsapp{--wa-d:#075e54;--wa-m:#008069;--wa-c:#d9fdd3;--wa-s:#f1fbef;--wa-l:#c5dccd;--wa-t:#111b21}
+#p-whatsapp .nota{color:#54656f}
+/* botones y filtros en verde */
+#p-whatsapp>button,#p-whatsapp .acc2 button:not(.claro){background:var(--wa-m);border-color:var(--wa-m);color:#fff}
+#p-whatsapp>button:hover:not(:disabled),#p-whatsapp .acc2 button:not(.claro):hover:not(:disabled){background:#fff;color:var(--wa-m)}
+#p-whatsapp .chip.on{background:var(--wa-m);border-color:var(--wa-m);color:#fff}
+#p-whatsapp .chip.claro{border-color:var(--wa-l);color:var(--wa-d)}
+#p-whatsapp .wa-resumen{display:inline-block;background:var(--wa-c);color:var(--wa-t);border-radius:.9rem .9rem .9rem .2rem;padding:.55rem .9rem;font-weight:600;box-shadow:0 1px 0 #0001}
+
+/* la hoja (tabla) */
+.wa-hoja-tabla{border:1px solid var(--wa-l);border-radius:.9rem;background:#fff;box-shadow:0 6px 18px -12px #075e5466;margin:.3rem 0 1rem}
+#p-whatsapp .tabla-wa{border-collapse:collapse;min-width:46rem;width:100%;font-size:.92rem;color:var(--wa-t)}
+#p-whatsapp .tabla-wa th,#p-whatsapp .tabla-wa td{border:1px solid var(--wa-l);padding:.45rem .6rem;vertical-align:middle;text-align:left}
+#p-whatsapp .tabla-wa tr.wa-letras th{background:var(--wa-c);color:var(--wa-d);font-size:.72rem;font-weight:700;text-align:center;padding:.15rem;letter-spacing:.08em}
+#p-whatsapp .tabla-wa thead tr:nth-child(2) th{background:var(--wa-m);color:#fff;font-weight:700;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;border-color:#0a7a68;white-space:nowrap}
+#p-whatsapp .tabla-wa .rn{background:var(--wa-c);color:var(--wa-d);text-align:center;font-weight:700;font-size:.78rem;width:2.4rem;min-width:2.4rem;padding:.3rem}
+#p-whatsapp .tabla-wa thead tr:nth-child(2) th.rn{background:var(--wa-d);color:#fff}
+#p-whatsapp .tabla-wa tbody tr:nth-child(even) td:not(.rn){background:var(--wa-s)}
+#p-whatsapp .tabla-wa tbody tr:hover td:not(.rn){background:#e3f7dd}
+#p-whatsapp .tabla-wa td.num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--wa-d)}
+#p-whatsapp .tabla-wa tfoot td{background:var(--wa-c);font-weight:700;color:var(--wa-d);border-top:2px solid var(--wa-m)}
+#p-whatsapp .tabla-wa select{border:1px solid var(--wa-l);border-radius:999px;padding:.25rem .6rem;font-size:.85rem;background:#fff}
+#p-whatsapp .tabla-wa select.pg-PAGADO{background:var(--wa-c);border-color:var(--wa-m);color:var(--wa-d)}
+#p-whatsapp .tabla-wa select.pg-PENDIENTE{background:#fff4d6;border-color:#d9a400;color:#7a5200}
+#p-whatsapp .tabla-wa select.pg-CANCELADO{background:#fde7e5;border-color:#d4645e;color:#a3342f}
+
+/* el formulario "Nuevo pedido" como planilla */
+#p-whatsapp .wa-hoja{padding:0 1rem 1rem;overflow:hidden;border:1px solid var(--wa-l);box-shadow:0 8px 22px -14px #075e5488}
+#p-whatsapp .wa-hoja>h3{margin:0 -1rem .3rem;padding:.9rem 1rem;background:var(--wa-m);color:#fff;font-size:1.45rem}
+#p-whatsapp .wa-hoja>h4{margin:.5rem 0 0;color:var(--wa-d);font:700 .8rem/1 Figtree,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+#p-whatsapp .wa-hoja label{color:var(--wa-d);font-weight:600;font-size:.88rem}
+#p-whatsapp .wa-hoja input,#p-whatsapp .wa-hoja select{border-color:var(--wa-l);border-radius:.6rem;background:#fff}
+#p-whatsapp .wa-hoja input:focus,#p-whatsapp .wa-hoja select:focus{border-color:var(--wa-m);box-shadow:0 0 0 3px #00806922;outline:none}
+#p-whatsapp .wa-lineas{display:block;border:1px solid var(--wa-l);border-radius:.8rem;overflow:hidden;counter-reset:ln;background:#fff}
+#p-whatsapp .wa-cab{display:none}
+#p-whatsapp .wa-linea{display:grid;grid-template-columns:1fr 1fr;gap:.45rem .6rem;padding:.7rem .7rem .8rem 2.6rem;position:relative;border:0;border-bottom:1px solid var(--wa-l);border-radius:0;background:#fff;counter-increment:ln}
+#p-whatsapp .wa-linea:nth-child(even){background:var(--wa-s)}
+#p-whatsapp .wa-linea:last-child{border-bottom:0}
+#p-whatsapp .wa-linea::before{content:counter(ln);position:absolute;left:0;top:0;bottom:0;width:2rem;display:grid;place-items:center;background:var(--wa-c);color:var(--wa-d);font-weight:700;font-size:.8rem;border-right:1px solid var(--wa-l)}
+#p-whatsapp .cel{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+#p-whatsapp .cel::before{content:attr(data-l);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--wa-m)}
+#p-whatsapp .cel.cat::before{content:none}
+#p-whatsapp .cel input,#p-whatsapp .cel select{width:100%;padding:.45rem .6rem;min-height:2.5rem}
+#p-whatsapp .cel.cat,#p-whatsapp .cel.c-prod,#p-whatsapp .cel.c-sub{grid-column:1/-1}
+#p-whatsapp .wa-sub{font-weight:700;color:var(--wa-d);font-variant-numeric:tabular-nums;padding:.1rem 0}
+#p-whatsapp .wa-x{grid-column:1/-1;justify-self:start;min-height:0;padding:.3rem .9rem;font-size:.82rem}
+#p-whatsapp .wa-total{background:var(--wa-c);color:var(--wa-t);border-radius:1rem 1rem .25rem 1rem;box-shadow:0 1px 0 #0001;margin-left:auto;width:min(100%,22rem)}
+#p-whatsapp .wa-total .tot{font-weight:700;font-size:1.15rem;color:var(--wa-d);border-top:1px solid #0a7a6844;margin-top:.3rem;padding-top:.3rem}
+
+/* en pantallas anchas la fila de producto es una fila de hoja real, con encabezados arriba */
+#p-whatsapp .wa-form{grid-template-columns:minmax(0,1fr)}
+#p-whatsapp .wa-lineas,#p-whatsapp .wa-grid>*{min-width:0}
+@media(min-width:860px){
+  #p-whatsapp .wa-cab{display:grid;grid-template-columns:2rem minmax(0,1fr) 4rem 5.5rem 3.6rem 6rem 6rem 4.6rem;gap:.6rem;margin:.4rem 0 -.2rem;padding:.45rem .7rem .45rem 0;background:var(--wa-m);color:#fff;border-radius:.8rem .8rem 0 0;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  #p-whatsapp .wa-lineas{border-radius:0 0 .8rem .8rem}
+  #p-whatsapp .wa-linea{grid-template-columns:minmax(0,1fr) 4rem 5.5rem 3.6rem 6rem 6rem 4.6rem;gap:.35rem .6rem;padding:.5rem .7rem .5rem 2.6rem;align-items:center}
+  #p-whatsapp .cel::before{display:none}
+  #p-whatsapp .cel.cat{grid-column:1/-1}
+  #p-whatsapp .cel.c-prod,#p-whatsapp .cel.c-sub{grid-column:auto}
+  #p-whatsapp .cel input,#p-whatsapp .cel select{padding:.4rem .5rem}
+  #p-whatsapp .wa-x{grid-column:auto;justify-self:end;padding:.3rem .5rem}
+}
+/* tabla: más compacta para que quepan los botones de Editar y Quitar */
+#p-whatsapp .tabla-wa{min-width:40rem}
+#p-whatsapp .tabla-wa th,#p-whatsapp .tabla-wa td{padding:.4rem .5rem}
+#p-whatsapp .tabla-wa select{max-width:7.4rem;padding:.25rem .4rem}
+#p-whatsapp .tabla-wa{min-width:36rem}
+#p-whatsapp td.acc-wa{display:table-cell}#p-whatsapp .acc-wa button{display:block;width:100%;margin:.15rem 0}#p-whatsapp .acc-wa button{padding:.25rem .7rem}

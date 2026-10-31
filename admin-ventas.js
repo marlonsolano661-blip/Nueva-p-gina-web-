@@ -55,13 +55,16 @@
     var t = document.getElementById('wa-tabla'); t.textContent = '';
     t.appendChild(el('p', { class: 'wa-resumen', text: W.ventas.length + ' pedido' + (W.ventas.length === 1 ? '' : 's') + ' · Pagado ' + peso(pagado) + ' · Por cobrar ' + peso(porCobrar) }));
     if (!lista.length) { t.appendChild(el('p', { class: 'nota', text: W.ventas.length ? 'No hay pedidos en esta vista.' : 'Todavía no hay pedidos de WhatsApp. Toca "Registrar pedido" para anotar el primero.' })); return; }
-    var tb = el('tbody');
-    lista.forEach(function (v) { tb.appendChild(filaW(v)); });
+    var tb = el('tbody'), suma = 0;
+    lista.forEach(function (v, i) { tb.appendChild(filaW(v, i + 1)); suma += Number(v.total) || 0; });
     t.appendChild(el('p', { class: 'nota wa-hint', text: 'Desliza la tabla hacia el lado para ver Pago y Envío.' }));
-    t.appendChild(el('div', { class: 'wa-scroll' }, [el('table', { class: 'tabla-wa' }, [el('thead', {}, [el('tr', {}, ['Fecha', 'Clienta', 'Productos', 'Total', 'Pago', 'Envío', ''].map(function (x) { return el('th', { text: x }); }))]), tb])]));
+    var letras = el('tr', { class: 'wa-letras' }, [el('th', { class: 'rn', text: '' })].concat(['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(function (x) { return el('th', { text: x }); })));
+    var cab = el('tr', {}, [el('th', { class: 'rn', text: '#' })].concat(['Fecha', 'Clienta', 'Productos', 'Total', 'Pago', 'Envío', ''].map(function (x) { return el('th', { class: x === 'Total' ? 'num' : '', text: x }); })));
+    var pie = el('tfoot', {}, [el('tr', {}, [el('td', { class: 'rn', text: 'Σ' }), el('td', { colspan: '3', text: 'Suma de ' + lista.length + ' pedido' + (lista.length === 1 ? '' : 's') + ' en esta vista' }), el('td', { class: 'num', text: peso(suma) }), el('td', { colspan: '3' })])]);
+    t.appendChild(el('div', { class: 'wa-scroll wa-hoja-tabla' }, [el('table', { class: 'tabla-wa' }, [el('thead', {}, [letras, cab]), tb, pie])]));
   }
 
-  function filaW(v) {
+  function filaW(v, n) {
     var prods = (v.items || []).map(function (i) { return i.cant + '× ' + i.nombre + (i.talla ? ' (' + i.talla + ')' : ''); }).join(', ');
     var pago = el('select', { 'aria-label': 'Estado del pago' }, opciones(PAGO, v.estado_pago));
     var env = el('select', { 'aria-label': 'Estado del envío' }, opciones(ENVIO, v.estado_envio));
@@ -80,6 +83,7 @@
     } });
     var datos = [v.telefono, v.ciudad, v.metodo_pago, v.guia ? 'Guía ' + v.guia : '', v.nota].filter(Boolean).join(' · ');
     return el('tr', {}, [
+      el('td', { class: 'rn', text: String(n || '') }),
       el('td', { text: fechaCorta(v.fecha) }),
       el('td', {}, [el('strong', { text: v.cliente }), el('div', { class: 'nota', text: datos })]),
       el('td', { text: prods }),
@@ -112,7 +116,7 @@
 
     function recalcular() {
       var sub = 0;
-      filas.forEach(function (f) { sub += (parseInt(f.cant.value, 10) || 0) * (parseInt(f.precio.value, 10) || 0); });
+      filas.forEach(function (f) { var q = (parseInt(f.cant.value, 10) || 0) * (parseInt(f.precio.value, 10) || 0); sub += q; if (f.sub) f.sub.textContent = peso(q); });
       var e = parseInt(envio.value, 10) || 0, d = parseInt(desc.value, 10) || 0;
       total.textContent = '';
       [['Productos', sub], ['Envío', e], ['Descuento', -d]].forEach(function (x) { total.appendChild(el('div', { class: 'linea suave' }, [el('span', { text: x[0] }), el('span', { text: (x[1] < 0 ? '−' : '') + peso(Math.abs(x[1])) })])); });
@@ -125,11 +129,13 @@
       var color = inp({ type: 'text', maxlength: '40', value: i.color || '', placeholder: 'Color', 'aria-label': 'Color' });
       var cant = inp({ type: 'number', min: '1', max: '100', inputmode: 'numeric', value: String(i.cant || 1), 'aria-label': 'Cantidad' });
       var precio = inp({ type: 'number', min: '1', step: '100', inputmode: 'numeric', value: i.precio === '' ? '' : String(i.precio), placeholder: 'Precio', 'aria-label': 'Precio de cada par' });
-      var f = { nombre: nombre, talla: talla, color: color, cant: cant, precio: precio };
+      var sub = el('div', { class: 'wa-sub', 'aria-label': 'Subtotal de la fila', text: '$0' });
+      var f = { nombre: nombre, talla: talla, color: color, cant: cant, precio: precio, sub: sub };
       var caja = el('div', { class: 'wa-linea' });
-      var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () { if (filas.length < 2) return A.msg('El pedido necesita al menos un producto', true); filas.splice(filas.indexOf(f), 1); caja.remove(); recalcular(); } });
-      if (W.prods.length) caja.appendChild(elegir);
-      [nombre, el('div', { class: 'wa-mini' }, [talla, color, cant, precio]), quitar].forEach(function (x) { caja.appendChild(x); });
+      var quitar = el('button', { type: 'button', class: 'claro wa-x', text: 'Quitar', 'aria-label': 'Quitar esta fila', onclick: function () { if (filas.length < 2) return A.msg('El pedido necesita al menos un producto', true); filas.splice(filas.indexOf(f), 1); caja.remove(); recalcular(); } });
+      var cel = function (clase, etiqueta, nodo) { return el('div', { class: 'cel ' + clase, 'data-l': etiqueta }, [nodo]); };
+      if (W.prods.length) caja.appendChild(el('div', { class: 'cel cat' }, [elegir]));
+      [cel('c-prod', 'Producto', nombre), cel('c-talla', 'Talla', talla), cel('c-color', 'Color', color), cel('c-cant', 'Cant.', cant), cel('c-precio', 'Precio', precio), cel('c-sub', 'Subtotal', sub), quitar].forEach(function (x) { caja.appendChild(x); });
       elegir.addEventListener('change', function () {
         var p = W.prods.filter(function (x) { return x.id === elegir.value; })[0]; if (!p) return;
         nombre.value = p.nombre; precio.value = String(p.precio); recalcular();
@@ -152,10 +158,12 @@
         .then(function () { A.msg('Pedido guardado ✓'); cont.textContent = ''; return recargarW(); })
         .catch(function (e) { guardar.disabled = false; A.falla(e); });
     });
-    var form = el('div', { class: 'form wa-form' }, [
+    var form = el('div', { class: 'form wa-form wa-hoja' }, [
       el('h3', { text: nuevo ? 'Nuevo pedido por WhatsApp' : 'Editar pedido' }),
       el('div', { class: 'wa-grid' }, [el('label', {}, ['Fecha', fecha]), el('label', {}, ['Clienta', cliente]), el('label', {}, ['Teléfono', tel]), el('label', {}, ['Ciudad', ciudad])]),
-      el('h4', { text: 'Productos' }), lineas, datalistTallas,
+      el('h4', { text: 'Productos' }),
+      el('div', { class: 'wa-cab', 'aria-hidden': 'true' }, ['', 'Producto', 'Talla', 'Color', 'Cant.', 'Precio', 'Subtotal', ''].map(function (x) { return el('span', { text: x }); })),
+      lineas, datalistTallas,
       el('button', { type: 'button', class: 'claro', text: '+ Agregar otro producto', onclick: function () { lineaNueva({ cant: 1, precio: '' }); } }),
       el('div', { class: 'wa-grid' }, [el('label', {}, ['Envío cobrado ($)', envio]), el('label', {}, ['Descuento ($)', desc])]),
       total,
