@@ -17,7 +17,7 @@ create table if not exists pedidos (
   estado_pago text not null default 'PENDING'
     check (estado_pago in ('PENDING','APPROVED','DECLINED','VOIDED','ERROR')),
   estado_envio text not null default 'PREPARANDO'
-    check (estado_envio in ('PREPARANDO','EN_CAMINO','ENTREGADO','DEVUELTO')),
+    check (estado_envio in ('PREPARANDO','EN_CAMINO','EN_DESTINO','ENTREGADO','DEVUELTO')),
   transportadora text,
   guia text,
   monto_centavos bigint not null check (monto_centavos > 0),
@@ -150,3 +150,26 @@ grant all on table ajustes, eventos to service_role;
 
 -- Enlace de rastreo de la transportadora (lo escribe Marlon en el panel; el cliente ve el botón "Rastrear pedido")
 alter table pedidos add column if not exists link_rastreo text;
+
+-- Pedidos por WhatsApp registrados en el panel (ver supabase/migracion-ventas-whatsapp.sql)
+create table if not exists ventas_whatsapp (
+  id bigint generated always as identity primary key,
+  fecha date not null default ((now() at time zone 'America/Bogota')::date),
+  cliente text not null,
+  telefono text,
+  ciudad text,
+  items jsonb not null default '[]' check (jsonb_typeof(items) = 'array'),   -- [{"nombre":"Plataforma Luna","talla":"37","color":"Negro","cant":1,"precio":189900}]  (pesos COP)
+  envio bigint not null default 0 check (envio >= 0),
+  descuento bigint not null default 0 check (descuento >= 0),
+  total bigint not null check (total >= 0),                                  -- productos + envío - descuento (lo calcula el servidor)
+  metodo_pago text not null default 'Transferencia',
+  estado_pago text not null default 'PAGADO' check (estado_pago in ('PAGADO','PENDIENTE','CANCELADO')),
+  estado_envio text not null default 'PREPARANDO' check (estado_envio in ('PREPARANDO','EN_CAMINO','ENTREGADO','DEVUELTO')),
+  guia text,
+  nota text,
+  creado_en timestamptz not null default now()
+);
+create index if not exists ventas_whatsapp_fecha on ventas_whatsapp (fecha desc, id desc);
+alter table ventas_whatsapp enable row level security;
+revoke all on table ventas_whatsapp from anon, authenticated;
+grant all on table ventas_whatsapp to service_role;
