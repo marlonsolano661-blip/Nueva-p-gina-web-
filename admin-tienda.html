@@ -138,6 +138,7 @@
   <p id="msg" role="status"></p>
   <div id="app" hidden>
     <nav class="tabs" id="tabs">
+      <div id="resumen" class="resumen" aria-live="polite"></div>
       <h3 class="grupo">Ventas y dinero</h3>
       <div class="lista">
         <button type="button" data-t="pedidos"><span class="ic">🧾</span><span class="tx"><b>Pedidos</b><small>Pagos, guías y envíos de la tienda</small></span><i class="fl" aria-hidden="true">›</i></button>
@@ -168,6 +169,7 @@
       </div>
     </nav>
     <div class="volver" id="volver" hidden><button type="button" id="inicio" class="claro">← Inicio</button><h2 id="titulo"></h2></div>
+    <details class="ayuda" id="ayuda" hidden></details>
     <section class="panel" id="p-inicio"></section>
     <section class="panel" id="p-comunidad"></section>
     <section class="panel" id="p-descuentos"></section>
@@ -189,5 +191,6 @@
 <script src="admin-descuentos.js"></script>
 <script src="admin-comunidad.js"></script>
 <script src="admin-ventas.js"></script>
+<script src="admin-resumen.js"></script>
 </body>
 </html>

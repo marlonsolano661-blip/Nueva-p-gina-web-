@@ -554,14 +554,65 @@
   var cargarFinanzas = function () { return window.mfAdminFinanzas ? window.mfAdminFinanzas.abrir() : Promise.reject(new Error('Finanzas no cargó: revisa que admin-ventas.js esté subido')); };
   var CARGA = { whatsapp: cargarWhatsapp, finanzas: cargarFinanzas, comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
   var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  // ---------- Ayuda de cada sección: qué es, cómo se usa y qué cuidar ----------
+  var AYUDA = {
+    pedidos: { sirve: 'Aquí ves las compras hechas en la tienda online (con su pago) y registras el despacho de cada una.',
+      pasos: ['En «Ver» deja «Pagados por preparar»: son compras ya pagadas que todavía no has enviado.', 'Prepara el pedido con los datos de la clienta que ves en la tarjeta.', 'Escribe la transportadora y el n.º de guía, cambia el estado de envío (Preparando, En camino, Entregado o Devuelto) y pulsa «Guardar despacho».'],
+      ojo: 'Los controles de envío solo se activan cuando el pago está aprobado. Si el pago sigue pendiente, no despaches.' },
+    whatsapp: { sirve: 'Anota aquí lo que vendes por chat para que cuente en Finanzas junto con las ventas de la tienda.',
+      pasos: ['Pulsa «+ Registrar pedido» y escribe el nombre, teléfono y ciudad de la clienta.', 'Elige los productos del catálogo con su talla y cantidad. El total se calcula solo.', 'Marca cómo pagó y si ya pagó. Después puedes cambiar el pago o el envío desde la misma tabla.'],
+      ojo: 'Solo los pedidos PAGADOS suman en Finanzas; los pendientes quedan en «Por cobrar». Registrar un pedido aquí NO descuenta el inventario: baja esos pares a mano en Inventario.' },
+    finanzas: { sirve: 'Resumen de cuánto vendiste, por mes, con cada compra al detalle.',
+      pasos: ['Elige el mes arriba (o «todos»).', 'Mira las tarjetas: total vendido, venta promedio, pares vendidos, tienda online vs WhatsApp, envíos cobrados, descuentos y por cobrar.', 'Baja a «Lo más vendido» y a «Cada compra»; toca una compra para ver sus productos.', '«Descargar para Excel» te da todo en una hoja.'],
+      ojo: 'Cuenta solo pagos aprobados (tienda) y pedidos pagados (WhatsApp). No descuenta la comisión de Wompi: lo que llega a tu banco es un poco menos.' },
+    productos: { sirve: 'Crea y edita los productos que se ven en la tienda.',
+      pasos: ['Pulsa «+ Nuevo producto», o toca uno existente para editarlo.', 'Completa nombre, precio, fotos, colores, tallas y colección.', 'Pulsa «Crear producto» o «Guardar cambios».'],
+      ojo: 'Ocultar un producto lo retira de la tienda sin borrarlo.' },
+    inventario: { sirve: 'Cuántos pares tienes de cada producto, talla por talla.',
+      pasos: ['Encuentra el producto y cambia el número de cada talla.', 'Pulsa «Guardar inventario» en esa tarjeta.'],
+      ojo: 'Cuando se aprueba un pago en la tienda, los pares se descuentan solos. Los pedidos de WhatsApp y los pedidos borrados no mueven el inventario: ajústalo tú.' },
+    colecciones: { sirve: 'Una colección agrupa varios productos (por ejemplo «Tacones» o «Sandalias»). En la tienda aparece un botón por cada colección visible para filtrar.',
+      pasos: ['Escribe el nombre y un mensaje corto y pulsa «+ Crear colección».', 'Elige qué productos entran en ella y pulsa «Guardar colección».'],
+      ojo: 'Eliminar una colección no borra los productos: quedan sin colección.' },
+    descuentos: { sirve: 'Códigos que tus clientas escriben al pagar para obtener un porcentaje de descuento.',
+      pasos: ['Pulsa «+ Agregar código» y escribe el código (por ejemplo BIENVENIDA) y el porcentaje (de 1 a 90).', 'Deja «Activo» marcado para que funcione. Marca «Anunciar en la tienda» si quieres que se muestre.', 'Pulsa «Guardar descuentos».'],
+      ojo: 'Si no pulsas «Guardar descuentos», los cambios se pierden.' },
+    inicio: { sirve: 'Diseña los banners de la portada de la tienda: foto, textos y botón.',
+      pasos: ['Pulsa «+ Nuevo banner» o elige uno existente.', 'Sube la foto de fondo y agrega textos y botones. Cambia entre vista de celular y de computador para revisar cómo se ve en cada uno.', 'Guarda los cambios.'],
+      ojo: 'Revisa siempre la vista de celular: es desde donde compra la mayoría.' },
+    comunidad: { sirve: 'Aquí llegan las fotos que las clientas comparten con «Comparte tus MF». Nada se publica sin tu aprobación.',
+      pasos: ['En «Por revisar» mira cada foto.', 'Pulsa «Aprobar y publicar» para mostrarla en la tienda.', 'Si luego quieres retirarla, hazlo desde «Publicadas» con «Quitar de la tienda».'] },
+    contenido: { sirve: 'Textos de la tienda y mensajes de las colecciones.',
+      pasos: ['Cambia el texto que quieras.', 'Pulsa «Guardar contenido».'],
+      ojo: 'Si dejas un campo vacío, la tienda usa el texto original. Los cambios se ven al recargar la tienda.' },
+    envio: { sirve: 'La tarifa de envío que se suma al total de cada compra.',
+      pasos: ['Escribe la tarifa en pesos.', 'Pulsa «Guardar tarifa».'],
+      ojo: 'Total a pagar = subtotal de productos + esta tarifa. Cambiarla no altera los pedidos que ya se crearon.' },
+    registro: { sirve: 'El historial de lo que ha pasado en la tienda: pagos, despachos y cambios.',
+      pasos: ['Úsalo para revisar qué ocurrió con un pedido o si un pago llegó.'] },
+  };
+  function pintarAyuda(t) {
+    var d = $('#ayuda'), a = AYUDA[t]; d.textContent = '';
+    if (!a) { d.hidden = true; return; }
+    d.hidden = false;
+    var visto = false, k = 'mf_ayuda_' + t;
+    try { visto = localStorage.getItem(k) === '1'; localStorage.setItem(k, '1'); } catch (e) {}
+    d.open = !visto; // la primera vez en cada sección se muestra abierta; luego queda plegada
+    d.appendChild(el('summary', { text: '¿Para qué sirve y cómo se usa?' }));
+    var c = el('div', { class: 'ay-c' }, [el('p', { class: 'ay-sirve', text: a.sirve }), el('ol', {}, a.pasos.map(function (x) { return el('li', { text: x }); }))]);
+    if (a.ojo) c.appendChild(el('p', { class: 'ay-ojo', text: 'Ojo: ' + a.ojo }));
+    d.appendChild(c);
+  }
   function inicio() {
-    $('#tabs').hidden = false; $('#volver').hidden = true;
+    $('#tabs').hidden = false; $('#volver').hidden = true; $('#ayuda').hidden = true;
+    if (window.mfAdminResumen) window.mfAdminResumen.cargar();
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
     msg(''); window.scrollTo(0, 0);
   }
   function abrir(t) {
     $('#tabs').hidden = true; $('#volver').hidden = false; $('#titulo').textContent = TITULOS[t] || '';
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-' + t); });
+    pintarAyuda(t);
     msg(''); window.scrollTo(0, 0); CARGA[t]().catch(falla);
   }
   function entrar() {
