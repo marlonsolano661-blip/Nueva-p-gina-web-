@@ -264,6 +264,28 @@ async function prueba(nombre, fn) {
     assert.equal(await tienda.locator('article.pc[data-id="bota-nueva"]').count(), 0);
   });
 
+  console.log('pedidos por WhatsApp y finanzas (panel)');
+  await prueba('se registra un pedido de WhatsApp, queda en la tabla y se suma en Finanzas', async () => {
+    await ir('whatsapp');
+    await admin.click('#p-whatsapp >> text=+ Registrar pedido');
+    await admin.fill('#wa-form input[placeholder="Nombre de la clienta"]', 'Laura Gómez');
+    await admin.fill('#wa-form input[aria-label="Producto"]', 'Plataforma Luna');
+    await admin.fill('#wa-form input[aria-label="Talla"]', '37');
+    await admin.fill('#wa-form input[aria-label="Precio de cada par"]', '189900');
+    await admin.fill('#wa-form label:has-text("Envío cobrado") input', '17500');
+    assert.match(await admin.locator('#wa-form .wa-total').innerText(), /Total del pedido[\s\S]*207\.400/);
+    await admin.click('#wa-form >> text=Guardar pedido');
+    await esperarMsg(/Pedido guardado/);
+    await admin.waitForSelector('#wa-tabla tbody tr');
+    assert.match(await admin.locator('#wa-tabla tbody tr').first().innerText(), /Laura Gómez[\s\S]*Plataforma Luna[\s\S]*207\.400/);
+    const fila = (await b.filas('select cliente, total, estado_pago from ventas_whatsapp'))[0];
+    assert.deepEqual([fila.cliente, Number(fila.total), fila.estado_pago], ['Laura Gómez', 207400, 'PAGADO']);
+    await ir('finanzas');
+    await admin.waitForSelector('.fin-card.grande');
+    assert.match(await admin.locator('.fin-card:has(.fin-t:text-is("WhatsApp"))').innerText(), /207\.400[\s\S]*1 compra/);
+    assert.match(await admin.locator('#p-finanzas details.compra').first().innerText(), /Laura Gómez/);
+  });
+
   console.log('pedidos y despacho');
   await prueba('un pedido pagado aparece por preparar con su envío aplicado; se registra el despacho', async () => {
     const p = (await b.filas('select * from pedidos order by id limit 1'))[0];
