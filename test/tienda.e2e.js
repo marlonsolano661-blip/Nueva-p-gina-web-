@@ -70,7 +70,7 @@ async function prueba(nombre, fn) {
     assert.match(await admin.locator('#p-productos').innerText(), /Plataforma Luna/);
   });
   await prueba('crea un producto desde el panel y queda guardado en la base', async () => {
-    await admin.click('text=Nuevo producto');
+    await admin.click('button:has-text("Nuevo producto")');
     await admin.fill('#f-nombre', 'Bota Nueva'); await admin.fill('#f-precio', '300000');
     await admin.fill('#f-desc', 'Bota creada desde el panel');
     await admin.setInputFiles('#f-file', { name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') });
@@ -98,7 +98,7 @@ async function prueba(nombre, fn) {
   });
   await prueba('datos inválidos: el servidor responde error y el panel NO dice guardado', async () => {
     await ir('productos'); await admin.waitForSelector('#p-productos .pcard');
-    await admin.click('text=Nuevo producto');
+    await admin.click('button:has-text("Nuevo producto")');
     await admin.fill('#f-nombre', 'Malo'); await admin.fill('#f-precio', '0');
     await admin.evaluate(() => { document.querySelector('#form-prod form').noValidate = true; });
     await admin.click('#form-prod button[type=submit]');
@@ -175,7 +175,7 @@ async function prueba(nombre, fn) {
     await admin.click('#p-contenido button[type=submit]');
     await esperarMsg(/Contenido guardado/);
     await ir('colecciones');
-    await admin.fill('#f-ncol', 'Botas'); await admin.click('text=+ Crear colección');
+    await admin.fill('#f-ncol', 'Botas'); await admin.click('button:has-text("+ Crear colección")');
     await esperarMsg(/creada/);
     await admin.locator('#p-colecciones .icard', { hasText: 'Botas' }).locator('text=Elegir productos').click();
     await admin.locator('#edit-col label', { hasText: 'Bota Nueva' }).locator('input').check();
@@ -199,7 +199,7 @@ async function prueba(nombre, fn) {
     await ir('colecciones'); await admin.waitForSelector('#p-colecciones .icard'); await admin.waitForTimeout(1000);
     await admin.fill('#f-ncol', 'Sandalias'); await admin.fill('#f-mcol', 'Ligeras y con estilo');
     await admin.setInputFiles('#f-pcol', { name: 'p.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64') });
-    await admin.click('text=+ Crear colección'); await esperarMsg(/creada/);
+    await admin.click('button:has-text("+ Crear colección")'); await esperarMsg(/creada/);
     await tienda.evaluate(() => localStorage.removeItem('mf_cat_v1')); await tienda.reload(); await tienda.waitForFunction(() => window.MF_API_OK === true);
     const sand = await tienda.evaluate(() => window.MF_CONTENIDO.colecciones.find((k) => k.id === 'sandalias'));
     assert.equal(sand.mensaje, 'Ligeras y con estilo'); assert.match(sand.portada, /storage\/v1\/object\/public\/productos\//);
@@ -284,6 +284,16 @@ async function prueba(nombre, fn) {
     await admin.waitForSelector('.fin-card.grande');
     assert.match(await admin.locator('.fin-card:has(.fin-t:text-is("WhatsApp"))').innerText(), /207\.400[\s\S]*1 compra/);
     assert.match(await admin.locator('#p-finanzas details.compra').first().innerText(), /Laura Gómez/);
+  });
+
+  await prueba('el inicio muestra el resumen con datos reales y cada sección trae su ayuda', async () => {
+    await admin.click('#inicio');
+    await admin.waitForFunction(() => /207\.400/.test((document.querySelector('#resumen') || {}).innerText || ''));
+    assert.match(await admin.locator('#resumen .rc[data-ir="finanzas"]').innerText(), /207\.400[\s\S]*1 compra/);
+    assert.match(await admin.locator('#resumen').innerText(), /Todo al día|¿Qué hago ahora\?/);
+    await admin.click('#resumen .rc[data-ir="pedidos"]');
+    await admin.waitForSelector('#ayuda summary');
+    assert.match(await admin.locator('#ayuda').innerText(), /Pagados por preparar/);
   });
 
   console.log('pedidos y despacho');
