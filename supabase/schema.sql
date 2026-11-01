@@ -150,6 +150,7 @@ grant all on table ajustes, eventos to service_role;
 
 -- Enlace de rastreo de la transportadora (lo escribe Marlon en el panel; el cliente ve el botón "Rastrear pedido")
 alter table pedidos add column if not exists link_rastreo text;
+alter table pedidos add column if not exists visto_en timestamptz;  -- pedidos nuevos: null = todavía no lo has visto en el panel
 
 -- Pedidos por WhatsApp registrados en el panel (ver supabase/migracion-ventas-whatsapp.sql)
 create table if not exists ventas_whatsapp (
