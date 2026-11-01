@@ -103,32 +103,8 @@
       })
       .then(function () { clearTimeout(corte); });
   }, true);
-  var WIDGET_EN_CELULAR = true;
+  var WIDGET_EN_CELULAR = false;
   var ES_CELULAR = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-  // Mientras el widget está abierto, la página de atrás no debe moverse: en celulares el teclado y el scroll del widget la arrastraban y el pago se "pegaba".
-  var bloqueo = null;
-  function bloquear() {
-    if (bloqueo) return;
-    var h = document.documentElement, b = document.body, y = window.pageYOffset || 0;
-    bloqueo = { y: y, pos: b.style.position, top: b.style.top, w: b.style.width, sb: h.style.scrollBehavior };
-    h.style.scrollBehavior = 'auto'; b.style.position = 'fixed'; b.style.top = (-y) + 'px'; b.style.width = '100%';
-  }
-  function desbloquear() {
-    if (!bloqueo) return;
-    var h = document.documentElement, b = document.body, k = bloqueo; bloqueo = null;
-    b.style.position = k.pos; b.style.top = k.top; b.style.width = k.w;
-    window.scrollTo(0, k.y); h.style.scrollBehavior = k.sb;
-  }
-  // Red de seguridad: el bloqueo nunca debe quedarse pegado. Se suelta si el widget no llegó a abrirse, si su ventana desapareció o pasado un tiempo largo.
-  function vigilar(iframesAntes) {
-    var t0 = Date.now(), visto = false;
-    var iv = setInterval(function () {
-      if (!bloqueo) return clearInterval(iv);
-      var hay = document.querySelectorAll('iframe').length > iframesAntes;
-      if (hay) visto = true;
-      if ((visto && !hay) || (!visto && Date.now() - t0 > 12000) || Date.now() - t0 > 30 * 60 * 1000) { desbloquear(); clearInterval(iv); }
-    }, 500);
-  }
   // Abre el widget de Wompi con los mismos datos firmados que trae la URL del checkout (el servidor sigue siendo quien firma y fija el monto).
   function abrirWidget(url, alFallar, alCerrar) {
     var q, cfg;
@@ -147,16 +123,13 @@
     function abrir() {
       if (listo) return; listo = true;
       try {
-        var antes = document.querySelectorAll('iframe').length;
-        bloquear(); vigilar(antes);
         new window.WidgetCheckout(cfg).open(function (res) {
-          desbloquear();
           var t = res && res.transaction;
           // Con transacción: se vuelve a gracias.html?id=… igual que con el checkout normal. Sin ella (cerró el pago), se puede reintentar.
           if (t && t.id) location.href = cfg.redirectUrl + (cfg.redirectUrl.indexOf('?') < 0 ? '?' : '&') + 'id=' + encodeURIComponent(t.id);
           else alCerrar();
         });
-      } catch (e) { desbloquear(); alFallar(); }
+      } catch (e) { alFallar(); }
     }
     if (window.WidgetCheckout) return abrir();
     var sc = document.createElement('script');

@@ -475,7 +475,7 @@
   var ENVIOS = [['PREPARANDO', 'Preparando'], ['EN_CAMINO', 'En camino'], ['ENTREGADO', 'Entregado'], ['DEVUELTO', 'Devuelto']];
   function cargarPedidos() {
     var c = $('#p-pedidos'); c.textContent = '';
-    var f = el('select', { id: 'f-ped' }, [el('option', { value: 'preparacion=pendiente', text: 'Pagados por preparar' }), el('option', { value: 'pago=APPROVED', text: 'Todos los pagados' }), el('option', { value: 'pago=PENDING', text: 'Pago pendiente' }), el('option', { value: '', text: 'Todos' })]);
+    var f = el('select', { id: 'f-ped' }, [el('option', { value: 'preparacion=pendiente', text: 'Pagados por preparar' }), el('option', { value: 'nuevo=1', text: 'Nuevos (sin ver)' }), el('option', { value: 'pago=APPROVED', text: 'Todos los pagados' }), el('option', { value: 'pago=PENDING', text: 'Pago pendiente' }), el('option', { value: '', text: 'Todos' })]);
     f.addEventListener('change', listar);
     c.appendChild(el('div', { class: 'barra' }, [campo('Ver ', f), el('button', { type: 'button', class: 'claro', text: 'Actualizar', onclick: listar })]));
     c.appendChild(el('div', { id: 'lista-ped' }));
@@ -484,7 +484,16 @@
   function listar() {
     return api('admin-pedidos?' + $('#f-ped').value + '&limite=100').then(function (d) {
       var l = $('#lista-ped'); l.textContent = '';
-      if (!d.pedidos.length) l.appendChild(el('p', { class: 'suave', text: 'No hay pedidos en esta vista.' }));
+      var nuevos = d.pedidos.filter(function (p) { return p.estado_pago === 'APPROVED' && p.visto_en === null; });
+      var sinMarca = d.pedidos.length > 0 && d.pedidos.every(function (p) { return p.visto_en === undefined; });
+      if (sinMarca) l.appendChild(el('p', { class: 'alerta', text: 'Para saber cuáles pedidos son nuevos falta un paso único: en Supabase, abre SQL Editor y ejecuta el archivo migracion-pedidos-nuevos.sql.' }));
+      else if (nuevos.length) l.appendChild(el('div', { class: 'nuevos-barra' }, [
+        el('b', { text: nuevos.length + (nuevos.length === 1 ? ' pedido nuevo' : ' pedidos nuevos') }),
+        el('button', { type: 'button', class: 'claro', text: 'Marcar todos como vistos', onclick: function () {
+          api('admin-pedidos', { method: 'POST', body: { accion: 'todos_vistos' } }).then(function () { msg('Listo: todos quedaron como vistos ✓'); return listar(); }).catch(falla);
+        } }),
+      ]));
+      if (!d.pedidos.length) l.appendChild(el('p', { class: 'suave', text: $('#f-ped').value === 'nuevo=1' ? 'No tienes pedidos nuevos. Todo está visto.' : 'No hay pedidos en esta vista.' }));
       d.pedidos.forEach(function (p) { l.appendChild(tarjeta(p)); });
     }).catch(falla);
   }
@@ -495,11 +504,15 @@
     if (sub != null) { det.push(el('div', { class: 'linea suave' }, [el('span', { text: 'Subtotal' }), el('span', { text: peso(sub) })])); det.push(el('div', { class: 'linea suave' }, [el('span', { text: 'Envío aplicado' }), el('span', { text: peso(env) })])); }
     else det.push(el('div', { class: 'linea suave' }, [el('span', { text: 'Pedido anterior: el total ya incluía su envío' }), el('span')]));
     det.push(el('div', { class: 'linea tot' }, [el('span', { text: 'Total cobrado' }), el('span', { text: peso(tot) })]));
+    var esNuevo = p.estado_pago === 'APPROVED' && p.visto_en === null;
     var kids = [
-      el('div', { class: 'fila' }, [el('span', { class: 'ref', text: p.referencia }), el('span', { class: 'etiqueta ' + p.estado_pago, text: ({ APPROVED: 'Pagado', PENDING: 'Pago pendiente', DECLINED: 'Rechazado', VOIDED: 'Anulado', ERROR: 'Error' })[p.estado_pago] || p.estado_pago })]),
+      el('div', { class: 'fila' }, [el('span', { class: 'ref', text: p.referencia }), esNuevo ? el('span', { class: 'tag-nuevo', text: 'NUEVO' }) : null, el('span', { class: 'etiqueta ' + p.estado_pago, text: ({ APPROVED: 'Pagado', PENDING: 'Pago pendiente', DECLINED: 'Rechazado', VOIDED: 'Anulado', ERROR: 'Error' })[p.estado_pago] || p.estado_pago })]),
       el('p', { text: (cl.nombre || '') + ' · ' + (cl.tel || '') + ' · ' + (cl.direccion || '') }),
     ].concat(det);
     if (p.alerta) kids.push(el('div', { class: 'alerta', text: 'Revisar: ' + p.alerta }));
+    if (esNuevo) kids.push(el('div', { class: 'aviso-nuevo' }, [el('span', { text: 'Pedido nuevo: todavía no lo has marcado como visto.' }), el('button', { type: 'button', text: 'Marcar como visto', onclick: function () {
+      api('admin-pedidos', { method: 'POST', body: { id: p.id, accion: 'visto' } }).then(function () { msg('Pedido marcado como visto ✓'); return listar(); }).catch(falla);
+    } })]));
     if (p.estado_pago === 'APPROVED') {
       var prep = el('input', { type: 'checkbox' }); prep.checked = !!p.preparado_en;
       var est = el('select', {}, ENVIOS.map(function (x) { return el('option', { value: x[0], text: x[1] }); })); est.value = p.estado_envio;
@@ -532,7 +545,7 @@
       }
       kids.push(el('p', { class: 'nota', text: 'Las guías y transportadoras las escribes tú; no hay consulta automática a la transportadora. Pagado no significa despachado.' + (p.enviado_en ? ' Despachado: ' + new Date(p.enviado_en).toLocaleString('es-CO') : '') }));
     }
-    return el('article', { class: 'pedido' }, kids);
+    return el('article', { class: 'pedido' + (esNuevo ? ' es-nuevo' : '') }, kids);
   }
 
   // ---------- Registro ----------

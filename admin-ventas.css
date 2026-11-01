@@ -130,3 +130,17 @@ td.num,th.num{text-align:right;white-space:nowrap}
 #p-whatsapp .tabla-wa select{max-width:7.4rem;padding:.25rem .4rem}
 #p-whatsapp .tabla-wa{min-width:36rem}
 #p-whatsapp td.acc-wa{display:table-cell}#p-whatsapp .acc-wa button{display:block;width:100%;margin:.15rem 0}#p-whatsapp .acc-wa button{padding:.25rem .7rem}
+
+/* Pedidos nuevos */
+.tag-nuevo{display:inline-block;background:#0a0a0a;color:#fff;border-radius:999px;padding:.12rem .7rem;font-size:.72rem;font-weight:700;letter-spacing:.12em}
+.pedido.es-nuevo{border:1.5px solid #0a0a0a;box-shadow:0 0 0 4px #0a0a0a14}
+.aviso-nuevo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem .8rem;background:#f1f1ee;border-radius:.9rem;padding:.55rem .8rem;margin:.7rem 0;font-size:.92rem}
+.aviso-nuevo button{min-height:0;padding:.35rem 1rem;font-size:.88rem}
+.nuevos-barra{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem .8rem;background:#0a0a0a;color:#fff;border-radius:1rem;padding:.7rem 1rem;margin:.2rem 0 .6rem}
+.nuevos-barra button{min-height:0;padding:.4rem 1rem;font-size:.88rem}
+.rs-nuevos{display:flex;align-items:center;gap:.8rem;background:#0a0a0a;color:#fff;border-radius:1.3rem;padding:1rem;margin:0 0 .7rem;cursor:pointer}
+.rs-nuevos .rs-tx small{color:#d0d0d4}.rs-nuevos .fl{flex:none;font-style:normal;font-size:1.8rem;line-height:1;color:#8a8a90}
+.rs-pulso{flex:none;width:.8rem;height:.8rem;border-radius:50%;background:#ff4d4d;box-shadow:0 0 0 0 #ff4d4d99;animation:pulso 1.8s infinite}
+@keyframes pulso{70%{box-shadow:0 0 0 .7rem #ff4d4d00}100%{box-shadow:0 0 0 0 #ff4d4d00}}
+@media(prefers-reduced-motion:reduce){.rs-pulso{animation:none}}
+nav.tabs .bd{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .4rem;margin-left:.5rem;border-radius:999px;background:#d23b35;color:#fff;font:700 .75rem/1 Figtree,system-ui,sans-serif;vertical-align:middle}
