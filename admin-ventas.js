@@ -204,7 +204,8 @@
       r.descuentos ? tarjetaF('Descuentos dados', peso(r.descuentos), 'en pedidos de WhatsApp') : null,
       tarjetaF('Por cobrar', peso(r.por_cobrar.total), r.por_cobrar.n + ' pedido' + (r.por_cobrar.n === 1 ? '' : 's') + ' de WhatsApp sin pagar', r.por_cobrar.n ? 'aviso' : ''),
     ]));
-    c.appendChild(el('p', { class: 'nota', text: 'Son los valores cobrados a las clientas. No se restan comisiones de Wompi, costos de los productos ni gastos. Solo cuentan las compras pagadas.' }));
+    c.appendChild(el('p', { class: 'nota', text: 'Lo de arriba es lo cobrado a las clientas (solo compras pagadas). Más abajo, en "Ganancias y gastos", anotas lo que gastaste para ver cuánto te queda.' }));
+    c.appendChild(bloqueGastos(d));
 
     c.appendChild(el('h3', { class: 'fin-h', text: 'Mes a mes' }));
     if (!d.meses.length) c.appendChild(el('p', { class: 'nota', text: 'Todavía no hay ventas pagadas.' }));
@@ -221,6 +222,62 @@
     c.appendChild(el('h3', { class: 'fin-h', text: 'Cada compra' }));
     if (!d.detalle.length) c.appendChild(el('p', { class: 'nota', text: 'No hay compras en este periodo.' }));
     d.detalle.forEach(function (v) { c.appendChild(compra(v)); });
+  }
+
+  // ---- Ganancias y gastos: Marlon anota lo que gasta y el panel calcula la ganancia bruta, la neta y los márgenes ----
+  var CATS = { MERCANCIA: 'Mercancía (costo de los zapatos)', INSUMOS: 'Insumos (cajas, bolsas, etiquetas)', ENVIOS: 'Envíos pagados a la transportadora', COMISIONES: 'Comisiones (Wompi, banco)', PUBLICIDAD: 'Publicidad', SERVICIOS: 'Servicios y arriendo', PERSONAL: 'Pagos a personas', OTROS: 'Otros gastos' };
+  var pct = function (x) { return x == null ? '—' : String(x).replace('.', ',') + ' %'; };
+  var gananciaTxt = function (n) { return (n < 0 ? '−' : '') + peso(Math.abs(n)); };
+
+  function bloqueGastos(d) {
+    var u = d.utilidad, caja = el('div', { class: 'gan' });
+    caja.appendChild(el('h3', { class: 'fin-h', text: 'Ganancias y gastos' }));
+    if (!u) { caja.appendChild(el('div', { class: 'alerta', text: d.aviso_gastos || 'Gastos no disponibles por ahora.' })); return caja; }
+    caja.appendChild(el('div', { class: 'fin-cards' }, [
+      tarjetaF('Vendiste', peso(u.ventas), 'lo cobrado, con envíos'),
+      tarjetaF('Costo de la mercancía', peso(u.costo_mercancia), 'lo que anotas como "Mercancía"'),
+      tarjetaF('Ganancia bruta', gananciaTxt(u.ganancia_bruta), 'margen bruto ' + pct(u.margen_bruto), 'grande'),
+      tarjetaF('Otros gastos', peso(u.otros_gastos), 'insumos, envíos, publicidad…'),
+      tarjetaF('Ganancia neta', gananciaTxt(u.ganancia_neta), 'margen neto ' + pct(u.margen_neto), u.ganancia_neta < 0 ? 'aviso grande' : 'grande'),
+    ]));
+    caja.appendChild(el('p', { class: 'nota', text: 'Ganancia bruta = vendido − costo de la mercancía. Ganancia neta = ganancia bruta − los demás gastos. El margen es la ganancia dividida entre lo vendido. Solo cuenta lo que tú anotas aquí: si falta anotar un gasto, la ganancia sale más alta de lo real. Las compras de mercancía se cuentan en el mes en que las anotas.' }));
+
+    // formulario
+    var fecha = el('input', { type: 'date', value: hoy(), max: hoy() });
+    var cat = el('select', {}, opciones(CATS, 'INSUMOS'));
+    var desc = el('input', { type: 'text', maxlength: '120', placeholder: 'Qué fue (ej. 50 cajas)', autocomplete: 'off' });
+    var monto = el('input', { type: 'number', min: '1', step: '1', inputmode: 'numeric', placeholder: 'Valor en pesos' });
+    var form = el('form', { class: 'gasto-form' }, [
+      el('label', {}, ['Fecha', fecha]), el('label', {}, ['Tipo de gasto', cat]), el('label', {}, ['Descripción (opcional)', desc]), el('label', {}, ['Valor ($)', monto]),
+      el('button', { type: 'submit', text: 'Guardar gasto' }),
+    ]);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = parseInt(monto.value, 10);
+      if (!(v > 0)) { A.msg('Escribe el valor del gasto en pesos'); return; }
+      A.msg('Guardando…');
+      A.api('admin-tienda', { method: 'POST', body: { recurso: 'gasto', accion: 'crear', gasto: { fecha: fecha.value, categoria: cat.value, descripcion: desc.value, monto: v } } })
+        .then(function () { A.msg('Gasto guardado ✓'); return cargarF(F.mes); }).catch(A.falla);
+    });
+    caja.appendChild(el('details', { class: 'gasto-nuevo', open: 'open' }, [el('summary', { text: '+ Agregar un gasto' }), form]));
+
+    if (u.por_categoria.length) {
+      caja.appendChild(el('h3', { class: 'fin-h', text: 'En qué se fue la plata' }));
+      caja.appendChild(el('ol', { class: 'fin-top' }, u.por_categoria.map(function (x) { return el('li', {}, [el('span', { text: x.nombre }), el('span', { class: 'nota', text: peso(x.total) })]); })));
+      caja.appendChild(el('h3', { class: 'fin-h', text: 'Gastos anotados' }));
+      u.gastos.forEach(function (g) {
+        caja.appendChild(el('div', { class: 'gasto-fila' }, [
+          el('span', { class: 'cf', text: fechaCorta(g.fecha) }),
+          el('span', { class: 'gx' }, [el('strong', { text: CATS[g.categoria] || g.categoria }), g.descripcion ? el('span', { class: 'nota', text: g.descripcion }) : null]),
+          el('strong', { class: 'ct', text: peso(g.monto) }),
+          el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () {
+            if (!window.confirm('¿Quitar este gasto de ' + peso(g.monto) + '? No se puede deshacer.')) return;
+            A.api('admin-tienda', { method: 'POST', body: { recurso: 'gasto', accion: 'eliminar', id: g.id } }).then(function () { A.msg('Gasto quitado'); return cargarF(F.mes); }).catch(A.falla);
+          } }),
+        ]));
+      });
+    } else caja.appendChild(el('p', { class: 'nota', text: 'Aún no has anotado gastos en este periodo.' }));
+    return caja;
   }
 
   function compra(v) {

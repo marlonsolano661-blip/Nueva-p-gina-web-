@@ -144,3 +144,14 @@ td.num,th.num{text-align:right;white-space:nowrap}
 @keyframes pulso{70%{box-shadow:0 0 0 .7rem #ff4d4d00}100%{box-shadow:0 0 0 0 #ff4d4d00}}
 @media(prefers-reduced-motion:reduce){.rs-pulso{animation:none}}
 nav.tabs .bd{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .4rem;margin-left:.5rem;border-radius:999px;background:#d23b35;color:#fff;font:700 .75rem/1 Figtree,system-ui,sans-serif;vertical-align:middle}
+
+/* Ganancias y gastos (Finanzas) */
+.gan{margin-top:1.4rem}
+.gasto-nuevo{background:#fff;border-radius:1.2rem;padding:.2rem 1rem;box-shadow:0 10px 30px -24px #7d3f4f;margin:.8rem 0}
+.gasto-nuevo>summary{cursor:pointer;font-weight:700;padding:.8rem 0}
+.gasto-form{display:grid;grid-template-columns:1fr;gap:.7rem;padding:.2rem 0 1rem}
+.gasto-form label{display:grid;gap:.25rem;font-size:.85rem;font-weight:600}
+.gasto-fila{display:grid;grid-template-columns:auto 1fr auto;gap:.3rem .8rem;align-items:center;padding:.7rem 0;border-bottom:1px solid #0001}
+.gasto-fila .gx{display:grid;gap:.1rem;min-width:0;overflow-wrap:anywhere}
+.gasto-fila button{grid-column:1/-1;justify-self:end}
+@media(min-width:700px){.gasto-form{grid-template-columns:1fr 1.4fr 1.6fr 1fr auto;align-items:end}.gasto-fila{grid-template-columns:6rem 1fr auto auto}.gasto-fila button{grid-column:auto}}
