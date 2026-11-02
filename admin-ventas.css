@@ -145,13 +145,30 @@ td.num,th.num{text-align:right;white-space:nowrap}
 @media(prefers-reduced-motion:reduce){.rs-pulso{animation:none}}
 nav.tabs .bd{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .4rem;margin-left:.5rem;border-radius:999px;background:#d23b35;color:#fff;font:700 .75rem/1 Figtree,system-ui,sans-serif;vertical-align:middle}
 
-/* Ganancias y gastos (Finanzas) */
-.gan{margin-top:1.4rem}
-.gasto-nuevo{background:#fff;border-radius:1.2rem;padding:.2rem 1rem;box-shadow:0 10px 30px -24px #7d3f4f;margin:.8rem 0}
-.gasto-nuevo>summary{cursor:pointer;font-weight:700;padding:.8rem 0}
-.gasto-form{display:grid;grid-template-columns:1fr;gap:.7rem;padding:.2rem 0 1rem}
-.gasto-form label{display:grid;gap:.25rem;font-size:.85rem;font-weight:600}
-.gasto-fila{display:grid;grid-template-columns:auto 1fr auto;gap:.3rem .8rem;align-items:center;padding:.7rem 0;border-bottom:1px solid #0001}
-.gasto-fila .gx{display:grid;gap:.1rem;min-width:0;overflow-wrap:anywhere}
-.gasto-fila button{grid-column:1/-1;justify-self:end}
-@media(min-width:700px){.gasto-form{grid-template-columns:1fr 1.4fr 1.6fr 1fr auto;align-items:end}.gasto-fila{grid-template-columns:6rem 1fr auto auto}.gasto-fila button{grid-column:auto}}
+/* Ganancias y gastos (Finanzas): hojas de cálculo en verde, igual que la de WhatsApp */
+.gan{--hj-d:#075e54;--hj-m:#008069;--hj-c:#d9fdd3;--hj-s:#f1fbef;--hj-l:#c5dccd;--hj-t:#111b21;margin-top:1.4rem}
+.gan .nota{color:#54656f}
+.hoja-f{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--hj-l);border-radius:.9rem;background:#fff;box-shadow:0 6px 18px -12px #075e5466;margin:.3rem 0 .8rem}
+.tabla-hj{border-collapse:collapse;width:100%;font-size:.92rem;color:var(--hj-t)}
+.tabla-hj th,.tabla-hj td{border:1px solid var(--hj-l);padding:.4rem .55rem;text-align:left;vertical-align:middle}
+.tabla-hj tr.hj-letras th{background:var(--hj-c);color:var(--hj-d);font-size:.72rem;font-weight:700;text-align:center;padding:.15rem;letter-spacing:.08em}
+.tabla-hj thead tr:nth-child(2) th{background:var(--hj-m);color:#fff;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;border-color:#0a7a68;white-space:nowrap}
+.tabla-hj .rn{background:var(--hj-c);color:var(--hj-d);text-align:center;font-weight:700;font-size:.78rem;width:2.4rem;min-width:2.4rem;padding:.3rem}
+.tabla-hj thead tr:nth-child(2) th.rn{background:var(--hj-d);color:#fff}
+.tabla-hj .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.tabla-hj td.num{color:var(--hj-d)}
+.tabla-hj tbody tr:nth-child(even) td:not(.rn){background:var(--hj-s)}
+.tabla-hj tfoot td{background:var(--hj-c);font-weight:700;color:var(--hj-d);border-top:2px solid var(--hj-m)}
+.tabla-hj.res{table-layout:fixed;font-size:.88rem}.tabla-hj.res th,.tabla-hj.res td{padding:.4rem .4rem}.tabla-hj.res .rn{width:2rem;min-width:0;padding:.3rem 0}.tabla-hj.res th.num,.tabla-hj.res td.num{width:6.6rem}.tabla-hj.res th.pc,.tabla-hj.res td.pc{width:3.9rem}.tabla-hj.res thead tr:nth-child(2) th{font-size:.7rem;padding:.4rem .3rem}
+.tabla-hj.res td.pc,.tabla-hj.res th.pc{text-align:right;white-space:nowrap;color:var(--hj-d);font-weight:600}
+.tabla-hj.res tr.sub td:not(.rn){color:#54656f;font-size:.86rem}
+.tabla-hj.res tr.total td:not(.rn){background:var(--hj-c);font-weight:700;color:var(--hj-d);font-size:1rem}
+.tabla-hj.res tr.total.neg td:not(.rn){background:#fde7e5;color:#a3342f}
+.tabla-hj.gas{min-width:42rem}
+.tabla-hj.gas td.acc{width:5.2rem;text-align:center}
+.tabla-hj.gas td.acc button{min-height:0;padding:.3rem .8rem;font-size:.85rem}
+.tabla-hj.gas tr.nueva td:not(.rn){background:var(--hj-c)}
+.tabla-hj.gas tr.nueva input,.tabla-hj.gas tr.nueva select{width:100%;min-width:0;min-height:0;padding:.4rem .5rem;border:1px solid var(--hj-m);border-radius:.5rem;background:#fff;font-size:.9rem}
+.tabla-hj.gas tr.nueva input:focus,.tabla-hj.gas tr.nueva select:focus{outline:none;box-shadow:0 0 0 3px #00806933}
+.tabla-hj.gas tr.nueva button{background:var(--hj-m);border-color:var(--hj-m);color:#fff;min-height:0;padding:.4rem .9rem;font-size:.88rem}
+.tabla-hj thead tr:nth-child(2) th{color:#fff!important}

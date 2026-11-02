@@ -233,50 +233,55 @@
     var u = d.utilidad, caja = el('div', { class: 'gan' });
     caja.appendChild(el('h3', { class: 'fin-h', text: 'Ganancias y gastos' }));
     if (!u) { caja.appendChild(el('div', { class: 'alerta', text: d.aviso_gastos || 'Gastos no disponibles por ahora.' })); return caja; }
-    caja.appendChild(el('div', { class: 'fin-cards' }, [
-      tarjetaF('Vendiste', peso(u.ventas), 'lo cobrado, con envíos'),
-      tarjetaF('Costo de la mercancía', peso(u.costo_mercancia), 'lo que anotas como "Mercancía"'),
-      tarjetaF('Ganancia bruta', gananciaTxt(u.ganancia_bruta), 'margen bruto ' + pct(u.margen_bruto), 'grande'),
-      tarjetaF('Otros gastos', peso(u.otros_gastos), 'insumos, envíos, publicidad…'),
-      tarjetaF('Ganancia neta', gananciaTxt(u.ganancia_neta), 'margen neto ' + pct(u.margen_neto), u.ganancia_neta < 0 ? 'aviso grande' : 'grande'),
-    ]));
-    caja.appendChild(el('p', { class: 'nota', text: 'Ganancia bruta = vendido − costo de la mercancía. Ganancia neta = ganancia bruta − los demás gastos. El margen es la ganancia dividida entre lo vendido. Solo cuenta lo que tú anotas aquí: si falta anotar un gasto, la ganancia sale más alta de lo real. Las compras de mercancía se cuentan en el mes en que las anotas.' }));
+    var td = function (txt, cls, extra) { var o = { text: txt }; if (cls) o.class = cls; if (extra) Object.keys(extra).forEach(function (k) { o[k] = extra[k]; }); return el('td', o); };
+    var th = function (txt, cls) { return el('th', { class: cls || '', text: txt }); };
+    var letras = function (n) { return el('tr', { class: 'hj-letras' }, [el('th', { class: 'rn' })].concat('ABCDEFGH'.slice(0, n).split('').map(function (x) { return el('th', { text: x }); }))); };
 
-    // formulario
-    var fecha = el('input', { type: 'date', value: hoy(), max: hoy() });
-    var cat = el('select', {}, opciones(CATS, 'INSUMOS'));
-    var desc = el('input', { type: 'text', maxlength: '120', placeholder: 'Qué fue (ej. 50 cajas)', autocomplete: 'off' });
-    var monto = el('input', { type: 'number', min: '1', step: '1', inputmode: 'numeric', placeholder: 'Valor en pesos' });
-    var form = el('form', { class: 'gasto-form' }, [
-      el('label', {}, ['Fecha', fecha]), el('label', {}, ['Tipo de gasto', cat]), el('label', {}, ['Descripción (opcional)', desc]), el('label', {}, ['Valor ($)', monto]),
-      el('button', { type: 'submit', text: 'Guardar gasto' }),
-    ]);
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    // 1) Resultado del periodo, como una hoja: ventas − costo = ganancia bruta; − otros gastos = ganancia neta
+    var filas = [
+      ['Vendiste (con envíos)', peso(u.ventas), '100 %', 'base'],
+      ['− Costo de la mercancía', gananciaTxt(-u.costo_mercancia), '', ''],
+      ['= GANANCIA BRUTA', gananciaTxt(u.ganancia_bruta), pct(u.margen_bruto), 'total'],
+    ];
+    u.por_categoria.filter(function (x) { return x.categoria !== 'MERCANCIA'; }).forEach(function (x) { filas.push(['   − ' + x.nombre.replace(/ \(.*\)$/, ''), gananciaTxt(-x.total), '', 'sub']); });
+    filas.push(['− Otros gastos', gananciaTxt(-u.otros_gastos), '', '']);
+    filas.push(['= GANANCIA NETA', gananciaTxt(u.ganancia_neta), pct(u.margen_neto), u.ganancia_neta < 0 ? 'total neg' : 'total']);
+    var tb1 = el('tbody');
+    filas.forEach(function (f, i) { tb1.appendChild(el('tr', { class: f[3] }, [td(String(i + 1), 'rn'), td(f[0]), td(f[1], 'num'), td(f[2], 'pc')])); });
+    caja.appendChild(el('div', { class: 'hoja-f' }, [el('table', { class: 'tabla-hj res' }, [el('thead', {}, [letras(3), el('tr', {}, [el('th', { class: 'rn', text: '#' }), th('Resultado del periodo'), th('Valor', 'num'), th('Margen', 'pc')])]), tb1])]));
+    caja.appendChild(el('p', { class: 'nota', text: 'Ganancia bruta = vendido − costo de la mercancía. Ganancia neta = bruta − los demás gastos. Margen = ganancia ÷ vendido. Solo cuenta lo que anotas abajo: si falta un gasto, la ganancia sale más alta que la real. La mercancía se cuenta en el mes en que la anotas.' }));
+
+    // 2) Hoja de gastos: cada fila es un gasto y la última fila (verde claro) es para anotar uno nuevo
+    caja.appendChild(el('h3', { class: 'fin-h', text: 'Hoja de gastos' }));
+    var fecha = el('input', { type: 'date', value: hoy(), max: hoy(), 'aria-label': 'Fecha' });
+    var cat = el('select', { 'aria-label': 'Tipo de gasto' }, opciones(CATS, 'INSUMOS'));
+    var desc = el('input', { type: 'text', maxlength: '120', placeholder: 'Qué fue (opcional)', autocomplete: 'off', 'aria-label': 'Descripción' });
+    var monto = el('input', { type: 'number', min: '1', step: '1', inputmode: 'numeric', placeholder: '$ valor', 'aria-label': 'Valor en pesos' });
+    var boton = el('button', { type: 'button', text: 'Agregar' });
+    function guardar() {
       var v = parseInt(monto.value, 10);
-      if (!(v > 0)) { A.msg('Escribe el valor del gasto en pesos'); return; }
+      if (!(v > 0)) { A.msg('Escribe el valor del gasto en pesos'); monto.focus(); return; }
       A.msg('Guardando…');
       A.api('admin-tienda', { method: 'POST', body: { recurso: 'gasto', accion: 'crear', gasto: { fecha: fecha.value, categoria: cat.value, descripcion: desc.value, monto: v } } })
         .then(function () { A.msg('Gasto guardado ✓'); return cargarF(F.mes); }).catch(A.falla);
-    });
-    caja.appendChild(el('details', { class: 'gasto-nuevo', open: 'open' }, [el('summary', { text: '+ Agregar un gasto' }), form]));
+    }
+    boton.addEventListener('click', guardar);
+    [desc, monto, fecha].forEach(function (i) { i.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); guardar(); } }); });
 
-    if (u.por_categoria.length) {
-      caja.appendChild(el('h3', { class: 'fin-h', text: 'En qué se fue la plata' }));
-      caja.appendChild(el('ol', { class: 'fin-top' }, u.por_categoria.map(function (x) { return el('li', {}, [el('span', { text: x.nombre }), el('span', { class: 'nota', text: peso(x.total) })]); })));
-      caja.appendChild(el('h3', { class: 'fin-h', text: 'Gastos anotados' }));
-      u.gastos.forEach(function (g) {
-        caja.appendChild(el('div', { class: 'gasto-fila' }, [
-          el('span', { class: 'cf', text: fechaCorta(g.fecha) }),
-          el('span', { class: 'gx' }, [el('strong', { text: CATS[g.categoria] || g.categoria }), g.descripcion ? el('span', { class: 'nota', text: g.descripcion }) : null]),
-          el('strong', { class: 'ct', text: peso(g.monto) }),
-          el('button', { type: 'button', class: 'claro', text: 'Quitar', onclick: function () {
-            if (!window.confirm('¿Quitar este gasto de ' + peso(g.monto) + '? No se puede deshacer.')) return;
-            A.api('admin-tienda', { method: 'POST', body: { recurso: 'gasto', accion: 'eliminar', id: g.id } }).then(function () { A.msg('Gasto quitado'); return cargarF(F.mes); }).catch(A.falla);
-          } }),
-        ]));
-      });
-    } else caja.appendChild(el('p', { class: 'nota', text: 'Aún no has anotado gastos en este periodo.' }));
+    var tb2 = el('tbody'), suma = 0;
+    u.gastos.forEach(function (g, i) {
+      suma += Number(g.monto) || 0;
+      tb2.appendChild(el('tr', {}, [td(String(i + 1), 'rn'), td(fechaCorta(g.fecha)), td((CATS[g.categoria] || g.categoria).replace(/ \(.*\)$/, '')), td(g.descripcion || ''), td(peso(g.monto), 'num'),
+        el('td', { class: 'acc' }, [el('button', { type: 'button', class: 'claro', 'aria-label': 'Quitar este gasto', text: '✕', onclick: function () {
+          if (!window.confirm('¿Quitar este gasto de ' + peso(g.monto) + '? No se puede deshacer.')) return;
+          A.api('admin-tienda', { method: 'POST', body: { recurso: 'gasto', accion: 'eliminar', id: g.id } }).then(function () { A.msg('Gasto quitado'); return cargarF(F.mes); }).catch(A.falla);
+        } })])]));
+    });
+    tb2.appendChild(el('tr', { class: 'nueva' }, [td('+', 'rn'), el('td', {}, [fecha]), el('td', {}, [cat]), el('td', {}, [desc]), el('td', {}, [monto]), el('td', { class: 'acc' }, [boton])]));
+    var pie = el('tfoot', {}, [el('tr', {}, [td('Σ', 'rn'), el('td', { colspan: '3', text: u.gastos.length + ' gasto' + (u.gastos.length === 1 ? '' : 's') + ' en este periodo' }), td(peso(suma), 'num'), el('td')])]);
+    caja.appendChild(el('p', { class: 'nota wa-hint', text: 'Desliza la hoja hacia el lado si no ves todas las columnas.' }));
+    caja.appendChild(el('div', { class: 'hoja-f' }, [el('table', { class: 'tabla-hj gas' }, [el('thead', {}, [letras(5), el('tr', {}, [th('#', 'rn'), th('Fecha'), th('Tipo'), th('Descripción'), th('Valor', 'num'), th('')])]), tb2, pie])]));
+    caja.appendChild(el('p', { class: 'nota', text: 'Para anotar un gasto llena la última fila (la de color verde claro) y pulsa «Agregar» o Enter.' }));
     return caja;
   }
 
