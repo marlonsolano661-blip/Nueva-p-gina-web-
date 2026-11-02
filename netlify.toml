@@ -5,6 +5,16 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # compartir.js lee index.html para ponerle la vista previa de cada producto
+  included_files = ["index.html"]
+
+# Enlace directo a un producto (/?producto=...): la tienda con la foto, el nombre y el precio de ese producto al compartir el enlace.
+# Solo se activa cuando el enlace trae ?producto=; la portada normal (/) sigue siendo el archivo estático.
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/compartir?id=:id"
+  status = 200
+  query = {producto = ":id"}
 
 # El frontend llama a /api/..., Netlify lo envía a la función correspondiente
 [[redirects]]

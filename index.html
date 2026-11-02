@@ -467,7 +467,9 @@ function reveal(){if(!IO)return;document.querySelectorAll('#app .pc,#app .lc,#ap
 function draw(){$('#app').innerHTML=PG[pg]();$('#cnt').textContent=CART.reduce((s,l)=>s+l.q,0);renderBag();reveal();heroInit();window.mfCatInit&&window.mfCatInit()}
 /* Sube al inicio de golpe (sin la animación suave de la página, que en iPhone se corta y deja al pie) y lo repite tras el siguiente cuadro por si cargan imágenes */
 window.mfTop=function(){const e=document.documentElement;e.style.scrollBehavior='auto';scrollTo(0,0);requestAnimationFrame(()=>{scrollTo(0,0);setTimeout(()=>{scrollTo(0,0);e.style.scrollBehavior=''},120)})};
-function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false;try{const q=catalog().find(x=>String(x.id)===String(arg)),j=q?imgIdx(q,q.colors[0]):-1;if(j>0)gi=j}catch(_){}}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',pg==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+location.search)}catch(e){}draw();pgFx();mfTop()}
+// Dirección que se ve (y se comparte) en cada página: un producto abierto es /?producto=<id>; las demás páginas no llevan ese dato.
+const urlNav=(p,a)=>{const s=location.search.replace(/[?&](?:producto|p)=[^&#]*/g,'').replace(/^&/,'?');return p==='prod'&&a!=null?location.pathname+(s?s+'&':'?')+'producto='+encodeURIComponent(a):p==='col'&&window.MF_COL?'#'+window.MF_COL:location.pathname+s};
+function nav(p,a,m){if(p==='cart'){openBag();return}closeBag();pg=p;arg=a||null;if(m)mode=m;if(p==='prod'){gi=0;selT='';selC=0;guideT='';guideOpen=false;try{const q=catalog().find(x=>String(x.id)===String(arg)),j=q?imgIdx(q,q.colors[0]):-1;if(j>0)gi=j}catch(_){}}try{history.pushState({p:pg,a:arg,m:mode,c:window.MF_COL||''},'',urlNav(pg,arg))}catch(e){}draw();pgFx();mfTop()}
 addEventListener('popstate',e=>{if(e.state){pg=e.state.p;arg=e.state.a;mode=e.state.m||mode;draw()}});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-n]');if(!a)return;const d=a.dataset;
  switch(d.n){

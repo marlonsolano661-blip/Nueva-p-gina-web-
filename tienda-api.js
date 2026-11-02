@@ -25,7 +25,7 @@
     if (typeof draw === 'function') draw();
   });
 
-  function aplicar(d, sinDibujar) {
+  function aplicar(d, sinDibujar, esCopia) {
     if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
     window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // ya respondió el servidor: se muestra la portada definitiva
     window.MF_CATALOGO_PRODUCTOS = d.productos;
@@ -40,19 +40,26 @@
       }
     } catch (e) { /* sin carrito */ }
     if (typeof draw === 'function' && !sinDibujar) draw();
-    abrirEnlace(d.productos);
+    abrirEnlace(d.productos, !esCopia);
   }
 
-  // Enlace directo a un producto (/?producto=<id>): lo usan los anuncios y el catálogo de Meta. Solo si el producto existe; se abre una sola vez.
+  // Enlace directo a un producto (/?producto=<id> o /?producto=<nombre-del-producto>): lo usan los anuncios, el catálogo de Meta y el botón de compartir del navegador.
+  // Solo si el producto existe. Con la copia guardada en el navegador puede faltar un producto nuevo: en ese caso se reintenta con lo que responda el servidor.
   var enlaceUsado = false;
-  function abrirEnlace(productos) {
-    if (enlaceUsado) return; enlaceUsado = true;
+  var slug = function (s) { return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); };
+  function abrirEnlace(productos, esServidor) {
+    if (enlaceUsado) return;
     try {
-      var m = /[?&]producto=([^&#]+)/.exec(location.search); if (!m) return;
-      var id = decodeURIComponent(m[1]);
-      var p = productos.filter(function (x) { return String(x.id) === id; })[0];
-      if (p && typeof nav === 'function') nav('prod', p.id);
-    } catch (e) { /* enlace inválido: se queda en la portada */ }
+      var m = /[?&](?:producto|p)=([^&#]+)/.exec(location.search);
+      if (!m) { enlaceUsado = true; return; }
+      var id = decodeURIComponent(m[1]).trim();
+      var p = productos.filter(function (x) { return String(x.id) === id; })[0] || productos.filter(function (x) { return slug(x.name) === slug(id); })[0];
+      if (!p) { if (esServidor) enlaceUsado = true; return; }
+      enlaceUsado = true;
+      // la entrada "inicio" del historial queda con la dirección limpia, para que «atrás» vuelva a la portada de verdad
+      try { history.replaceState(history.state, '', location.pathname + location.search.replace(/[?&](?:producto|p)=[^&#]*/g, '').replace(/^&/, '?')); } catch (e) { /* sin historial */ }
+      if (typeof nav === 'function') nav('prod', p.id);
+    } catch (e) { enlaceUsado = true; /* enlace inválido: se queda en la portada */ }
   }
 
   // Copia del último catálogo en el navegador: en las visitas siguientes la tienda se pinta al instante con esa copia
@@ -68,7 +75,7 @@
   } catch (e) { /* copia dañada: se ignora */ }
   function usarCopia() {
     if (!copia || window.MF_API_OK) return;
-    try { aplicar(JSON.parse(copia.d)); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
+    try { aplicar(JSON.parse(copia.d), false, true); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', usarCopia); else usarCopia();
 
