@@ -18,7 +18,7 @@ describe('diseño de correos', () => {
   it('pago: incluye logo, progreso, enlace al pedido y escapa los datos del cliente', () => {
     const m = correoPago(completo, pedido);
     assert.match(m.subject, /MF-261024-2861/);
-    assert.match(m.html, /https:\/\/tienda\.test\/assets\/brand\/logo-correo\.png/);
+    assert.match(m.html, /https:\/\/tienda\.test\/assets\/brand\/logo-negro\.png/);
     assert.match(m.html, /Compra confirmada/);
     assert.ok(!/background:#0|bgcolor="#0/i.test(m.html), 'sin fondos negros: todo en blanco');
     assert.match(m.html, /https:\/\/tienda\.test\/gracias\.html\?t=tok123/);
