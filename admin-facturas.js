@@ -140,7 +140,7 @@
   function compartir(f) {
     var file = archivo(f);
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      return navigator.share({ files: [file], title: 'Comprobante ' + f.numero, text: waTexto(f) }).catch(function (e) { if (e && e.name !== 'AbortError') throw e; });
+      return navigator.share({ files: [file] }).catch(function (e) { if (e && e.name !== 'AbortError') throw e; });
     }
     descargar(f);
     A.msg('PDF descargado. Se abre WhatsApp: adjunta el archivo en el chat.');
