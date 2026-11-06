@@ -104,7 +104,6 @@
     txt('Pago: ' + f.pago + '  |  Estado: ' + f.estado, M, y, 10, { b: 1 }); y -= 14;
     if (f.nota) envolver('Nota: ' + f.nota, W - 2 * M, 9.5).forEach(function (s) { txt(s, M, y, 9.5, { c: GR }); y -= 12; });
     txt('Gracias por tu compra en ' + em.nombre + '.', W / 2, 78, 10.5, { cen: 1, b: 1 });
-    txt('Este documento es un comprobante de venta. No es una factura electronica de venta validada por la DIAN.', W / 2, 62, 7.5, { cen: 1, c: GR });
 
     var objs = [], add = function (s) { objs.push(s); return objs.length; };
     add('<< /Type /Catalog /Pages 2 0 R >>'); add(''); // 2 = Pages (se rellena)
