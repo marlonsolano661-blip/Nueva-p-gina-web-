@@ -288,13 +288,21 @@
     if (!tabs || !volver || document.getElementById('b-facturas')) return;
     var secc = el('section', { class: 'panel', id: 'p-facturas' });
     var ultimo = document.querySelector('.panel:last-of-type'); if (ultimo && ultimo.parentNode) ultimo.parentNode.appendChild(secc); else volver.parentNode.appendChild(secc);
-    var b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), 'Facturas', el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]);
+    var lista = tabs.querySelector('.lista'); // primer grupo: "Ventas y dinero"
+    var b;
+    if (lista) {
+      b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), el('span', { class: 'tx' }, [el('b', { text: 'Facturas' }), el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]), el('i', { class: 'fl', 'aria-hidden': 'true', text: '›' })]);
+      lista.appendChild(b);
+    } else {
+      b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), 'Facturas', el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]);
+      tabs.appendChild(b);
+    }
     b.addEventListener('click', function () {
       tabs.hidden = true; volver.hidden = false; document.getElementById('titulo').textContent = 'Facturas';
+      var ay = document.getElementById('ayuda'); if (ay) ay.hidden = true;
       document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-facturas'); });
       A.msg(''); window.scrollTo(0, 0); abrir().catch(A.falla);
     });
-    tabs.appendChild(b);
   }
   montar();
 })();
