@@ -270,6 +270,11 @@
     if (!h.length) c.appendChild(el('p', { class: 'nota', text: 'Aún no has creado facturas en este dispositivo.' }));
     h.slice(0, 30).forEach(function (f) { c.appendChild(resumen(f)); });
     if (h.length) c.appendChild(el('p', { class: 'nota', text: 'El historial y la numeración se guardan solo en este dispositivo. Si usas otro teléfono o computador, empezarán de cero.' }));
+    if (h.length) c.appendChild(el('button', { type: 'button', class: 'claro', text: 'Borrar historial y reiniciar numeración', onclick: function () {
+      if (!window.confirm('¿Borrar todas las facturas guardadas en este dispositivo y volver a empezar en MF-0001? Esto no se puede deshacer.')) return;
+      try { localStorage.removeItem(KH); localStorage.removeItem(KN); } catch (e) { /* sin acceso: se ignora */ }
+      ULTIMA = null; A.msg('Historial borrado. El próximo comprobante será MF-0001.'); pintar();
+    } }));
   }
 
   function abrir() {
