@@ -1,0 +1,77 @@
+/* Encabezado de Marlon Footwear: buscador desplegable y menú a pantalla completa con submenú de colecciones.
+   Usa las colecciones reales del panel (MF_CONTENIDO.colecciones) y la navegación de la tienda (nav, Q, MF_COL). */
+(function () {
+  'use strict';
+  var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (m) { return '&#' + m.charCodeAt(0) + ';'; }); };
+  var X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var ORDEN = ['tacones', 'plataformas', 'sandalias'];
+
+  function colecciones() {
+    var c = ((window.MF_CONTENIDO && window.MF_CONTENIDO.colecciones) || []).filter(function (k) { return k && k.visible !== false && k.id && k.nombre; });
+    var pos = function (k) { var i = ORDEN.indexOf(k.id); return i < 0 ? ORDEN.length : i; };
+    return c.slice().sort(function (a, b) { return pos(a) - pos(b); });
+  }
+
+  function nivel1() {
+    return '<div class="hd-mh"><span></span><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
+      '<ul class="hd-l1">' +
+      '<li><button type="button" data-hd="col" class="hd-sub">Colección</button></li>' +
+      '<li><button type="button" data-mn="home">Inicio</button></li>' +
+      '<li><button type="button" data-mn="com">Comunidad Marlon</button></li>' +
+      '</ul><ul class="hd-l2">' +
+      '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
+      '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
+      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>';
+  }
+  function nivel2() {
+    return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Colección</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
+      '<ul class="hd-l1 hd-ls">' + '<li><button type="button" data-hd-col="">Ver todo</button></li>' +
+      colecciones().map(function (k) { return '<li><button type="button" data-hd-col="' + E(k.id) + '">' + E(k.nombre) + '</button></li>'; }).join('') + '</ul>';
+  }
+  function menu() { return document.getElementById('mn'); }
+  function pintar(h) { var m = menu(); if (m) { m.innerHTML = h; m.scrollTop = 0; } }
+  function cerrarMenu() { document.body.classList.remove('mnopen'); }
+
+  /* Buscador */
+  var bx = null;
+  function buscador(abrir) {
+    var b = document.querySelector('[data-hd="buscar"]');
+    if (!bx) {
+      bx = document.createElement('form'); bx.className = 'hd-bx'; bx.setAttribute('role', 'search');
+      bx.innerHTML = '<input type="search" placeholder="Buscar modelos" aria-label="Buscar modelos" enterkeyhint="search"><button type="button" data-hd="buscar-x" aria-label="Cerrar búsqueda">' + X + '</button>';
+      bx.addEventListener('submit', function (e) {
+        e.preventDefault(); var q = String(bx.querySelector('input').value || '').trim(); if (!q) return;
+        try { Q = q; } catch (er) { /* nada */ } window.MF_COL = ''; buscador(false); bx.querySelector('input').value = '';
+        if (typeof nav === 'function') nav('col');
+      });
+      var bar = document.querySelector('header.bar'); if (bar) bar.insertAdjacentElement('afterend', bx);
+    }
+    document.body.classList.toggle('hd-busca', abrir);
+    if (b) b.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    if (abrir) setTimeout(function () { var i = bx.querySelector('input'); if (i) i.focus(); }, 30);
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target : null; if (!t) return;
+    if (t.closest('[data-mn="o"]')) { pintar(nivel1()); buscador(false); return; } // el menú se abre con la lógica existente
+    var h = t.closest('[data-hd]');
+    if (h) {
+      var a = h.getAttribute('data-hd');
+      if (a === 'col') pintar(nivel2());
+      else if (a === 'atras') pintar(nivel1());
+      else if (a === 'cerrar') cerrarMenu();
+      else if (a === 'buscar') buscador(!document.body.classList.contains('hd-busca'));
+      else if (a === 'buscar-x') buscador(false);
+      return;
+    }
+    var c = t.closest('[data-hd-col]');
+    if (c) {
+      var id = c.getAttribute('data-hd-col'); cerrarMenu();
+      window.MF_COL = id; try { Q = ''; } catch (er) { /* nada */ }
+      try { history.replaceState(history.state, '', id ? '#' + id : location.pathname + location.search); } catch (er) { /* nada */ }
+      if (typeof nav === 'function') nav('col');
+    }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { cerrarMenu(); buscador(false); } });
+  if (menu()) pintar(nivel1());
+})();

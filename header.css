@@ -1,0 +1,27 @@
+/* Encabezado Marlon Footwear */
+html body .hd-ann{display:block;background:#0c1b19;color:#fff;text-align:center;font-family:inherit;font-weight:400;font-size:.92rem;line-height:1.35;letter-spacing:.01em;padding:.75rem 1rem}
+html.mf-espera .hd-ann{visibility:visible}
+html body header.bar{display:flex;align-items:center;gap:.25rem;background:#fff;border-bottom:1px solid #e6e6e6;padding:.95rem 1rem .95rem 1.4rem;padding-top:calc(.95rem + env(safe-area-inset-top,0px))}
+html body header.bar .sp{display:block;flex:1}
+html body header.bar .hc{display:none!important}
+html body .hd-s,html body header.bar .bag,html body header.bar .mb{display:grid;place-items:center;width:2.75rem;height:2.75rem;padding:0;border:0;background:none;cursor:pointer;position:relative}
+html body .hd-s svg,html body header.bar .bag svg,html body header.bar .mb svg{width:1.6rem;height:1.6rem;fill:none;stroke:#111;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.hd-bx{display:none;align-items:center;gap:.5rem;background:#fff;border-bottom:1px solid #e6e6e6;padding:.7rem 1rem .9rem 1.4rem;position:sticky;z-index:39}
+body.hd-busca .hd-bx{display:flex}
+.hd-bx input{flex:1;min-width:0;height:2.9rem;padding:0 1.1rem;border:1px solid #c9c9c9;border-radius:999px;font:inherit;font-size:16px;background:#fff;color:#111;-webkit-appearance:none;appearance:none}
+.hd-bx input:focus{outline:0;border-color:#111}
+.hd-bx button{display:grid;place-items:center;width:2.6rem;height:2.6rem;border:0;background:none;padding:0;cursor:pointer}
+.hd-bx svg{width:1.4rem;height:1.4rem;fill:none;stroke:#111;stroke-width:1.5;stroke-linecap:round}
+/* Menú a pantalla completa */
+html body .mn{background:#fff}
+.hd-mh{display:flex;justify-content:space-between;align-items:center;padding:1.3rem 1.2rem 1.3rem 1.6rem}
+.hd-mh button{border:0;background:none;padding:.35rem;cursor:pointer;display:grid;place-items:center;color:#111}
+.hd-mh svg{width:1.8rem;height:1.8rem;fill:none;stroke:#111;stroke-width:1.5;stroke-linecap:round}
+html body .mn .hd-back{display:flex;align-items:center;gap:.55rem;padding:.35rem 0;font-family:inherit;font-weight:600;font-size:1.15rem;letter-spacing:0;text-transform:none;color:#111}
+.hd-back::before{content:"";width:.55rem;height:.55rem;border-left:2px solid #111;border-bottom:2px solid #111;transform:rotate(45deg);margin-left:.15rem}
+html body .mn ul.hd-l1,html body .mn ul.hd-l2{list-style:none;margin:0;padding:.6rem 1.6rem 0;background:none;min-height:0}
+html body .mn .hd-l1 li button,html body .mn .hd-l2 li button{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;border:0;background:none;padding:1.05rem 0;font-family:inherit;font-weight:400;font-size:1.2rem;letter-spacing:0;text-transform:none;color:#111;cursor:pointer}
+html body .mn li button::after{content:none}
+html body .mn .hd-l1 .hd-sub::after{content:"";width:.55rem;height:.55rem;border-right:1.5px solid #111;border-top:1.5px solid #111;transform:rotate(45deg);margin-right:.3rem}
+html body .mn ul.hd-l2{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid #e6e6e6}
+html body .mn .hd-l2 li button{font-size:1rem;color:#555;padding:.85rem 0}
