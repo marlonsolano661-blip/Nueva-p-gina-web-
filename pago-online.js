@@ -66,6 +66,10 @@
     if (!/^\d{5,12}$/.test(String(c.doc).replace(/[\s.\-]/g, ''))) return aviso('Escribe el documento del titular (solo números)');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(c.email).trim())) return aviso('Escribe el correo del titular');
     if (!CART.length) return aviso('Tu carrito está vacío');
+    var mp = document.querySelector('input[name="ck-mp"]:checked');
+    var conTarjeta = mp && mp.value === 'tarjeta';
+    var tj = null;
+    if (conTarjeta) { tj = leerTarjeta(); if (typeof tj === 'string') return aviso(tj); }
 
     enviando = true;
     var textoOriginal = b.innerHTML; // conserva la flecha del botón
@@ -77,6 +81,14 @@
     var lineas = CART.map(function (l) { var x = { id: l.id, talla: l.talla, cant: l.q != null ? l.q : l.cant }; if (l.color) x.color = l.color; return x; });
     // total que la clienta vio (productos + envío); el servidor lo recalcula y avisa si cambió
     var esperado = (typeof total === 'function' && typeof window.MF_ENVIO === 'number') ? total() - (window.mfDescuento ? window.mfDescuento() : 0) + window.MF_ENVIO : undefined;
+    if (conTarjeta) {
+      b.textContent = 'Procesando pago…';
+      return pagarConTarjeta(tj, lineas, esperado, c).catch(function (x) {
+        aviso((x && x.message) || 'No pudimos procesar la tarjeta. Inténtalo de nuevo.');
+        try { sessionStorage.removeItem('mf_clave'); } catch (e2) { /* nada */ }
+        enviando = false; b.disabled = false; b.innerHTML = textoOriginal;
+      }).then(function () { clearTimeout(corte); });
+    }
     fetch(API + '/api/crear-pedido', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
       body: JSON.stringify({
@@ -103,6 +115,101 @@
       })
       .then(function () { clearTimeout(corte); });
   }, true);
+
+  /* ---------- Pago con tarjeta dentro de la tienda (como un checkout de Shopify) ----------
+     1) El navegador manda la tarjeta DIRECTO a Wompi (llave pública) y recibe un token.
+     2) El servidor crea el pedido con el monto real y cobra ese token (firma de integridad).
+     3) Se consulta el estado; aprobado → gracias.html, rechazado → se avisa aquí mismo y se puede reintentar. */
+  var CONF = null, confProm = null, sinConf = false;
+  function config() {
+    if (CONF) return Promise.resolve(CONF);
+    if (!confProm) confProm = fetch(API + '/api/pago-config').then(function (r) { if (!r.ok) throw new Error('config'); return r.json(); })
+      .then(function (d) { CONF = d; enlaces(); return d; }).catch(function (e) { confProm = null; throw e; });
+    return confProm;
+  }
+  function enlaces() {
+    if (!CONF) return;
+    var a = document.getElementById('tj-l1'), d = document.getElementById('tj-l2');
+    if (a && CONF.terminos && CONF.terminos.url) a.href = CONF.terminos.url;
+    if (d && CONF.datos && CONF.datos.url) d.href = CONF.datos.url;
+  }
+  function digitos(v) { return String(v || '').replace(/\D/g, ''); }
+  function luhn(n) { var s = 0, alt = false; for (var i = n.length - 1; i >= 0; i--) { var d = +n[i]; if (alt) { d *= 2; if (d > 9) d -= 9; } s += d; alt = !alt; } return s % 10 === 0; }
+  function val(id) { var e = document.getElementById(id); return e ? e.value : ''; }
+  function leerTarjeta() {
+    var num = digitos(val('tj-num')), exp = digitos(val('tj-exp')), cvc = digitos(val('tj-cvc')), nom = String(val('tj-nom') || (typeof FRM !== 'undefined' ? FRM.nombre : '')).trim();
+    if (num.length < 13 || num.length > 19 || !luhn(num)) return 'Revisa el número de la tarjeta';
+    if (exp.length !== 4) return 'Escribe la fecha de vencimiento como MM / AA';
+    var mm = +exp.slice(0, 2), aa = +exp.slice(2), hoy = new Date(), ya = hoy.getFullYear() % 100;
+    if (mm < 1 || mm > 12 || aa < ya || (aa === ya && mm < hoy.getMonth() + 1)) return 'La fecha de vencimiento no es válida';
+    if (!/^\d{3,4}$/.test(cvc)) return 'Revisa el código de seguridad';
+    if (nom.length < 3) return 'Escribe el nombre del titular como aparece en la tarjeta';
+    var acp = document.getElementById('tj-acp');
+    if (!acp || !acp.checked) return 'Acepta el reglamento de Wompi y el tratamiento de datos para pagar';
+    return { number: num, exp_month: exp.slice(0, 2), exp_year: exp.slice(2), cvc: cvc, card_holder: nom.slice(0, 60), cuotas: +(val('tj-cuo') || 1) };
+  }
+  function limpiarTarjeta() { ['tj-num', 'tj-exp', 'tj-cvc'].forEach(function (id) { var e = document.getElementById(id); if (e) e.value = ''; }); }
+  function json(r) { return r.json().catch(function () { return {}; }); }
+  function pagarConTarjeta(t, lineas, esperado, c) {
+    var conf;
+    return config().catch(function () { throw new Error('El pago con tarjeta no está disponible ahora. Elige Wompi para pagar.'); })
+      .then(function (d) {
+        conf = d;
+        return fetch(d.api + '/tokens/cards', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + d.pub },
+          body: JSON.stringify({ number: t.number, exp_month: t.exp_month, exp_year: t.exp_year, cvc: t.cvc, card_holder: t.card_holder }),
+        });
+      })
+      .then(function (r) { return json(r).then(function (j) { if (!r.ok || !j.data || !j.data.id) throw new Error('Revisa los datos de la tarjeta: Wompi no la aceptó.'); return j.data.id; }); })
+      .then(function (token) {
+        t.number = t.cvc = ''; // no se guardan en memoria más de lo necesario
+        return fetch(API + '/api/crear-pedido', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: lineas, clave: nuevaClave(), total_esperado: esperado, codigo: (window.mfCodigo && window.mfCodigo()) || undefined,
+            consent_wa: WA_OK, meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
+            cliente: { nombre: c.nombre, documento: c.doc || '', tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
+            tarjeta: { token: token, cuotas: t.cuotas, aceptacion: conf.terminos.token, datos: conf.datos ? conf.datos.token : '' },
+          }),
+        });
+      })
+      .then(function (r) { return json(r).then(function (d) { if (!r.ok || !d.transaccion) throw new Error(d.error || 'No pudimos procesar la tarjeta. Inténtalo de nuevo.'); return d; }); })
+      .then(function (d) { return esperar(conf, d.transaccion, 0); });
+  }
+  // Clave nueva en cada intento con tarjeta: cada intento es un cobro distinto en Wompi
+  function nuevaClave() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); }
+  function irAGracias(id) { location.href = 'gracias.html?id=' + encodeURIComponent(id); }
+  function esperar(conf, id, n) {
+    return fetch(conf.api + '/transactions/' + encodeURIComponent(id)).then(json).catch(function () { return {}; }).then(function (j) {
+      var t = j.data || {};
+      if (t.status === 'APPROVED') return irAGracias(id);
+      if (t.status === 'DECLINED' || t.status === 'ERROR' || t.status === 'VOIDED') {
+        limpiarTarjeta();
+        throw new Error('Tu banco rechazó el pago' + (t.status_message ? ': ' + t.status_message : '') + '. Prueba con otra tarjeta o elige Wompi.');
+      }
+      // Sigue pendiente (p. ej. validación del banco): la página de confirmación sigue consultando sola
+      if (n >= 15) return irAGracias(id);
+      return new Promise(function (ok) { setTimeout(ok, 2000); }).then(function () { return esperar(conf, id, n + 1); });
+    });
+  }
+
+  // Cambiar de medio de pago muestra su panel; el formato de los campos ayuda a escribir la tarjeta
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.name !== 'ck-mp') return;
+    window.MF_MP = e.target.value;
+    document.querySelectorAll('.ck-pn').forEach(function (p) { p.hidden = p.getAttribute('data-mp') !== e.target.value; });
+  });
+  document.addEventListener('input', function (e) {
+    var id = e.target && e.target.id, v;
+    if (id === 'tj-num') { v = digitos(e.target.value).slice(0, 19); e.target.value = v.replace(/(\d{4})(?=\d)/g, '$1 '); }
+    else if (id === 'tj-exp') { v = digitos(e.target.value).slice(0, 4); e.target.value = v.length > 2 ? v.slice(0, 2) + ' / ' + v.slice(2) : v; }
+    else if (id === 'tj-cvc') { e.target.value = digitos(e.target.value).slice(0, 4); }
+    else if (id === 'tj-nom') { e.target.dataset.propio = '1'; }
+    else if (id === 'f-nombre') { var n = document.getElementById('tj-nom'); if (n && !n.dataset.propio) n.value = e.target.value; }
+  });
+  // Al llegar al pago se cargan los contratos de Wompi (enlaces vigentes) sin esperar al clic
+  if (document.body) new MutationObserver(function () { if (document.getElementById('tj-acp')) { if (CONF) enlaces(); else if (!sinConf) config().catch(function () { sinConf = true; }); } }).observe(document.body, { childList: true, subtree: true });
+
   var WIDGET_EN_CELULAR = false;
   var ES_CELULAR = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   // Abre el widget de Wompi con los mismos datos firmados que trae la URL del checkout (el servidor sigue siendo quien firma y fija el monto).

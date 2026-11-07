@@ -180,3 +180,67 @@ describe('crear-pedido', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
     assert.equal(no.headers['Access-Control-Allow-Origin'], undefined);
   });
 });
+
+describe('crear-pedido con tarjeta dentro de la tienda', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
+  let b;
+  beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); });
+  afterEach(() => b.terminar());
+  const tarjeta = (x = {}) => ({ token: 'tok_test_12345_abc', cuotas: 3, aceptacion: 'eyJhbGciOi.aceptacion.firma', datos: 'eyJhbGciOi.datos.firmado', ...x });
+
+  it('cobra el token con el monto del servidor, firma y aceptación', async () => {
+    const c = carritoOk(); c.tarjeta = tarjeta(); c.items[0].precio = 1;
+    const r = await post(c);
+    assert.equal(r.status, 200);
+    assert.equal(r.json.url, undefined);
+    assert.match(r.json.transaccion, /^tx-tarjeta-/);
+    const [cobro] = b.wompi.cobros;
+    const esperado = (189900 * 2 + 169900 + 17500) * 100;
+    assert.equal(cobro.auth, 'Bearer ' + ENV_PRUEBA.WOMPI_PUBLIC_KEY);
+    assert.equal(cobro.amount_in_cents, esperado);
+    assert.equal(cobro.reference, r.json.referencia);
+    assert.equal(cobro.signature, crypto.createHash('sha256').update(`${cobro.reference}${esperado}COP${ENV_PRUEBA.WOMPI_INTEGRITY_SECRET}`).digest('hex'));
+    assert.deepEqual(cobro.payment_method, { type: 'CARD', token: 'tok_test_12345_abc', installments: 3 });
+    assert.equal(cobro.acceptance_token, 'eyJhbGciOi.aceptacion.firma');
+    assert.equal(cobro.accept_personal_auth, 'eyJhbGciOi.datos.firmado');
+    assert.equal(cobro.customer_email, 'ana@correo.com');
+    assert.equal(cobro.customer_data.phone_number, '573001234567');
+    const p = await b.pedido(r.json.referencia);
+    assert.equal(p.estado_pago, 'PENDING');
+    assert.equal(Number(p.monto_centavos), esperado);
+  });
+
+  it('rechaza tarjetas mal formadas sin crear pedido ni cobrar', async () => {
+    for (const t of [{ token: 'abc' }, { cuotas: 0 }, { cuotas: 37 }, { cuotas: 1.5 }, { aceptacion: '' }, { aceptacion: '<script>' }]) {
+      const c = carritoOk(); c.tarjeta = tarjeta(t);
+      const r = await post(c);
+      assert.equal(r.status, 400, JSON.stringify(t));
+    }
+    const c = carritoOk(); c.tarjeta = 'tok_x';
+    assert.equal((await post(c)).status, 400);
+    assert.equal(b.wompi.cobros.length, 0);
+    assert.equal((await b.filas('select * from pedidos')).length, 0);
+  });
+
+  it('si Wompi no acepta la tarjeta responde 402 con mensaje claro', async () => {
+    b.wompi.rechazar = true;
+    const c = carritoOk(); c.tarjeta = tarjeta();
+    const r = await post(c);
+    assert.equal(r.status, 402);
+    assert.match(r.json.error, /tarjeta/);
+  });
+});
+
+describe('pago-config', () => {
+  const pagoConfig = require('../lib/pago-config');
+  it('entrega la llave pública y los contratos de Wompi, sin secretos', async () => {
+    const env = { ...process.env }, f = globalThis.fetch;
+    process.env.WOMPI_PUBLIC_KEY = 'pub_test_abc'; process.env.WOMPI_INTEGRITY_SECRET = 'secreto';
+    globalThis.fetch = async (u) => { assert.match(String(u), /^https:\/\/sandbox\.wompi\.co\/v1\/merchants\/pub_test_abc$/); return new Response(JSON.stringify({ data: { presigned_acceptance: { acceptance_token: 'a.b.c', permalink: 'https://w/r.pdf' }, presigned_personal_data_auth: { acceptance_token: 'd.e.f', permalink: 'https://w/d.pdf' } } }), { status: 200 }); };
+    try {
+      const r = await pagoConfig({ method: 'GET', headers: {}, query: {} });
+      assert.equal(r.status, 200);
+      assert.deepEqual(r.json, { pub: 'pub_test_abc', api: 'https://sandbox.wompi.co/v1', terminos: { token: 'a.b.c', url: 'https://w/r.pdf' }, datos: { token: 'd.e.f', url: 'https://w/d.pdf' } });
+      assert.doesNotMatch(JSON.stringify(r.json), /secreto/);
+    } finally { globalThis.fetch = f; process.env = env; }
+  });
+});

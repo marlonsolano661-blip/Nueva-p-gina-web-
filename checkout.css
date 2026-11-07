@@ -1,0 +1,111 @@
+/* =====================================================================
+   PAGO EN DOS COLUMNAS (estilo checkout de tienda de moda, como el de calzadosara22)
+   Izquierda: contacto, entrega, envío y pago (tarjeta dentro de la tienda o Wompi).
+   Derecha: resumen gris con miniaturas, código de descuento y totales.
+   ===================================================================== */
+:root{--ck-body:"Figtree","Helvetica Neue",Helvetica,Arial,sans-serif;--ck-disp:"Figtree","Helvetica Neue",Helvetica,Arial,sans-serif}
+html body .ckt{font-family:var(--ck-body);color:#0b0b0b}
+html body .ckt .ck-h{font-weight:600!important;letter-spacing:-.01em!important}
+html body .ckt{display:grid;grid-template-columns:1fr;min-height:calc(100svh - 8rem);background:#fff}
+@media(min-width:960px){html body .ckt{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
+html body .ck-main{padding:2rem max(16px,5vw) 3rem;max-width:40rem;width:100%;justify-self:end;box-sizing:border-box}
+@media(max-width:959px){html body .ck-main{justify-self:center;order:2}}
+html body .ck-side{background:#f5f5f5;border-left:1px solid #e6e6e6;padding:2rem max(16px,4vw)}
+@media(min-width:960px){html body .ck-side{padding-top:3.4rem}html body .ck-side .ck-sum{position:sticky;top:6rem;max-width:30rem}}
+@media(max-width:959px){html body .ck-side{order:1;border-left:0;border-bottom:1px solid #e6e6e6}}
+html body .ck-crumbs{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0 0 1.6rem;font:400 .8rem var(--ck-body);color:#6e6e6e}
+html body .ck-crumbs b{color:#0b0b0b;font-weight:500}
+html body .ck-crumbs .lk{font:400 .8rem var(--ck-body)!important;letter-spacing:0!important;text-transform:none!important;color:#0b0b0b!important;padding:0;border:0;text-decoration:underline;text-underline-offset:3px}
+html body .ck-h{font:400 1.45rem/1.2 var(--ck-disp)!important;margin:2rem 0 .9rem!important;text-transform:none!important}
+html body .ck-main .ck-h:first-of-type{margin-top:0!important}
+html body .ckt .fg{display:grid;grid-template-columns:1fr;gap:.75rem}
+@media(min-width:560px){html body .ckt .fg{grid-template-columns:1fr 1fr}html body .ckt .fg>.f:has(#f-email),html body .ckt .fg>.f:has(#f-dir),html body .ckt .fg>.f:has(#f-nota){grid-column:1/-1}}
+html body .ckt .fg label{font:400 .78rem var(--ck-body)!important;letter-spacing:.02em!important;text-transform:none!important;color:#6e6e6e;margin-bottom:.3rem;display:block}
+html body .ckt .fg input,html body .ckt .fg textarea{width:100%;box-sizing:border-box;border:1px solid #d9d9d9!important;border-radius:6px!important;padding:.95rem .9rem!important;font:400 .95rem var(--ck-body)!important;background:#fff;transition:border-color .2s,box-shadow .2s}
+html body .ckt .fg input:focus,html body .ckt .fg textarea:focus{border-color:#0b0b0b!important;box-shadow:0 0 0 1px #0b0b0b;outline:0}
+html body .ckt .fg .sub{display:none}
+html body .ck-pais{border:1px solid #d9d9d9;border-radius:6px;padding:.55rem .9rem;margin-bottom:.75rem;display:flex;flex-direction:column}
+html body .ck-pais small{font:400 .72rem var(--ck-body);color:#6e6e6e}
+html body .ck-pais span{font:400 .95rem var(--ck-body)}
+html body .ck-ship{display:flex;justify-content:space-between;gap:1rem;align-items:center;border:1px solid #0b0b0b;border-radius:6px;padding:1rem;background:#fafafa}
+html body .ck-ship span{display:flex;flex-direction:column;gap:.2rem}
+html body .ck-ship b{font:500 .95rem var(--ck-body)}
+html body .ck-ship small{font:300 .8rem var(--ck-body);color:#6e6e6e}
+html body .ck-pay{border:1px solid #d9d9d9;border-radius:6px;padding:1rem;background:#fafafa}
+html body .ck-pay p{margin:0 0 .9rem;font:300 .88rem/1.6 var(--ck-body);color:#3a3a3a}
+html body .ck-pay .payicons{display:flex;flex-wrap:wrap;gap:.4rem;margin:0}
+html body .ck-legal{margin:1.4rem 0 .4rem!important;font:300 .78rem/1.6 var(--ck-body)!important;color:#6e6e6e;text-align:left!important}
+html body .ck-btn{margin-top:.6rem;border-radius:6px!important;min-height:3.6rem;font-size:.74rem!important}
+html body .ckt #mf-wa{font:300 .86rem var(--ck-body)!important;color:#3a3a3a}
+/* Resumen */
+html body .ck-sum{border:0!important;padding:0!important;background:transparent!important}
+html body .ck-sh{font-size:1.2rem!important;margin:0 0 1.2rem!important}
+@media(min-width:960px){html body .ck-sh{display:none}}
+html body .ck-it{display:grid;grid-template-columns:64px 1fr auto;gap:1rem;align-items:center;margin-bottom:1rem}
+html body .ck-th{position:relative;width:64px;height:64px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;overflow:visible}
+html body .ck-th>*:not(b){width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
+html body .ck-th svg{padding:10px;box-sizing:border-box;color:#0b0b0b}
+html body .ck-th b{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#0b0b0b;color:#fff;font:500 .7rem/20px var(--ck-body);text-align:center;box-sizing:border-box}
+html body .ck-in h3{font:400 .92rem/1.3 var(--ck-body)!important;margin:0!important;text-transform:none!important;letter-spacing:0!important}
+html body .ck-in p{margin:.15rem 0 0;font:300 .8rem var(--ck-body);color:#6e6e6e}
+html body .ck-pr{font:400 .92rem var(--ck-body)}
+html body .ck-sum .dcb{display:flex;gap:.5rem;margin:1.4rem 0 1.4rem}
+html body .ck-sum .dcb input{flex:1;border:1px solid #d9d9d9!important;border-radius:6px!important;background:#fff;text-transform:none!important;letter-spacing:.02em!important}
+html body .ck-sum .dcb button{border-radius:6px!important;background:#e9e9e9!important;border:1px solid #d9d9d9!important;color:#555!important;padding:0 1.1rem!important;min-height:2.9rem!important;font:500 .8rem var(--ck-body)!important;letter-spacing:.04em!important;text-transform:none!important}
+html body .ck-sum .ds{display:flex!important;justify-content:space-between;font:300 .9rem var(--ck-body)!important;color:#3a3a3a!important;margin:.45rem 0!important}
+html body .ck-sum .tt{display:flex;justify-content:space-between;align-items:baseline;margin-top:1rem;padding-top:1rem;border-top:0;font:500 1.2rem var(--ck-body)!important}
+html body .ck-sum .tt span:last-child::before{content:"COP  ";font:400 .7rem var(--ck-body);color:#6e6e6e;letter-spacing:.06em}
+
+
+/* ---------- Pago dentro de la tienda: tarjeta o Wompi (acordeón como checkout de Shopify) ---------- */
+html body .ck-note{margin:-.4rem 0 .9rem;font:300 .86rem/1.5 var(--ck-body);color:#6e6e6e}
+html body .ck-mp{border:1px solid #d9d9d9;border-radius:8px;overflow:hidden;background:#fff}
+html body .ck-mo{display:flex;align-items:center;gap:.8rem;margin:0;padding:1rem 1.1rem;cursor:pointer;border-top:1px solid #d9d9d9;font:400 .95rem/1.3 var(--ck-body);color:#0b0b0b}
+html body .ck-mo:first-child{border-top:0}
+html body .ck-mo:has(input:checked){background:#fff;box-shadow:inset 0 0 0 1px #0b0b0b;border-radius:8px 8px 0 0}
+html body .ck-mo input{width:1.15rem;height:1.15rem;margin:0;accent-color:#0b0b0b;flex:none}
+html body .ck-mo b{font-weight:500;flex:1}
+html body .ck-br{display:flex;gap:.3rem;align-items:center}
+html body .ck-br svg{width:2.4rem;height:auto;display:block}
+html body .ck-brt{font:400 .74rem/1 var(--ck-body);color:#6e6e6e;letter-spacing:.02em}
+html body .ck-pn{background:#f5f5f5;padding:1rem 1.1rem 1.1rem;display:grid;gap:.7rem;border-top:1px solid #d9d9d9}
+html body .ck-pn[hidden]{display:none}
+html body .ck-pn p{margin:0;font:300 .88rem/1.6 var(--ck-body);color:#3a3a3a}
+html body .ck-pn input,html body .ck-pn select{width:100%;box-sizing:border-box;border:1px solid #d9d9d9;border-radius:6px;background:#fff;padding:.95rem .9rem;font:400 .95rem/1.2 var(--ck-body);color:#0b0b0b;outline:none;transition:border-color .15s,box-shadow .15s}
+html body .ck-pn input:focus,html body .ck-pn select:focus{border-color:#0b0b0b;box-shadow:0 0 0 1px #0b0b0b}
+html body .ck-pn input::placeholder{color:#8a8a8a}
+html body .ck-in1{position:relative}
+html body .ck-in1 input{padding-right:2.6rem}
+html body .ck-in1 svg{position:absolute;right:.9rem;top:50%;width:1.1rem;height:1.1rem;transform:translateY(-50%);fill:none;stroke:#6e6e6e;stroke-width:1.6}
+html body .ck-in2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+html body .ck-fl{position:relative}
+html body .ck-fl label{position:absolute;left:.9rem;top:.45rem;font:400 .7rem/1 var(--ck-body);color:#6e6e6e;pointer-events:none}
+html body .ck-fl input,html body .ck-fl select{padding:1.35rem .9rem .5rem}
+html body .ck-sel select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center;background-size:.75rem}
+html body .ck-pn .ck-acp{margin:.2rem 0 0;font:300 .84rem/1.5 var(--ck-body);color:#3a3a3a}
+html body .ck-pn .ck-acp input{width:1.05rem;height:1.05rem;padding:0;margin-top:.15rem;flex:none;accent-color:#0b0b0b}
+html body .ck-pn .ck-acp a{color:#0b0b0b;text-decoration:underline}
+html body .ck-pn .ck-safe{font-size:.76rem;color:#6e6e6e}
+@media (max-width:480px){html body .ck-in2{grid-template-columns:1fr}}
+
+/* ---------- Colores y marcos como el checkout de Memento ----------
+   Fondo gris claro a la izquierda, resumen en gris un poco más oscuro, y cada campo
+   en una caja blanca enmarcada con borde fino y esquinas suaves. */
+html body .ckt{background:#e7e7e7}
+html body .ck-main{background:#e7e7e7}
+html body .ck-side{background:#dfdfdf!important;border-left:1px solid #d4d4d4!important}
+@media(max-width:959px){html body .ck-side{border-left:0!important;border-bottom:1px solid #d4d4d4!important}}
+html body .ckt .fg input,html body .ckt .fg textarea,html body .ck-pais,html body .ck-ship,html body .ck-sum .dcb input{background:#fff!important;border:1px solid #dedede!important;border-radius:5px!important;box-shadow:none}
+html body .ckt .fg input:focus,html body .ckt .fg textarea:focus,html body .ck-sum .dcb input:focus{border-color:#0b0b0b!important;box-shadow:0 0 0 1px #0b0b0b!important}
+html body .ck-ship{background:#fff!important}
+html body .ck-mp{background:#fff;border:1px solid #dedede;border-radius:6px}
+html body .ck-mo{border-top:1px solid #dedede}
+html body .ck-mo:has(input:checked){background:#fff;box-shadow:inset 0 0 0 1px #0b0b0b;border-radius:6px 6px 0 0}
+html body .ck-pn{background:#f4f4f4;border-top:1px solid #dedede}
+html body .ck-pn input,html body .ck-pn select{border-color:#dedede;border-radius:5px}
+html body .ck-sum .dcb button{background:#efefef!important;color:#848484!important;border:1px solid #dedede!important;border-radius:5px!important}
+html body .ck-sum .dcb button:hover{color:#0b0b0b!important}
+html body .ck-btn{border-radius:5px!important}
+/* En el pago no se muestra la barra de búsqueda de la tienda (como en Memento: solo el pago) */
+html body:has(.ckt) .sq{display:none!important}
+html body .ck-sum .dcb input{padding:.85rem .9rem!important}
