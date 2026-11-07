@@ -109,3 +109,24 @@ html body .ck-btn{border-radius:5px!important}
 /* En el pago no se muestra la barra de búsqueda de la tienda (como en Memento: solo el pago) */
 html body:has(.ckt) .sq{display:none!important}
 html body .ck-sum .dcb input{padding:.85rem .9rem!important}
+
+/* ---------- Detalles "mejor que Memento" ----------
+   Nombre del campo dentro de la caja (como Memento), cajas de altura pareja,
+   miniaturas con marco blanco y foco claro al escribir. */
+html body .ckt .fg>div{position:relative}
+html body .ckt .fg>div>label{position:absolute;top:.55rem;left:.95rem;right:.95rem;margin:0!important;font-size:.72rem!important;line-height:1!important;color:#707070!important;pointer-events:none;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .ckt .fg>div>label .opt{font-size:.68rem;color:#9a9a9a}
+html body .ckt .fg input,html body .ckt .fg textarea{padding:1.55rem .95rem .55rem!important;min-height:3.4rem;line-height:1.3}
+html body .ckt .fg textarea{padding-top:1.7rem!important;min-height:4.6rem;resize:vertical}
+html body .ckt .fg input::placeholder,html body .ckt .fg textarea::placeholder{color:#a3a3a3}
+html body .ckt .fg input:hover,html body .ckt .fg textarea:hover,html body .ck-pn input:hover,html body .ck-pn select:hover{border-color:#b9b9b9!important}
+html body .ckt .fg input:focus,html body .ckt .fg textarea:focus,html body .ck-pn input:focus,html body .ck-pn select:focus{border-color:#0b0b0b!important;box-shadow:0 0 0 1px #0b0b0b!important;outline:0}
+html body .ck-pais{min-height:3.4rem;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+html body .ck-th{background:#fff!important;border:1px solid #d6d6d6!important;border-radius:8px!important;overflow:visible!important}
+html body .ck-th>*:not(b){border-radius:7px}
+html body .ck-th b{background:#0b0b0b!important;color:#fff!important;border:2px solid #dfdfdf}
+html body .ck-sum .tt{border-top:0!important}
+html body .ck-btn{min-height:3.5rem;font-size:.78rem!important;letter-spacing:.24em!important}
+html body .ckt .fg{gap:.7rem!important}
+html body .ckt .fg>div{margin:0!important;padding:0!important}
+html body .ck-sum .dcb input{font-size:.95rem!important;min-height:3.1rem}
