@@ -24,3 +24,18 @@ body .lc p:not(:empty)::after{content:"\201D"}
 body .lc .lkn{gap:.45rem;font:500 .74rem Jost,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#0a0a0a}
 body .lc small{margin-top:.35rem;font:400 .82rem Jost,sans-serif;letter-spacing:.06em;color:#8a6f3f}
 @media(prefers-reduced-motion:reduce){body .lc,body .lc .im img{transition:none}body .lc:hover{transform:none}body .lc:hover .im img{transform:none}}
+
+/* ---- Rediseño limpio y moderno (fotos redondeadas, sin marcos) ---- */
+body .com::before{background:#fff}
+body .com .st::after{display:none}
+body .com .ds{margin-top:.7rem;letter-spacing:.24em}
+body .lks{gap:.9rem;padding:2rem 1.2rem 2rem}
+body .lc{flex:0 0 min(72%,17.5rem);padding:0;background:none;border:0;border-radius:0;box-shadow:none;text-align:left}
+@media(hover:hover){body .lc:hover{transform:none;box-shadow:none}}
+body .lc .im{aspect-ratio:3/4;border-radius:1.25rem;outline:0;background:#f3f3f1;color:#9a9a95}
+body .lc .lkn{order:2;justify-content:flex-start;margin:.95rem .2rem 0;font:600 .9rem Jost,sans-serif;letter-spacing:.02em;text-transform:none;color:#0a0a0a}
+body .lc small{order:3;margin:.1rem .2rem 0;font:400 .8rem Jost,sans-serif;letter-spacing:0;color:#8a8a85}
+body .lc p{order:4;margin:.55rem .2rem 0;font:400 .95rem/1.45 Jost,sans-serif;font-style:normal;color:#3a3a36;text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+body .lc p:not(:empty)::before{content:"\201C";display:inline;font:inherit;color:inherit;margin:0}
+body .lc p:not(:empty)::after{content:"\201D"}
+body .com .ctr .btn{border-radius:999px;padding-left:2.4rem;padding-right:2.4rem}

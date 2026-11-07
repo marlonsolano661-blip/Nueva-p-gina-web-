@@ -81,7 +81,7 @@
   function ponerTab() {
     if (tab || !P || ses(OK) || ses(TABX) || S.codigo || enPago()) return;
     tab = document.createElement('div'); tab.className = 'mfp-tab';
-    tab.innerHTML = '<button type="button" class="mfp-tab-a" data-mfabrir>−' + P.pct + ' %</button><button type="button" class="mfp-tab-x" data-mftabx aria-label="Ocultar descuento">×</button>';
+    tab.innerHTML = '<button type="button" class="mfp-tab-a" data-mfabrir aria-label="Ver descuento de ' + P.pct + ' %"><span class="mfp-tab-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.6" cy="7.6" r="1.4"/></svg></span><span><b>' + P.pct + ' % OFF</b><small>Tu primer par</small></span></button><button type="button" class="mfp-tab-x" data-mftabx aria-label="Ocultar descuento">×</button>';
     tab.addEventListener('click', function (e) {
       if (e.target.closest('[data-mftabx]')) { setSes(TABX); quitarTab(); return; }
       if (e.target.closest('[data-mfabrir]')) { quitarTab(); mostrar(P.pct, P.foto, true); }
