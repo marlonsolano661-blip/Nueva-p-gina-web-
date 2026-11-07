@@ -18,18 +18,21 @@ describe('diseño de correos', () => {
   it('pago: incluye logo, progreso, enlace al pedido y escapa los datos del cliente', () => {
     const m = correoPago(completo, pedido);
     assert.match(m.subject, /MF-261024-2861/);
-    assert.match(m.html, /https:\/\/tienda\.test\/assets\/brand\/logo-blanco\.png/);
-    assert.match(m.html, /Pago confirmado/);
+    assert.match(m.html, /https:\/\/tienda\.test\/assets\/brand\/logo-negro\.png/);
+    assert.match(m.html, /Compra confirmada/);
+    assert.ok(!/background:#0|bgcolor="#0/i.test(m.html), 'sin fondos negros: todo en blanco');
     assert.match(m.html, /https:\/\/tienda\.test\/gracias\.html\?t=tok123/);
     assert.ok(!m.html.includes('<b>Pérez'), 'debe escapar HTML del cliente');
     assert.match(m.html, /Plataforma Luna/);
     assert.match(m.text, /Total pagado: \$263\.000/);
   });
-  it('los bloques de marketing son opcionales y nunca inventan datos', () => {
+  it('solo lo esencial: invita a seguir (Instagram o la tienda) y nunca inventa datos', () => {
     const con = correoPago(completo, pedido).html;
-    assert.match(con, /MF10/); assert.match(con, /Síguenos en Instagram/);
+    assert.match(con, /¿Ya nos sigues\?/); assert.match(con, /Síguenos en Instagram/);
+    assert.ok(!/MF10|Comunidad|Pasos|Guárdalas/.test(con), 'sin bloques de marketing extra');
+    assert.match(correoPago({ ...minimo, site: 'https://tienda.test' }, pedido).html, /Visitar la tienda/);
     const sin = correoPago(minimo, pedido).html;
-    assert.ok(!/Un detalle para ti/.test(sin) && !/Síguenos en Instagram/.test(sin) && !/wa\.me/.test(sin));
+    assert.ok(!/Síguenos en Instagram/.test(sin) && !/wa\.me/.test(sin));
     assert.match(sin, /MF·COL/); // sin SITE_URL el logo cae a texto
     assert.ok(!/undefined|NaN|\[object/.test(sin));
   });
@@ -46,21 +49,14 @@ describe('diseño de correos', () => {
 
 describe('contenido de los correos (datos reales del pedido)', () => {
   const dos = { ...pedido, items: [{ nombre: 'Plataforma Luna', talla: '37', color: 'Negro', cant: 2, precio: 249000 }, { nombre: 'Ébano', talla: '38', cant: 1, precio: 219000 }], subtotal_centavos: 71700000, envio_centavos: 1750000, monto_centavos: 73450000, cliente: { ...pedido.cliente, nota: 'Dejar con el portero <i>x</i>' } };
-  it('confirmación: datos del cliente, dirección, productos con cantidad y precio, subtotal, envío y total', () => {
+  it('confirmación: datos de la compradora, entrega, productos con cantidad y precio, envío y total', () => {
     const m = correoPago(completo, dos);
-    for (const t of ['Datos del cliente', 'ana@correo.com', '3001234567', 'Dirección de entrega', 'Calle 1 # 2-3', 'Bogotá', 'Subtotal', 'Envío', 'Total pagado', 'Plataforma Luna', 'x2', '$249.000 c/u', '$498.000', '$717.000', '$17.500', '$734.500', 'Indicaciones: Dejar con el portero'])
+    for (const t of ['Tus datos', 'ana@correo.com', '3001234567', 'Entrega', 'Calle 1 # 2-3', 'Bogotá', 'Envío', 'Total pagado', 'Plataforma Luna', 'x2', '$249.000 c/u', '$498.000', '$17.500', '$734.500', 'Dejar con el portero', 'Gracias por tu compra'])
       assert.ok(m.html.includes(t), 'falta: ' + t);
     assert.ok(!m.html.includes('<i>x</i>'), 'debe escapar la nota del cliente');
     assert.ok(!/Ébano[^<]*<br>[^<]*c\/u/.test(m.html), 'sin precio unitario cuando es un solo par');
-  });
-  it('confirmación: avisa al final que llegará otro correo al despachar, y no promete guía antes', () => {
-    const m = correoPago(completo, dos);
-    const i = m.html.indexOf('otro correo'), dir = m.html.indexOf('Dirección de entrega');
-    assert.ok(i > dir, 'el aviso va después de la dirección');
-    assert.match(m.html, /transportadora, número de guía y enlace de rastreo/);
-    assert.ok(!/te enviaremos la guía de seguimiento/.test(m.html));
-    assert.match(m.text, /otro correo con los datos para hacer el seguimiento/);
-    assert.match(m.text, /Datos del cliente:\nAna <b>Pérez<\/b>\nana@correo.com/);
+    assert.match(m.text, /Tus datos:\nAna <b>Pérez<\/b>\nana@correo.com/);
+    assert.match(m.text, /Total pagado: \$734\.500/);
   });
   it('seguimiento: línea de tiempo de 6 pasos, transportadora, guía y enlace', () => {
     const m = correoEnvio(completo, pedido);
@@ -87,10 +83,10 @@ describe('contenido de los correos (datos reales del pedido)', () => {
     assert.ok(!/undefined|NaN|\[object|null/.test(m.html));
     assert.match(m.html, /Ver el estado de mi pedido/);
   });
-  it('el correo de confirmación conserva su barra de 4 tramos y el de seguimiento usa 6, con los mismos estilos', () => {
+  it('la confirmación es corta (sin barra de progreso) y el seguimiento conserva sus 6 pasos, todo en blanco', () => {
     const a = correoPago(completo, pedido).html, b = correoEnvio(completo, pedido).html;
-    assert.equal((a.match(/height:3px;line-height:3px;font-size:0;background:/g) || []).length, 5); // 4 tramos + línea dorada del encabezado
-    assert.equal((b.match(/height:3px;line-height:3px;font-size:0;background:/g) || []).length, 7); // 6 tramos + línea dorada
-    for (const c of ['#0a0a0a', '#b08d57', '#f6f2ec']) assert.ok(a.includes(c) && b.includes(c));
+    assert.equal((a.match(/height:3px;line-height:3px;font-size:0;background:/g) || []).length, 0);
+    assert.equal((b.match(/height:3px;line-height:3px;font-size:0;background:/g) || []).length, 6);
+    for (const h of [a, b]) assert.ok(!/b08d57|f6f2ec|ebe7e0|bgcolor="#0/i.test(h), 'sin dorado, marfil ni fondos negros');
   });
 });
