@@ -121,7 +121,7 @@
     return '<div class="rvbg"><div class="rvals"><div><h3>Envío</h3><p>' + E(env) + '</p></div><div><h3>Pago seguro</h3><p>Tarjeta, Nequi o PSE con Wompi.</p></div><div><h3>Ediciones limitadas</h3><p>Pocas unidades por modelo.</p></div></div></div>';
   }
 
-  function home() { return '<div data-rnew="home">' + hero() + portadas() + valores() + '</div>'; }
+  function home() { return '<div data-rnew="home">' + hero() + portadas() + '</div>'; }
 
   /* ---- Página de una colección (o de todos los modelos) ---- */
   function chips() {

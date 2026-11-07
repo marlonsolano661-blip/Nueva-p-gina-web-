@@ -1,5 +1,5 @@
 /* Encabezado Marlon Footwear */
-html body .hd-ann{display:block;background:#0c1b19;color:#fff;text-align:center;font-family:inherit;font-weight:400;font-size:.92rem;line-height:1.35;letter-spacing:.01em;padding:.75rem 1rem}
+html body .hd-ann{display:block;background:#000;color:#fff;text-align:center;font-family:inherit;font-weight:400;font-size:.92rem;line-height:1.35;letter-spacing:.01em;padding:.75rem 1rem}
 html.mf-espera .hd-ann{visibility:visible}
 html body header.bar{display:flex;align-items:center;gap:.25rem;background:#fff;border-bottom:1px solid #e6e6e6;padding:.95rem 1rem .95rem 1.4rem;padding-top:calc(.95rem + env(safe-area-inset-top,0px))}
 html body header.bar .sp{display:block;flex:1}
