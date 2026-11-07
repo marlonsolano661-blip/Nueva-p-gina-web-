@@ -73,7 +73,7 @@
     if (enviando) return; enviando = true;
     fetch(API + '/api/bienvenida', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos enviar tu código. Intenta de nuevo.'); return d; }); })
-      .then(function (d) { if (d.ok) { marcar(); paso2(d, email); } else paso1(pct, d.error || 'Ese descuento no está disponible'); })
+      .then(function (d) { if (d.ok && d.codigo) { marcar(); paso2(d, email); } else paso1(pct, d.error || 'Ese descuento no está disponible'); })
       .catch(function (e) { paso1(pct, (e && e.message) || 'No pudimos enviar tu código. Intenta de nuevo.'); })
       .then(function () { enviando = false; });
   }
