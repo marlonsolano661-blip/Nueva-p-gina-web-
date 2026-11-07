@@ -56,11 +56,16 @@
     'body #gr.cv3 .pc .dots{display:none}',
     '.cv-bag{position:absolute;right:.6rem;bottom:.6rem;width:2.7rem;height:2.7rem;display:grid;place-items:center;border:0;border-radius:50%;background:#fff;color:#000;box-shadow:0 1px 6px #0003;cursor:pointer;padding:0}',
     '.cv-bag svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}',
+    '.cv-fav{position:absolute;right:.45rem;top:.45rem;width:2.6rem;height:2.6rem;display:grid;place-items:center;border:0;background:none;color:#111;cursor:pointer;padding:0;z-index:2;-webkit-tap-highlight-color:transparent}',
+    '.cv-fav svg{width:1.6rem;height:1.6rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 1px #fff);transition:transform .2s,fill .2s}',
+    '.cv-fav[aria-pressed="true"] svg{fill:#111}.cv-fav:active svg{transform:scale(.85)}',
+    'body #gr.cv3 .cv-fav{width:2rem;height:2rem;right:.2rem;top:.2rem}body #gr.cv3 .cv-fav svg{width:1.2rem;height:1.2rem}',
     'body #gr.cv3 .cv-bag{width:2rem;height:2rem;right:.4rem;bottom:.4rem}body #gr.cv3 .cv-bag svg{width:1rem;height:1rem}',
     'body #gr .pc .tag{position:absolute;left:.5rem;top:.5rem;background:#000;color:#fff;padding:.25rem .55rem;font:600 .6rem Figtree,sans-serif;letter-spacing:.12em;text-transform:uppercase}'
   ].join('\n');
   var st = document.createElement('style'); st.setAttribute('data-vista', '1'); st.textContent = css; document.head.appendChild(st);
 
+  var CORAZON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.6-4.6-9.2-9.4C1.7 7.5 3.9 4.6 7.1 4.6c2 0 3.6 1.1 4.9 2.9 1.3-1.8 2.9-2.9 4.9-2.9 3.2 0 5.4 2.9 4.3 6.3-1.6 4.8-9.2 9.4-9.2 9.4z"/></svg>';
   var BOLSA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>';
   var V2 = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>';
   var V3 = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="9.5" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="9.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="9.5" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>';
@@ -71,7 +76,19 @@
 
   function texto(n) { return n + (n === 1 ? ' producto' : ' productos'); }
 
+  function corazones() {
+    Array.prototype.forEach.call(document.querySelectorAll('#app .pc[data-id], #gr .pc[data-id]'), function (c) {
+      var im = c.querySelector('.im'); if (!im) return;
+      var id = c.getAttribute('data-id'), on = !!(window.mfFavs && window.mfFavs.tiene(id)), h = im.querySelector('.cv-fav');
+      if (h) { if (h.getAttribute('aria-pressed') !== String(on)) h.setAttribute('aria-pressed', String(on)); return; }
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'cv-fav';
+      b.setAttribute('data-fav', id); b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', 'Guardar ' + (c.querySelector('h3') ? c.querySelector('h3').textContent : 'este modelo') + ' en favoritos');
+      b.innerHTML = CORAZON; im.appendChild(b);
+    });
+  }
   function refrescar() {
+    corazones();
     var gr = document.getElementById('gr'); if (!gr) return;
     gr.classList.toggle('cv3', vista === '3');
     var cp = gr.closest('.rcp'); if (!cp) return;
@@ -87,13 +104,6 @@
     var cards = gr.querySelectorAll('.pc[data-id]');
     var n = bar.querySelector('.cv-n'), t = texto(cards.length);
     if (n && n.textContent !== t) n.textContent = t;
-    Array.prototype.forEach.call(cards, function (c) {
-      var im = c.querySelector('.im'); if (!im || im.querySelector('.cv-bag')) return;
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'cv-bag';
-      b.setAttribute('data-n', 'prod'); b.setAttribute('data-id', c.getAttribute('data-id'));
-      b.setAttribute('aria-label', 'Elegir talla de ' + (c.querySelector('h3') ? c.querySelector('h3').textContent : 'este modelo'));
-      b.innerHTML = BOLSA; im.appendChild(b);
-    });
   }
 
   document.addEventListener('click', function (e) {

@@ -34,6 +34,7 @@
       '<li><button type="button" data-mn="home">Inicio</button></li>' +
       '<li><button type="button" data-mn="com">Comunidad Marlon</button></li>' +
       '</ul><ul class="hd-l2">' +
+      '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
       '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
       '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + carrusel();
@@ -43,6 +44,18 @@
       '<ul class="hd-l1 hd-ls">' + '<li><button type="button" data-hd-col="">Ver todo</button></li>' +
       colecciones().map(function (k) { return '<li><button type="button" data-hd-col="' + E(k.id) + '">' + E(k.nombre) + '</button></li>'; }).join('') + '</ul>';
   }
+  function favN() { return window.mfFavs ? window.mfFavs.lista().length : 0; }
+  function nivelFavs() {
+    var ids = window.mfFavs ? window.mfFavs.lista() : [], L = []; try { L = (typeof catalog === 'function' ? catalog() : []) || []; } catch (e) { L = []; }
+    var prods = ids.map(function (id) { return L.filter(function (p) { return String(p.id) === String(id); })[0]; }).filter(Boolean);
+    return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Mis favoritos</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
+      (prods.length ? '<ul class="hd-fv">' + prods.map(function (p) {
+        return '<li><button type="button" class="hd-fvp" data-hd-prod="' + E(p.id) + '"><span class="hd-fvi">' + (p.img ? '<img src="' + E(p.img) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '') + '</span>' +
+          '<span class="hd-fvt"><b>' + E(p.name) + '</b><small>' + E(precio(p.price)) + (p.tallas && p.tallas.length ? '' : ' · Agotado') + '</small></span></button>' +
+          '<button type="button" class="hd-fvx" data-hd-unfav="' + E(p.id) + '" aria-label="Quitar ' + E(p.name) + ' de favoritos">Quitar</button></li>';
+      }).join('') + '</ul>' : '<p class="hd-fv0">Aún no tienes favoritos. Toca el corazón de cualquier modelo para guardarlo aquí.</p><ul class="hd-l1"><li><button type="button" data-hd-col="">Ver la colección</button></li></ul>');
+  }
+  window.mfVerFavs = function () { var t = document.getElementById('toast'); if (t) t.classList.remove('on'); pintar(nivelFavs()); document.body.classList.add('mnopen'); };
   function menu() { return document.getElementById('mn'); }
   function pintar(h) { var m = menu(); if (m) { m.innerHTML = h; m.scrollTop = 0; } }
   function cerrarMenu() { document.body.classList.remove('mnopen'); }
@@ -73,12 +86,15 @@
     if (h) {
       var a = h.getAttribute('data-hd');
       if (a === 'col') pintar(nivel2());
+      else if (a === 'favs') pintar(nivelFavs());
       else if (a === 'atras') pintar(nivel1());
       else if (a === 'cerrar') cerrarMenu();
       else if (a === 'buscar') buscador(!document.body.classList.contains('hd-busca'));
       else if (a === 'buscar-x') buscador(false);
       return;
     }
+    var uf = t.closest('[data-hd-unfav]');
+    if (uf) { if (window.mfFavs) window.mfFavs.quitar(uf.getAttribute('data-hd-unfav')); pintar(nivelFavs()); return; }
     var pr = t.closest('[data-hd-prod]');
     if (pr) { cerrarMenu(); if (typeof nav === 'function') nav('prod', pr.getAttribute('data-hd-prod')); return; }
     var c = t.closest('[data-hd-col]');
