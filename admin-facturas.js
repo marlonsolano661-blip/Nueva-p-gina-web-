@@ -21,6 +21,16 @@
   function siguiente() { var n = parseInt(leer(KN, 1), 10) || 1; return 'MF-' + String(n).padStart(4, '0'); }
   function subtotal() { return F.items.reduce(function (t, i) { return t + (+i.cant || 0) * (+i.precio || 0); }, 0); }
   function descuento() { return Math.round(subtotal() * (Math.min(90, Math.max(0, +F.desc || 0)) / 100)); }
+  var GAR_MESES = 3;
+  function garHasta(f) {
+    var d = new Date(f && f.creado ? f.creado : Date.now()), dia = d.getDate();
+    d.setMonth(d.getMonth() + GAR_MESES); if (d.getDate() < dia) d.setDate(0); // 30 nov + 3 meses = 28/29 feb
+    return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function garTexto(f) {
+    return 'Este par tiene garantía de ' + GAR_MESES + ' meses por defectos de fabricación, contados desde la fecha de compra (válida hasta el ' + garHasta(f) + '). ' +
+      'No cubre el desgaste normal por uso, el mal uso, la humedad, el almacenamiento inadecuado ni los daños causados después de la entrega. Para hacerla válida presenta este comprobante.';
+  }
   function total() { return Math.max(0, subtotal() - descuento() + (+F.envio || 0)); }
 
   /* ---------- PDF sin librerías (A4, Helvetica) ---------- */
@@ -103,6 +113,13 @@
     y -= 8;
     txt('Pago: ' + f.pago + '  |  Estado: ' + f.estado, M, y, 10, { b: 1 }); y -= 14;
     if (f.nota) envolver('Nota: ' + f.nota, W - 2 * M, 9.5).forEach(function (s) { txt(s, M, y, 9.5, { c: GR }); y -= 12; });
+    var gl = envolver(garTexto(f), W - 2 * M - 24, 9);
+    if (y - (gl.length * 11.5 + 40) < 100) { pag(); }
+    y -= 14;
+    var gAlto = gl.length * 11.5 + 30;
+    cs.push(col([248, 246, 241]) + ' rg ' + M + ' ' + (y - gAlto + 12) + ' ' + (W - 2 * M) + ' ' + gAlto + ' re f');
+    txt('GARANTIA DE ' + GAR_MESES + ' MESES', M + 12, y - 4, 9, { b: 1, c: CH }); y -= 18;
+    gl.forEach(function (s) { txt(s, M + 12, y - 4, 9, { c: [60, 60, 56] }); y -= 11.5; });
     txt('Gracias por tu compra en ' + em.nombre + '.', W / 2, 78, 10.5, { cen: 1, b: 1 });
 
     var objs = [], add = function (s) { objs.push(s); return objs.length; };
@@ -131,7 +148,7 @@
     var file = archivo(f), u = URL.createObjectURL(file), a = document.createElement('a');
     a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
   }
-  function waTexto(f) { return 'Hola ' + (f.cliente.nombre || '').split(' ')[0] + ', te comparto tu comprobante ' + f.numero + ' por ' + peso(f.total) + '. Gracias por tu compra en ' + emisor().nombre + '.'; }
+  function waTexto(f) { return 'Hola ' + (f.cliente.nombre || '').split(' ')[0] + ', te comparto tu comprobante ' + f.numero + ' por ' + peso(f.total) + '. Tu par tiene garantía de ' + GAR_MESES + ' meses por defectos de fabricación, hasta el ' + garHasta(f) + '. Gracias por tu compra en ' + emisor().nombre + '.'; }
   function waLink(f) {
     var d = String(f.cliente.tel || '').replace(/\D/g, ''); if (d.length === 10) d = '57' + d;
     return 'https://wa.me/' + d + '?text=' + encodeURIComponent(waTexto(f));
@@ -182,7 +199,7 @@
 
   function pintar() {
     var c = root(); c.textContent = ''; refTot = null;
-    c.appendChild(el('p', { class: 'nota', text: 'Crea el comprobante con los datos de la clienta y envíaselo por WhatsApp. Es un comprobante de venta, no una factura electrónica de la DIAN.' }));
+    c.appendChild(el('p', { class: 'nota', text: 'Crea el comprobante con los datos de la clienta y envíaselo por WhatsApp. Cada comprobante incluye la garantía de 3 meses por defectos de fabricación, con su fecha de vencimiento. Es un comprobante de venta, no una factura electrónica de la DIAN.' }));
     if (ULTIMA) {
       c.appendChild(el('p', { class: 'nota', text: 'Comprobante listo ✓' }));
       c.appendChild(resumen(ULTIMA, true));
