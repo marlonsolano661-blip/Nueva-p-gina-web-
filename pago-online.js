@@ -93,7 +93,7 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
       body: JSON.stringify({
         items: lineas, clave: clave(lineas, c) || undefined, total_esperado: esperado, codigo: (window.mfCodigo && window.mfCodigo()) || undefined,
-        consent_wa: WA_OK,
+        consent_wa: WA_OK, novedades: !!c.news,
         meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
         cliente: { nombre: c.nombre, documento: c.doc || '', tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
       }),
@@ -167,7 +167,7 @@
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             items: lineas, clave: nuevaClave(), total_esperado: esperado, codigo: (window.mfCodigo && window.mfCodigo()) || undefined,
-            consent_wa: WA_OK, meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
+            consent_wa: WA_OK, novedades: !!c.news, meta: { fbp: cookie('_fbp'), fbc: cookie('_fbc') },
             cliente: { nombre: c.nombre, documento: c.doc || '', tel: c.tel, email: c.email || '', ciudad: c.ciudad, direccion: c.dir + ', ' + c.ciudad, nota: c.nota || '' },
             tarjeta: { token: token, cuotas: t.cuotas, aceptacion: conf.terminos.token, datos: conf.datos ? conf.datos.token : '' },
           }),

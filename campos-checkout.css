@@ -1,0 +1,23 @@
+/* Campos del checkout (Contacto / Entrega) y bloque de envío */
+html body .ckt .mf-fg{display:flex;flex-direction:column;gap:.75rem;margin:0 0 1.6rem}
+html body .ckt .mf-fl{position:relative;margin:0;padding:0}
+html body .ckt .mf-fl input,html body .ckt .mf-fl select{display:block;width:100%;box-sizing:border-box;height:3.6rem;margin:0;padding:1rem 1rem!important;border:1px solid #c9c9c9!important;border-radius:12px!important;background-color:#fff!important;color:#111;font-family:inherit!important;font-weight:400!important;font-size:16px!important;line-height:1.2!important;letter-spacing:0!important;box-shadow:none!important;transition:border-color .15s,box-shadow .15s,padding .15s}
+html body .ckt .mf-fl input::placeholder{color:#737373;opacity:1}
+html body .ckt .mf-fl>label{position:absolute;left:1rem;right:2.8rem;top:.6rem;margin:0!important;font-family:inherit!important;font-weight:400!important;font-size:.76rem!important;line-height:1!important;letter-spacing:0!important;text-transform:none!important;color:#737373!important;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .15s,transform .15s;z-index:1}
+html body .ckt .mf-fl input:not(:placeholder-shown){padding:1.55rem 1rem .45rem!important}
+html body .ckt .mf-fl input:placeholder-shown+label{opacity:0;transform:translateY(4px)}
+html body .ckt .mf-sel select{padding:1.55rem 2.8rem .45rem 1rem!important;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23333' stroke-width='1.4'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 1.1rem center!important;background-size:.8rem!important}
+html body .ckt .mf-fl input:hover,html body .ckt .mf-fl select:hover{border-color:#a8a8a8!important}
+html body .ckt .mf-fl input:focus,html body .ckt .mf-fl select:focus{border-color:#111!important;box-shadow:0 0 0 1px #111!important;outline:0}
+html body .ckt .mf-q{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);width:1.9rem;height:1.9rem;display:grid;place-items:center;border:0;background:none;padding:0;color:#555;cursor:pointer;z-index:2}
+html body .ckt .mf-q svg{width:1.45rem;height:1.45rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+html body .ckt .mf-fl:has(.mf-q) input{padding-right:3rem!important}
+html body .ckt .mf-chk{display:flex;gap:.75rem;align-items:flex-start;margin:.2rem 0 0!important;font-family:inherit!important;font-weight:400!important;font-size:.98rem!important;line-height:1.4!important;color:#111!important;text-transform:none!important;letter-spacing:0!important;cursor:pointer}
+html body .ckt .mf-chk input{appearance:none;-webkit-appearance:none;flex:none;width:1.35rem;height:1.35rem;margin:.05rem 0 0;border:1px solid #c9c9c9;border-radius:6px;background:#fff;display:grid;place-content:center;cursor:pointer}
+html body .ckt .mf-chk input:checked{background:#111;border-color:#111}
+html body .ckt .mf-chk input:checked::after{content:"";width:.32rem;height:.62rem;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+html body .ckt .mf-ship{display:flex!important;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.1rem!important;border:1px solid #111!important;border-radius:12px!important;background:#f6f6f6!important}
+html body .ckt .mf-ship>div b{display:block;font-family:inherit;font-weight:600;font-size:1rem;line-height:1.35;color:#111}
+html body .ckt .mf-ship small{display:block;margin-top:.3rem;font-family:inherit;font-weight:400;font-size:.9rem;line-height:1.45;color:#333}
+html body .ckt .mf-ship>b{flex:none;font-family:inherit;font-weight:600;font-size:1rem;line-height:1.35;color:#111;white-space:nowrap}
+html body .ckt .mf-ship>b{max-width:42%;text-align:right}

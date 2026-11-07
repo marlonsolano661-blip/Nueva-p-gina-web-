@@ -121,7 +121,7 @@ async function prueba(nombre, fn) {
     await tienda.click('.cl .sw >> nth=0');
     await tienda.click('[data-n="add"] >> nth=0');
     await tienda.evaluate(() => nav('out', null, 'online'));
-    await tienda.fill('#f-nombre', 'Ana Pérez'); await tienda.fill('#f-doc', '1020304050'); await tienda.fill('#f-email', 'ana@correo.com'); await tienda.fill('#f-tel', '3115752334'); await tienda.fill('#f-ciudad', 'Cali'); await tienda.fill('#f-dir', 'Calle 1 # 2-3');
+    await tienda.fill('#f-nom1', 'Ana'); await tienda.fill('#f-ape', 'Pérez'); await tienda.fill('#f-doc', '1020304050'); await tienda.fill('#f-email', 'ana@correo.com'); await tienda.fill('#f-tel', '3115752334'); await tienda.fill('#f-ciu', 'Cali'); await tienda.fill('#f-dir', 'Calle 1 # 2-3');
     const resumen = await tienda.locator('.sum').first().innerText();
     assert.match(resumen, /Subtotal[\s\S]*300\.000/); assert.match(resumen, /Envío[\s\S]*17\.500/); assert.match(resumen, /Total a pagar[\s\S]*317\.500/);
     await tienda.evaluate(() => { window.MF_REDIRECT = (u) => { window.__r = u; }; });
