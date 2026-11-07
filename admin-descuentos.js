@@ -72,6 +72,11 @@
         .catch(function (e) { A.falla(e); guardar.disabled = false; });
     });
     c.appendChild(el('div', { style: 'display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem' }, [nuevo, guardar]));
+    var previa = el('button', { type: 'button', class: 'claro', text: 'Ver el aviso en la tienda' });
+    previa.addEventListener('click', function () { window.open('index.html?verpromo=1', '_blank', 'noopener'); });
+    c.appendChild(el('div', { style: 'margin-top:.8rem' }, [
+      el('p', { class: 'nota', text: 'Aviso flotante de bienvenida: sale abajo en la tienda para el código marcado como "anunciar", pide el correo y entrega el código. Si la clienta lo cierra, queda una pestaña pequeña para volver a abrirlo. Guarda tus cambios antes de verlo.' }),
+      previa]));
     c.appendChild(aviso);
   }
 
