@@ -25,3 +25,13 @@ html body .mn li button::after{content:none}
 html body .mn .hd-l1 .hd-sub::after{content:"";width:.55rem;height:.55rem;border-right:1.5px solid #111;border-top:1.5px solid #111;transform:rotate(45deg);margin-right:.3rem}
 html body .mn ul.hd-l2{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid #e6e6e6}
 html body .mn .hd-l2 li button{font-size:1rem;color:#555;padding:.85rem 0}
+/* Carrusel de destacados en el menú */
+.hd-car{margin:1.6rem 0 2.4rem;padding-top:1.4rem;border-top:1px solid #e6e6e6}
+html body .mn .hd-car h3{margin:0 1.6rem .9rem;font-family:inherit;font-weight:600;font-size:1rem;letter-spacing:0;text-transform:none;color:#111}
+.hd-row{display:flex;gap:.8rem;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 1.6rem .4rem;scroll-padding-left:1.6rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.hd-row::-webkit-scrollbar{display:none}
+html body .mn .hd-pc{flex:0 0 42%;max-width:11rem;scroll-snap-align:start;display:flex;flex-direction:column;align-items:flex-start;gap:.3rem;padding:0;border:0;background:none;text-align:left;cursor:pointer;font-family:inherit;color:#111}
+.hd-im{display:block;width:100%;aspect-ratio:4/5;background:#f2f2f2;overflow:hidden}
+.hd-im img{width:100%;height:100%;object-fit:cover;display:block}
+.hd-pn{display:block;margin-top:.35rem;font-size:.92rem;line-height:1.3;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hd-pp{display:block;font-size:.88rem;color:#555}

@@ -12,6 +12,21 @@
     return c.slice().sort(function (a, b) { return pos(a) - pos(b); });
   }
 
+  /* Carrusel del menú: primero los marcados "Destacado en el inicio" en el panel, luego otros con tallas disponibles */
+  function destacados() {
+    var L = []; try { L = (typeof catalog === 'function' ? catalog() : []) || []; } catch (e) { L = []; }
+    var hay = function (p) { return p && p.id != null && p.price > 0 && p.tallas && p.tallas.length; };
+    var d = L.filter(function (p) { return hay(p) && p.destacado; }), o = L.filter(function (p) { return hay(p) && !p.destacado; });
+    return { titulo: d.length ? 'Destacados' : 'Te puede gustar', items: d.concat(o).slice(0, 8) };
+  }
+  function precio(n) { try { return typeof fmt === 'function' ? fmt(n) : '$' + Number(n).toLocaleString('es-CO'); } catch (e) { return '$' + n; } }
+  function carrusel() {
+    var D = destacados(); if (!D.items.length) return '';
+    return '<section class="hd-car" aria-label="' + E(D.titulo) + '"><h3>' + E(D.titulo) + '</h3><div class="hd-row">' + D.items.map(function (p) {
+      return '<button type="button" class="hd-pc" data-hd-prod="' + E(p.id) + '"><span class="hd-im">' + (p.img ? '<img src="' + E(p.img) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '') + '</span>' +
+        '<span class="hd-pn">' + E(p.name) + '</span><span class="hd-pp">' + E(precio(p.price)) + '</span></button>';
+    }).join('') + '</div></section>';
+  }
   function nivel1() {
     return '<div class="hd-mh"><span></span><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
       '<ul class="hd-l1">' +
@@ -21,7 +36,7 @@
       '</ul><ul class="hd-l2">' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
       '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
-      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>';
+      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + carrusel();
   }
   function nivel2() {
     return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Colección</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
@@ -64,6 +79,8 @@
       else if (a === 'buscar-x') buscador(false);
       return;
     }
+    var pr = t.closest('[data-hd-prod]');
+    if (pr) { cerrarMenu(); if (typeof nav === 'function') nav('prod', pr.getAttribute('data-hd-prod')); return; }
     var c = t.closest('[data-hd-col]');
     if (c) {
       var id = c.getAttribute('data-hd-col'); cerrarMenu();
