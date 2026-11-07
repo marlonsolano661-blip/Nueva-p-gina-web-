@@ -48,3 +48,30 @@
   function iniciar() { var app = document.getElementById('app') || document.body; new MutationObserver(programar).observe(app, { childList: true, subtree: true }); programar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
+
+/* Renglón del producto: en lugar de la descripción larga, un solo renglón con las tallas disponibles y luego los colores.
+   Se arma con el inventario real (catalog()), así que se actualiza solo cuando cambian tallas o colores en el panel. */
+(function () {
+  'use strict';
+  function tallasTxt(t) {
+    var n = t.map(Number);
+    if (n.length > 2 && n.every(function (x) { return isFinite(x); }) && n.every(function (x, i) { return !i || x === n[i - 1] + 1; })) return n[0] + ' a ' + n[n.length - 1];
+    return t.join(' · ');
+  }
+  function renglon() {
+    var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.ds1')) return;
+    var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
+    if (id == null) return;
+    var p = null; try { p = (catalog() || []).filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { return; }
+    if (!p) return;
+    var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
+    var txt = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
+    var el = document.createElement('p'); el.className = 'ds ds1'; el.title = txt; el.textContent = txt;
+    var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
+    if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
+  }
+  var pend = false;
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } }); }
+  function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();
