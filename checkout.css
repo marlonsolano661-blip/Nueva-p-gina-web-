@@ -130,3 +130,14 @@ html body .ck-btn{min-height:3.5rem;font-size:.78rem!important;letter-spacing:.2
 html body .ckt .fg{gap:.7rem!important}
 html body .ckt .fg>div{margin:0!important;padding:0!important}
 html body .ck-sum .dcb input{font-size:.95rem!important;min-height:3.1rem}
+
+/* ---------- Pago fijo en el celular: sin zoom al tocar un campo y sin moverse hacia los lados ----------
+   iPhone amplía la pantalla si la letra de un campo es menor de 16 px; el menú lateral escondido a la
+   derecha permitía arrastrar la página de lado. */
+html,html body{overflow-x:clip;max-width:100%}
+html body .ckt,html body .ck-main,html body .ck-side{max-width:100%;min-width:0;box-sizing:border-box}
+html body .ckt input,html body .ckt select,html body .ckt textarea,html body .ck-sum .dcb input{font-size:16px!important}
+html body .ckt input[type=checkbox],html body .ckt input[type=radio]{font-size:inherit!important}
+html body .ckt *{min-width:0}
+html body .ckt img,html body .ckt svg{max-width:100%}
+html body .ckt .fg input,html body .ckt .fg textarea,html body .ckt .fg select,html body .ckt .ck-pn input,html body .ckt .ck-pn select,html body .ckt .ck-sum .dcb input{font-size:16px!important}
