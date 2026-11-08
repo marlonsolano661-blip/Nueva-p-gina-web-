@@ -70,8 +70,17 @@
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
   }
+  // Orden en la ficha: primero la talla y luego el color (se mueve el bloque de color debajo de las tallas y la guía).
+  function ordenar() {
+    var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
+    var cl = pi.querySelector(':scope > .cl'), tl = pi.querySelector(':scope > .tl'); if (!cl || !tl) return;
+    var lb = cl.previousElementSibling; if (!lb || !lb.classList.contains('lb')) return;
+    if (tl.compareDocumentPosition(cl) & Node.DOCUMENT_POSITION_FOLLOWING) return; // ya está en orden
+    var antes = pi.querySelector(':scope > .row') || pi.querySelector(':scope > .trust');
+    if (antes) { pi.insertBefore(lb, antes); pi.insertBefore(cl, antes); } else { pi.appendChild(lb); pi.appendChild(cl); }
+  }
   var pend = false;
-  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } }); }
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ordenar(); } catch (e) { /* queda el orden original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
