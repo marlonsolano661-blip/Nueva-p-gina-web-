@@ -40,7 +40,7 @@
       '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + redes() + carrusel();
   }
   /* Redes sociales en el menú (con color). Para cambiar los enlaces, edita REDES. Si un enlace está vacío, ese ícono no se muestra. */
-  var REDES = { instagram: '', facebook: '' };
+  var REDES = { instagram: 'https://www.instagram.com/marlonfootwear', facebook: 'https://www.facebook.com/share/1CXYsBtK9Z/' };
   function redes() {
     var h = '';
     if (REDES.instagram) h += '<a class="hd-red hd-ig" href="' + E(REDES.instagram) + '" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Marlon Footwear"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" class="hd-pt"/></svg></a>';
