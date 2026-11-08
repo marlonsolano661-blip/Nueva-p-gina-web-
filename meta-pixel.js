@@ -56,7 +56,11 @@
     if (!COMPRA || !p || p.estado_pago !== 'APPROVED' || !p.reference) return;
     var clave = 'mf_px_p_' + p.reference;
     try { if (localStorage.getItem(clave)) return; localStorage.setItem(clave, '1'); } catch (e) { /* si no hay almacenamiento, igual se envía una vez por carga */ }
+    var it = (p.items || []).filter(function (i) { return i && i.id; });
     var n = (p.items || []).reduce(function (t, i) { return t + (Number(i.cant) || 0); }, 0);
-    ev('Purchase', { value: Number(p.amount_in_cents) / 100, currency: MON, content_type: 'product', num_items: n }, String(p.reference));
+    var d = { value: Number(p.amount_in_cents) / 100, currency: MON, content_type: 'product', num_items: n };
+    // Mismos ids que el catálogo de Meta (feed-meta) y que la API de conversiones: sirve para anuncios de catálogo.
+    if (it.length) { d.content_ids = it.map(function (i) { return String(i.id); }); d.contents = it.map(function (i) { return { id: String(i.id), quantity: Number(i.cant) || 1, item_price: Number(i.precio) || 0 }; }); }
+    ev('Purchase', d, String(p.reference));
   };
 })();

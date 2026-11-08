@@ -8,7 +8,7 @@ const webhook = require('../lib/webhook-wompi');
 const capi = require('../lib/meta-capi');
 
 const sha = (v) => crypto.createHash('sha256').update(v).digest('hex');
-const CFG = { metaPixelId: '123', metaCapiToken: 'tok', metaTestEventCode: '', site: 'https://tienda.test' };
+const CFG = { metaPixelId: '123', metaCapiToken: 'tok', metaTestEventCode: '', site: 'https://tienda.mfcol.com' };
 const PEDIDO = { cliente: { email: ' Ana@Correo.com ', tel: '311 575 2334' }, items: [{ id: 'plataforma-luna', cant: 2, precio: 189900 }] };
 
 describe('meta-capi (unidad)', () => {
@@ -41,11 +41,20 @@ describe('meta-capi (unidad)', () => {
     assert.equal(await capi.enviarCompra({ config: { ...CFG, metaCapiToken: '' }, referencia: 'MF-3', montoCentavos: 100, pedido: PEDIDO }), false);
     assert.equal(envios.length, 0);
   });
+
+  it('en una vista previa (netlify.app) no reporta compras de prueba a Meta, salvo con META_TEST_EVENT_CODE', async () => {
+    const previa = { ...CFG, site: 'https://deploy-preview-14--dreamy-belekoy-da5fc2.netlify.app' };
+    assert.equal(await capi.enviarCompra({ config: previa, referencia: 'MF-4', montoCentavos: 100, pedido: PEDIDO }), 'prueba');
+    assert.equal(envios.length, 0);
+    const r = await capi.enviarCompra({ config: { ...previa, metaTestEventCode: 'TEST123' }, referencia: 'MF-5', montoCentavos: 100, pedido: PEDIDO });
+    assert.equal(r.modo_prueba, true);
+    assert.equal(envios[0].body.test_event_code, 'TEST123');
+  });
 });
 
 describe('webhook + Meta CAPI', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () => {
   let b;
-  beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); process.env.META_PIXEL_ID = '123'; process.env.META_CAPI_ACCESS_TOKEN = 'tok'; });
+  beforeEach(async () => { b = await iniciar(); await b.sembrar(PRODUCTOS_BASE); process.env.META_PIXEL_ID = '123'; process.env.META_CAPI_ACCESS_TOKEN = 'tok'; process.env.SITE_URL = 'https://tienda.mfcol.com'; });
   afterEach(() => { delete process.env.META_PIXEL_ID; delete process.env.META_CAPI_ACCESS_TOKEN; b.terminar(); });
 
   async function pagar() {
