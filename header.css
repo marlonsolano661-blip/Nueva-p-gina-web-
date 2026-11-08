@@ -94,8 +94,7 @@ html body header.bar.wd svg{width:1.45rem;height:1.45rem;fill:none;stroke:#fff;s
 html body header.bar.wd .wd-t{font:400 1.05rem "Courier New",Courier,monospace;letter-spacing:.1em;text-transform:uppercase;color:#fff;white-space:nowrap}
 html body header.bar.wd .bag #cnt{position:static;min-width:0;height:auto;margin-left:.35rem;border-radius:0;background:none;color:#fff;font:400 1.05rem "Courier New",Courier,monospace}
 html body header.bar.wd .spg{background:#fff}
-.wd-marca{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:1.1rem 1rem .9rem;background:#fff;border-bottom:1px solid #eee}
-html body .wd-marca .logo{display:block;border:0;background:none;padding:0;color:#111;cursor:pointer}
-html body .wd-marca .logo svg{height:2.4rem;width:auto}
-html body .wd-marca .wm{border:0;background:none;padding:0;cursor:pointer;font:500 .95rem Jost,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#111}
+html body header.bar.wd{position:sticky}
+html body header.bar.wd .wd-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin-top:calc(env(safe-area-inset-top,0px)/2);display:block;width:auto;height:auto;border:0;background:none;padding:.2rem;color:#fff;cursor:pointer}
+html body header.bar.wd .wd-logo svg{display:block;height:1.9rem;width:auto;fill:#fff;stroke:none}
 @media (max-width:380px){html body header.bar.wd{gap:.7rem}html body header.bar.wd .wd-t{font-size:.92rem;letter-spacing:.06em}}
