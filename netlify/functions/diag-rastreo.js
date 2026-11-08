@@ -3,7 +3,6 @@
 // servicio saca el estado del envío, para poder actualizar los pedidos solos. Solo acepta enlaces de
 // *.interrapidisimo.com. Se borra cuando la integración quede lista.
 const PERMITIDO = /(^|\.)interrapidisimo\.com$/i;
-const T0 = Date.now();
 
 async function traer(url, ms) {
   const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (MF Colombia seguimiento)' }, signal: AbortSignal.timeout(ms || 6000) });
@@ -11,6 +10,7 @@ async function traer(url, ms) {
 }
 
 exports.handler = async (event) => {
+  const T0 = Date.now();
   const q = event.queryStringParameters || {};
   let u;
   try { u = new URL(String(q.u || '')); } catch (e) { u = null; }
