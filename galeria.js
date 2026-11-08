@@ -70,17 +70,38 @@
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
   }
-  // Orden en la ficha: primero la talla y luego el color (se mueve el bloque de color debajo de las tallas y la guía).
-  function ordenar() {
+  // Ficha estilo EGO: color, "Talla" con la guía a la derecha, lista desplegable de tallas, un botón principal y formas de pago.
+  function ego() {
     var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
-    var cl = pi.querySelector(':scope > .cl'), tl = pi.querySelector(':scope > .tl'); if (!cl || !tl) return;
-    var lb = cl.previousElementSibling; if (!lb || !lb.classList.contains('lb')) return;
-    if (tl.compareDocumentPosition(cl) & Node.DOCUMENT_POSITION_FOLLOWING) return; // ya está en orden
-    var antes = pi.querySelector(':scope > .row') || pi.querySelector(':scope > .trust');
-    if (antes) { pi.insertBefore(lb, antes); pi.insertBefore(cl, antes); } else { pi.appendChild(lb); pi.appendChild(cl); }
+    var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
+    if (id == null) return;
+    var tl = pi.querySelector(':scope > .tl');
+    if (tl && !pi.querySelector(':scope > .eg-sel')) {
+      var lb = tl.previousElementSibling, gl = pi.querySelector(':scope > .gl');
+      var fila = document.createElement('div'); fila.className = 'eg-sh';
+      if (lb && lb.classList.contains('lb')) fila.appendChild(lb);
+      if (gl) fila.appendChild(gl);
+      pi.insertBefore(fila, tl);
+      var bs = tl.querySelectorAll('.sz');
+      if (bs.length) {
+        var sel = document.createElement('select'); sel.className = 'eg-sel'; sel.setAttribute('aria-label', 'Elige tu talla');
+        var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Elige tu talla'; sel.appendChild(o0);
+        Array.prototype.forEach.call(bs, function (x) { var o = document.createElement('option'); o.value = x.getAttribute('data-t'); o.textContent = 'Talla ' + x.getAttribute('data-t'); if (x.classList.contains('on')) o.selected = true; sel.appendChild(o); });
+        sel.addEventListener('change', function () { var t = sel.value; Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (x) { if (x.getAttribute('data-t') === t && !x.classList.contains('on')) x.click(); }); });
+        tl.insertAdjacentElement('afterend', sel); tl.classList.add('eg-oculto');
+      }
+    }
+    var add = pi.querySelector(':scope > .row [data-n="add"]');
+    if (add) { var ya = !!pi.querySelector('.tl .sz.on'), txt = ya ? 'Agregar a la bolsa' : 'Elige tu talla'; if (add.textContent !== txt) add.textContent = txt; add.classList.toggle('eg-falta', !ya); }
+    var row = pi.querySelector(':scope > .row');
+    if (row && !pi.querySelector(':scope > .eg-pay')) {
+      var pay = document.createElement('div'); pay.className = 'eg-pay';
+      pay.innerHTML = '<p>Formas de pago:</p><div><span class="eg-nq">Nequi</span><span class="eg-pse">PSE</span><span class="eg-bc">Bancolombia</span><span class="eg-tj">Tarjeta</span></div>';
+      row.insertAdjacentElement('afterend', pay);
+    }
   }
   var pend = false;
-  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ordenar(); } catch (e) { /* queda el orden original */ } }); }
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ego(); } catch (e) { /* queda la ficha original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

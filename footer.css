@@ -47,3 +47,25 @@ html body #app .pi .row{margin-top:1rem;grid-template-columns:1fr 1fr;gap:.5rem}
 html body #app .pi .row .btn{min-height:3.1rem;padding:0 .4rem;letter-spacing:.14em;font-size:.66rem}
 html body #app .pi .trust{margin-top:1.1rem;padding-top:.85rem;gap:.45rem;font-size:.82rem}
 }
+/* Ficha del producto estilo EGO (desde el color hasta las formas de pago): talla en lista desplegable, un botón negro grande y formas de pago */
+html body #app .pi .lb{font:700 1.05rem Figtree,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:#111;margin:1.4rem 0 .8rem}
+html body #app .pi .lb .cn{font:400 1.05rem Figtree,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:#777;margin-left:.3rem}
+.eg-sh{display:flex;justify-content:space-between;align-items:center;margin:1.4rem 0 .7rem}
+html body #app .pi .eg-sh .lb{margin:0}
+html body #app .pi .eg-sh .gl{margin:0;font:400 .98rem Figtree,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:#555;text-decoration:underline;text-underline-offset:4px}
+html body #app .pi .tl.eg-oculto{display:none}
+.eg-sel{display:block;width:100%;height:3.5rem;padding:0 3rem 0 1.2rem;border:1px solid #cfcfcf;border-radius:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='1.8'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 1.1rem center/1.3rem;font:400 1.05rem Figtree,system-ui,sans-serif;color:#333;-webkit-appearance:none;appearance:none;cursor:pointer}
+.eg-sel:focus{outline:0;border-color:#111}
+html body #app .pi .cl{gap:1rem;margin:0 0 .4rem;min-height:3rem}
+html body #app .pi .sw{width:2.4rem;height:2.4rem;border:1px solid rgba(0,0,0,.15);outline:2px solid transparent;outline-offset:3px}
+html body #app .pi .sw.on{outline-color:#111}
+html body #app .pi .row{display:grid;grid-template-columns:1fr;gap:.7rem;margin-top:1.4rem}
+html body #app .pi .row .btn{min-height:3.6rem;border-radius:0;font:800 1rem Figtree,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+html body #app .pi .row [data-n="add"]{background:#000;color:#fff;border:1px solid #000}
+html body #app .pi .row [data-n="add"]::before{content:none}
+html body #app .pi .row [data-n="buy"]{display:none}
+.eg-pay{text-align:center;margin:1.6rem 0 .4rem}
+.eg-pay p{margin:0 0 1rem;font:500 1rem Figtree,system-ui,sans-serif;color:#111}
+.eg-pay div{display:flex;justify-content:center;flex-wrap:wrap;gap:.6rem}
+.eg-pay span{display:inline-grid;place-items:center;min-width:4.6rem;height:2.4rem;padding:0 .7rem;border-radius:3px;font:800 .82rem Figtree,system-ui,sans-serif;letter-spacing:.01em}
+.eg-nq{background:#e8dcff;color:#200449}.eg-pse{background:#dbe9ff;color:#0b3d91}.eg-bc{background:#fdda24;color:#1a1a1a}.eg-tj{background:#efefef;color:#111}
