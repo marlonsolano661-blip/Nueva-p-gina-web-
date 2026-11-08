@@ -472,8 +472,8 @@
   }
 
   // ---------- Pedidos y despachos ----------
-  // Los mismos pasos que ve la clienta en el seguimiento de su pedido (gracias.html).
-  var ENVIOS = [['PREPARANDO', 'Preparando'], ['EN_CAMINO', 'Enviado (en camino)'], ['EN_DESTINO', 'En destino (en distribución)'], ['ENTREGADO', 'Entregado'], ['DEVUELTO', 'Devuelto']];
+  // Los mismos estados que muestra Interrapidísimo en su rastreo (y que ve la clienta en su pedido).
+  var ENVIOS = [['PREPARANDO', 'Preparando tu pedido'], ['EN_CAMINO', 'Tu envío fue recogido'], ['CENTRO_ORIGEN', 'En Centro Logístico Origen'], ['VIAJANDO', 'Viajando a tu destino'], ['EN_DESTINO', 'En Centro Logístico Destino'], ['EN_REPARTO', 'En camino hacia ti'], ['EN_OFICINA', 'Disponible en oficina'], ['NOVEDAD', 'Novedad en la entrega'], ['ENTREGADO', 'Tu envío fue entregado'], ['DEVUELTO', 'Devolución al remitente']];
   function cargarPedidos() {
     var c = $('#p-pedidos'); c.textContent = '';
     var f = el('select', { id: 'f-ped' }, [el('option', { value: 'preparacion=pendiente', text: 'Pagados por preparar' }), el('option', { value: 'nuevo=1', text: 'Nuevos (sin ver)' }), el('option', { value: 'pago=APPROVED', text: 'Todos los pagados' }), el('option', { value: 'pago=PENDING', text: 'Pago pendiente' }), el('option', { value: '', text: 'Todos' })]);
@@ -529,7 +529,7 @@
       } });
       kids.push(el('div', { class: 'envio' }, [el('label', { class: 'ck' }, [prep, ' Preparado']), est, tr, gu, lk, inc, nota, b]));
       // Reenviar el correo de envío: solo con pedido ya enviado, con transportadora o guía guardadas y correo de la clienta.
-      var yaEnviado = ['EN_CAMINO', 'EN_DESTINO', 'ENTREGADO'].indexOf(p.estado_envio) >= 0;
+      var yaEnviado = ['PREPARANDO', 'DEVUELTO'].indexOf(p.estado_envio) < 0;
       if (yaEnviado && (p.guia || p.transportadora || p.link_rastreo) && cl.email) {
         kids.push(el('button', { type: 'button', class: 'claro', text: 'Reenviar correo de envío', onclick: function () {
           if (!window.confirm('¿Reenviar el correo de envío a ' + cl.email + '?')) return;
@@ -572,7 +572,7 @@
   // ---------- Ayuda de cada sección: qué es, cómo se usa y qué cuidar ----------
   var AYUDA = {
     pedidos: { sirve: 'Aquí ves las compras hechas en la tienda online (con su pago) y registras el despacho de cada una.',
-      pasos: ['En «Ver» deja «Pagados por preparar»: son compras ya pagadas que todavía no has enviado.', 'Prepara el pedido con los datos de la clienta que ves en la tarjeta.', 'Escribe la transportadora, el n.º de guía y el link de rastreo, cambia el estado de envío (Preparando, Enviado, En destino, Entregado o Devuelto) y pulsa «Guardar despacho». Son los mismos pasos que ve la clienta en su pedido; al pasar a Enviado y a En destino le llega un correo.'],
+      pasos: ['En «Ver» deja «Pagados por preparar»: son compras ya pagadas que todavía no has enviado.', 'Prepara el pedido con los datos de la clienta que ves en la tarjeta.', 'Escribe la transportadora, el n.º de guía y el link de rastreo, y cambia el estado de envío con el mismo nombre que muestra Interrapidísimo en su rastreo (Tu envío fue recogido, En Centro Logístico Origen, Viajando a tu destino, En Centro Logístico Destino, En camino hacia ti, Disponible en oficina, Novedad en la entrega, Tu envío fue entregado o Devolución al remitente). Pulsa «Guardar despacho». La clienta ve los mismos pasos en su pedido; al pasar a «Tu envío fue recogido» y a «En Centro Logístico Destino» le llega un correo.'],
       ojo: 'Los controles de envío solo se activan cuando el pago está aprobado. Si el pago sigue pendiente, no despaches.' },
     whatsapp: { sirve: 'Anota aquí lo que vendes por chat para que cuente en Finanzas junto con las ventas de la tienda.',
       pasos: ['Pulsa «+ Registrar pedido» y escribe el nombre, teléfono y ciudad de la clienta.', 'Elige los productos del catálogo con su talla y cantidad. El total se calcula solo.', 'Marca cómo pagó y si ya pagó. Después puedes cambiar el pago o el envío desde la misma tabla.'],
