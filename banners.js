@@ -90,3 +90,10 @@
   }
   engancha();
 })();
+
+/* Carga la sección "Cómo comprar" del inicio (como-comprar.css + como-comprar.js). Si no carga, la tienda sigue igual. */
+(function () {
+  if (document.querySelector('script[src*="como-comprar.js"]')) return;
+  var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'como-comprar.css'; document.head.appendChild(l);
+  var s = document.createElement('script'); s.src = 'como-comprar.js'; document.body.appendChild(s);
+})();
