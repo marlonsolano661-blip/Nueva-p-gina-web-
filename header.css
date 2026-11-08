@@ -108,3 +108,5 @@ html body header.bar.wd .bag.bump svg path:first-child{animation:mfRelleno 1.8s 
 @keyframes mfLatido{0%,100%{fill:rgba(255,79,163,.15)}25%{fill:rgba(255,79,163,.55)}50%{fill:rgba(255,203,61,.5)}75%{fill:rgba(94,224,255,.5)}}
 @keyframes mfBrillo{0%,100%{filter:drop-shadow(0 0 1px rgba(255,79,163,.25))}25%{filter:drop-shadow(0 0 4px rgba(255,79,163,.55))}50%{filter:drop-shadow(0 0 4px rgba(255,203,61,.5))}75%{filter:drop-shadow(0 0 4px rgba(94,224,255,.5))}}
 @media (prefers-reduced-motion:reduce){html body header.bar.wd .bag.bump svg,html body header.bar.wd .bag.bump svg path:first-child,html body header.bar.wd .bag.wd-lleno svg,html body header.bar.wd .bag.wd-lleno svg path:first-child{animation:none}}
+/* Una sola búsqueda: la lupa de la barra negra. Se oculta la barra grande "Buscar" que salía debajo del encabezado */
+html body form.sq#sf{display:none!important}
