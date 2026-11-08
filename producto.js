@@ -113,7 +113,7 @@
   try { mejorar(); } catch (e) { /* nada */ }
 })();
 
-/* Línea rosa brillante de carga: solo al tocar un producto (tarjetas con data-n="prod").
+/* Línea rosa brillante de carga: al tocar un producto (data-n="prod") o una colección del inicio (data-ver).
    No sale al deslizar fotos ni en otros cambios de página. Si falla, la tienda navega igual. */
 (function () {
   'use strict';
@@ -133,9 +133,9 @@
   document.body.appendChild(bar);
 
   var clic = 0, on = false, minFin = 0, t1, t2;
-  // Marca solo los toques reales sobre un producto
+  // Marca solo los toques reales sobre un producto o sobre una colección
   document.addEventListener('click', function (e) {
-    if (e.target.closest && e.target.closest('[data-n="prod"]')) clic = Date.now();
+    if (e.target.closest && e.target.closest('[data-n="prod"],[data-ver]')) clic = Date.now();
   }, true);
 
   function ini() {
@@ -160,7 +160,7 @@
     }, 300);
   }
   function esperarFoto() {
-    var img = document.querySelector('#app .pd .gsl-s img') || document.querySelector('#app .pd .im.big img');
+    var img = document.querySelector('#app .pd .gsl-s img') || document.querySelector('#app .pd .im.big img') || document.querySelector('#app #gr .pc img');
     if (!img || img.complete || img.naturalWidth) return fin();
     img.addEventListener('load', fin, { once: true });
     img.addEventListener('error', fin, { once: true });
@@ -170,7 +170,7 @@
   var nav0 = window.nav;
   window.nav = function (p) {
     var self = this, args = arguments;
-    if (p === 'prod' && Date.now() - clic < 800) {
+    if ((p === 'prod' || p === 'col') && Date.now() - clic < 800) {
       clic = 0;
       ini();
       setTimeout(function () {
