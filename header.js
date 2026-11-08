@@ -108,3 +108,22 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { cerrarMenu(); buscador(false); } });
   if (menu()) pintar(nivel1());
 })();
+
+/* Bolsa estilo Miss Lola: solo ordena y renombra lo que ya dibuja la tienda (no cambia el carrito ni el pago). */
+(function () {
+  'use strict';
+  function ajustar() {
+    var d = document.getElementById('dr'); if (!d) return;
+    var h2 = d.querySelector('.drh h2'); if (h2 && h2.textContent !== 'Bolsa de compras') h2.textContent = 'Bolsa de compras';
+    var p = d.querySelector('.drh p'); if (p) p.remove();
+    Array.prototype.forEach.call(d.querySelectorAll('.bl'), function (l) {
+      var bi = l.querySelector('.bi'), lp = l.querySelector('.lp'), info = bi && bi.querySelector('p');
+      if (bi && lp && info && lp.parentNode !== bi) bi.insertBefore(lp, info.nextSibling);
+    });
+    var pay = d.querySelector('.drf .cta .btn:not(.wa)'), tt = d.querySelectorAll('.drf .tt span');
+    if (pay && tt.length > 1 && !pay.querySelector('.ml-t')) pay.innerHTML = 'Pagar en línea <span class="ml-t">| ' + tt[tt.length - 1].textContent + '</span>';
+    var sigue = d.querySelector('.drf > .lk[data-n="bagclose"]'); if (sigue) sigue.classList.add('ml-sigue');
+  }
+  function iniciar() { var d = document.getElementById('dr'); if (!d) return; new MutationObserver(function () { ajustar(); }).observe(d, { childList: true }); ajustar(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();
