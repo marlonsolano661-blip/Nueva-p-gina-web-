@@ -27,25 +27,17 @@
         '<span class="hd-pn">' + E(p.name) + '</span><span class="hd-pp">' + E(precio(p.price)) + '</span></button>';
     }).join('') + '</div></section>';
   }
-  var IC = {
-    fav: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
-    bag: '<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
-    share: '<circle cx="12" cy="9" r="3.2"/><path d="M5.5 20c.8-3.4 3.4-5.2 6.5-5.2s5.7 1.8 6.5 5.2"/>',
-    wa: '<path d="M4.5 19.5l1.2-3.6A7.8 7.8 0 1 1 8.4 18.4z"/><path d="M9.3 9.2c.2 2.3 1.8 4.4 4.6 5.4l1-1.1-1.6-.9-.7.6c-.9-.4-1.6-1.1-2-2l.6-.7-.8-1.6z"/>'
-  };
-  function ico(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[k] + '</svg>'; }
   function nivel1() {
-    var f = favN();
-    return '<div class="hd-mh"><span class="hd-kk">Menú</span><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
-      '<ul class="hd-l1 hd-big">' +
-      '<li><button type="button" data-hd="col" class="hd-sub"><span class="hd-n">01</span><span class="hd-t">Colección</span></button></li>' +
-      '<li><button type="button" data-mn="home"><span class="hd-n">02</span><span class="hd-t">Inicio</span></button></li>' +
-      '<li><button type="button" data-mn="com"><span class="hd-n">03</span><span class="hd-t">Comunidad Marlon</span></button></li>' +
-      '</ul><ul class="hd-l2 hd-tiles">' +
-      '<li><button type="button" data-hd="favs">' + ico('fav') + '<span>Mis favoritos</span>' + (f ? '<i class="hd-bd">' + f + '</i>' : '') + '</button></li>' +
-      '<li><button type="button" data-mn="bag">' + ico('bag') + '<span>Mi bolsa</span></button></li>' +
-      '<li><button type="button" data-mn="share">' + ico('share') + '<span>Comparte tus MF</span></button></li>' +
-      '<li><button type="button" data-mn="wa">' + ico('wa') + '<span>Pedir por WhatsApp</span></button></li></ul>' + carrusel();
+    return '<div class="hd-mh"><span></span><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
+      '<ul class="hd-l1">' +
+      '<li><button type="button" data-hd="col" class="hd-sub">Colección</button></li>' +
+      '<li><button type="button" data-mn="home">Inicio</button></li>' +
+      '<li><button type="button" data-mn="com">Comunidad Marlon</button></li>' +
+      '</ul><ul class="hd-l2">' +
+      '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
+      '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
+      '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
+      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + carrusel();
   }
   function nivel2() {
     return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Colección</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
