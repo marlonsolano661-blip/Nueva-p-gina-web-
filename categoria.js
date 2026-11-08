@@ -69,44 +69,11 @@
     'body #gr .pc .btn.s{width:auto;min-height:0;border:0;border-bottom:1px solid var(--mv);background:none;color:var(--mv);border-radius:0;padding:0 0 3px;font:400 11px Jost,sans-serif;letter-spacing:.28em}',
     'body #gr .pc .btn.s:hover{background:none;color:var(--or)}',
     '@media(prefers-reduced-motion:reduce){.rh-ph img,.rcov-ph img{transition:none}}',
-    /* ---- Inicio: favoritos con precio, compra por ocasión y colecciones compactas ---- */
-    '.rfav{padding:2.6rem 0 2.2rem;background:#fff}',
-    '.rsec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;padding:0 1.2rem;margin-bottom:1.2rem;max-width:1240px;margin-left:auto;margin-right:auto}',
-    '.rsec-h h2{font-size:clamp(28px,7vw,44px);line-height:1;margin:0}',
-    '.rsec-h .rey{margin-bottom:.55rem}',
-    '.rsec-h button{flex:none;border:0;background:none;font:400 .68rem Jost,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--mv);padding:0 0 3px;border-bottom:1px solid var(--mv);cursor:pointer}',
-    '.rfav-t{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 1.2rem;padding:0 1.2rem 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:1240px;margin:0 auto}',
-    '.rfav-t::-webkit-scrollbar{display:none}',
-    '.rfc{flex:0 0 44%;max-width:240px;scroll-snap-align:start;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--mv);font:inherit}',
-    '.rfc-im{display:block;position:relative;aspect-ratio:3/4;background:var(--ro);overflow:hidden}',
-    '.rfc-im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
-    '.rfc b{display:block;font:500 19px/1.15 "Cormorant Garamond",Georgia,serif;margin:.7rem 0 .2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-    '.rfc span{display:block;font:400 13px Jost,sans-serif;letter-spacing:.06em;color:var(--mv)}',
-    '@media(min-width:800px){.rfc{flex-basis:22%}}',
-    '.roca{padding:2.4rem 1.2rem 2.6rem;background:var(--ro);text-align:center}',
-    '.roca h2{font-size:clamp(28px,7vw,44px);line-height:1;margin:0 0 .5rem}',
-    '.roca p{color:var(--mu);font-size:.95rem;margin:0 auto 1.4rem;max-width:26rem}',
-    '.roca-c{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:640px;margin:0 auto}',
-    '.roca-c button{border:1px solid var(--mv);background:#fff;color:var(--mv);border-radius:999px;padding:.7rem 1.15rem;font:400 .85rem Jost,sans-serif;letter-spacing:.04em;cursor:pointer;transition:background .25s,color .25s}',
-    '.roca-c button:hover,.roca-c button:active{background:var(--mv);color:#fff}',
-    '.roca a{display:inline-block;margin-top:1.3rem;font:400 .7rem Jost,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mv);border-bottom:1px solid var(--mv);padding-bottom:3px;text-decoration:none}',
-    '.rgcol{padding:2.6rem 0 0;background:#fff}',
-    '.rgcol-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 8px;max-width:1240px;margin:0 auto}',
-    '.rgc{position:relative;display:block;aspect-ratio:3/4;overflow:hidden;background:var(--ro);border:0;padding:0;cursor:pointer;text-align:left;color:#fff;font:inherit}',
-    '.rgc:first-child{grid-column:1/-1;aspect-ratio:16/11}',
-    '.rgc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1s cubic-bezier(.2,.8,.2,1)}',
-    '.rgc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55))}',
-    '.rgc span{position:absolute;z-index:1;left:14px;right:14px;bottom:14px}',
-    '.rgc b{display:block;font:500 clamp(24px,6.4vw,36px)/1 "Cormorant Garamond",Georgia,serif}',
-    '.rgc small{display:block;margin-top:.45rem;font:400 .62rem Jost,sans-serif;letter-spacing:.26em;text-transform:uppercase;opacity:.9}',
-    '.rgc:hover img{transform:scale(1.04)}',
-    '@media(min-width:900px){.rgcol-g{grid-template-columns:repeat(3,1fr)}.rgc:first-child{grid-column:span 2;aspect-ratio:auto}}',
     /* ---- Reseñas: estrellas llenas y doradas ---- */
     '.rstar{color:#c9a24a;letter-spacing:.08em}',
     /* ---- Medios de pago en "Pago seguro" ---- */
     '.rpay{display:flex;flex-wrap:wrap;gap:5px;margin-top:.45rem}',
-    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}',
-    '@media(prefers-reduced-motion:reduce){.rgc img{transition:none}}'
+    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -159,44 +126,7 @@
     return '<div class="rvbg"><div class="rvals"><div><h3>Envío</h3><p>' + E(env) + '</p></div><div><h3>Pago seguro</h3><p>Tarjeta, Nequi o PSE con Wompi.</p></div><div><h3>Ediciones limitadas</h3><p>Pocas unidades por modelo.</p></div></div></div>';
   }
 
-
-  /* ---- Favoritos: los productos marcados como destacados en el panel, con foto y precio ---- */
-  function favoritos() {
-    var C = catalog().filter(function (p) { return foto(p); });
-    var L = C.filter(function (p) { return p.destacado; });
-    if (L.length < 4) L = L.concat(C.filter(function (p) { return !p.destacado; })).slice(0, 8);
-    L = L.slice(0, 12);
-    if (!L.length) return '';
-    return '<section class="rfav" aria-label="Favoritos"><div class="rsec-h"><div><div class="rey">Elegidos por MF</div><h2>Favoritos</h2></div><button data-ver="">Ver todo</button></div>' +
-      '<div class="rfav-t">' + L.map(function (p) {
-        return '<button class="rfc" type="button" data-n="prod" data-id="' + E(p.id) + '"><span class="rfc-im"><img src="' + E(foto(p)) + '" alt="' + E(p.name) + '" loading="lazy" decoding="async"></span><b>' + E(p.name) + '</b><span>' + E(fmt(p.price)) + '</span></button>';
-      }).join('') + '</div></section>';
-  }
-
-  /* ---- Compra por ocasión: cada ocasión abre la colección que mejor le va ---- */
-  var OCASIONES = [['Matrimonio', 'tacones'], ['Fiesta', 'plataformas'], ['Grado', 'aura'], ['Quince años', 'tacones'], ['Cumpleaños', 'sandalias'], ['Día a día', 'yute']];
-  function ocasiones() {
-    var ok = {}; conProductos().forEach(function (k) { ok[k.id] = 1; });
-    var L = OCASIONES.filter(function (o) { return ok[o[1]]; });
-    if (!L.length) return '';
-    var wa = 'https://wa.me/573115752334?text=' + encodeURIComponent('Hola Marlon Footwear 👋 Estoy buscando tacones para una ocasión especial. ¿Me ayudan a elegir?');
-    return '<section class="roca" aria-label="Compra por ocasión"><div class="rey">Compra por ocasión</div><h2>¿Para qué ocasión?</h2><p>Elige el momento y te mostramos los modelos que mejor le van.</p>' +
-      '<div class="roca-c">' + L.map(function (o) { return '<button type="button" data-ver="' + E(o[1]) + '">' + E(o[0]) + '</button>'; }).join('') + '</div>' +
-      '<a href="' + E(wa) + '" target="_blank" rel="noopener">¿Dudas? Te asesoramos por WhatsApp</a></section>';
-  }
-
-  /* ---- Colecciones compactas: cuadrícula de 2 columnas, la primera a lo ancho ---- */
-  function cuadricula() {
-    var L = conProductos();
-    if (!L.length) return '';
-    return '<section class="rgcol" id="colecciones" aria-label="Colecciones"><div class="rsec-h"><div><div class="rey">Colecciones</div><h2>Encuentra tu estilo</h2></div></div><div class="rgcol-g">' + L.map(function (k) {
-      var ps = deColeccion(k.id);
-      var src = k.portada || (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? foto(q) : ''; })();
-      return '<button class="rgc" type="button" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">' + (src ? '<img src="' + E(src) + '" alt="" loading="lazy" decoding="async">' : '') + '<span><b>' + E(k.nombre) + '</b><small>' + ps.length + (ps.length === 1 ? ' modelo' : ' modelos') + ' · Ver</small></span></button>';
-    }).join('') + '</div></section><div class="rall"><button data-ver="">Ver todos los modelos</button></div>';
-  }
-
-  function home() { return '<div data-rnew="home">' + hero() + favoritos() + ocasiones() + cuadricula() + '</div>'; }
+  function home() { return '<div data-rnew="home">' + hero() + portadas() + '</div>'; }
 
   /* ---- Página de una colección (o de todos los modelos) ---- */
   function chips() {
@@ -220,7 +150,6 @@
     try { history.replaceState(history.state, '', id ? '#' + id : location.pathname + location.search); } catch (e) { /* sin historial */ }
     draw(); (window.mfTop || function () { window.scrollTo(0, 0); })();
   }
-
 
   /* ---- Detalles después de dibujar: estrellas de reseñas llenas y medios de pago en "Pago seguro" ---- */
   function detalles() {
