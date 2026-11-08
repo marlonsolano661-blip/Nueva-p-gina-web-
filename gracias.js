@@ -36,22 +36,29 @@
     tarjeta.appendChild(el('a', { class: 'boton', href: '/', text: 'Volver a la tienda' }));
   }
 
-  /* ---- Línea de seguimiento: 5 pasos, cada uno con su animación cuando el pedido avanza ---- */
+  /* ---- Línea de seguimiento: los mismos pasos que muestra Interrapidísimo en su rastreo ---- */
   var ICONOS = {
     recibido: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     preparando: '<path d="M4 8l8-4 8 4v9l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v9"/>',
+    recogido: '<path d="M4 9l8-4 8 4v8l-8 4-8-4z"/><path d="M9 13l2 2 4-4"/>',
+    centro: '<path d="M3 20V9l9-5 9 5v11"/><path d="M7 20v-7h10v7M7 16h10"/>',
     enviado: '<path d="M2.5 6.5h11v9h-11zM13.5 9.5h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     destino: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>',
+    reparto: '<circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M8.5 17h7M6 17l3-7h4l2 4h3M13 10l1-3h3"/>',
     entregado: '<path d="M4 10h16v10H4zM3 6.5h18V10H3zM12 6.5V20M12 6.5C10 3 6.5 3.5 7 5.5s3.5 1 5 1c1.5 0 5 1 5-1S14 3 12 6.5z"/>'
   };
   var PASOS = [
     ['recibido', 'Pedido recibido', 'Tu pago fue aprobado.'],
-    ['preparando', 'Estamos preparando tu pedido', 'Estamos alistando tu par con cuidado.'],
-    ['enviado', 'Pedido enviado', 'Tu pedido salió hacia tu ciudad.'],
-    ['destino', 'Pedido en destino', 'Tu pedido llegó a tu ciudad.'],
-    ['entregado', 'Pedido entregado', '¡Que lo disfrutes!']
+    ['preparando', 'Preparando tu pedido', 'Estamos alistando tu par con cuidado.'],
+    ['recogido', 'Tu envío fue recogido', 'La transportadora recibió tu paquete.'],
+    ['centro', 'En Centro Logístico Origen', 'Tu paquete se está clasificando para salir.'],
+    ['enviado', 'Viajando a tu destino', 'Tu paquete va hacia tu ciudad.'],
+    ['destino', 'En Centro Logístico Destino', 'Tu paquete llegó a tu ciudad.'],
+    ['reparto', 'En camino hacia ti', 'Un mensajero lo lleva a tu dirección.'],
+    ['entregado', 'Tu envío fue entregado', '¡Que lo disfrutes!']
   ];
-  var ETAPA = { PREPARANDO: 1, EN_CAMINO: 2, EN_DESTINO: 3, ENTREGADO: 4, DEVUELTO: 2 };
+  var FINAL = PASOS.length - 1;
+  var ETAPA = { PREPARANDO: 1, EN_CAMINO: 2, CENTRO_ORIGEN: 3, VIAJANDO: 4, EN_DESTINO: 5, EN_REPARTO: 6, EN_OFICINA: 6, NOVEDAD: 6, ENTREGADO: 7, DEVUELTO: 2 };
   var etapaVista = null;   // última etapa que el cliente ya vio animada
   function etapaGuardada(ref) { try { var v = localStorage.getItem('mf_seg_' + ref); return v == null ? null : parseInt(v, 10); } catch (e) { return null; } }
   function guardarEtapa(ref, n) { try { localStorage.setItem('mf_seg_' + ref, String(n)); } catch (e) { /* sin storage */ } }
@@ -67,24 +74,27 @@
     var ol = el('ol', { class: 'linea', 'aria-label': 'Estado de tu pedido' });
     PASOS.forEach(function (d, n) {
       var cls = 'et ' + (n < actual ? 'hecho' : n === actual ? 'actual' : 'falta');
-      var detalle = d[2];
+      var detalle = d[2], titulo = d[1];
       if (n === 2 && p.transportadora) detalle = 'Va con ' + p.transportadora + (p.guia ? ' · guía ' + p.guia : '') + '.';
+      // Variantes del paso de entrega que también usa Interrapidísimo
+      if (n === 6 && p.estado_envio === 'EN_OFICINA') { titulo = 'Disponible en oficina'; detalle = 'Recógelo en la oficina con tu documento de identidad.'; }
+      if (n === 6 && p.estado_envio === 'NOVEDAD') { titulo = 'Novedad en la entrega'; detalle = 'No se pudo entregar en este intento. Escríbenos por WhatsApp y lo resolvemos.'; }
       // Animación: pasos nuevos (desde la etapa que ya había visto) o todos en la primera visita
       var anima = previa == null ? n <= actual : (n > previa && n <= actual);
       if (anima) cls += ' anima';
       if (avanzo && n === actual) cls += ' nuevo';
       var li = el('li', n === actual ? { class: cls, 'aria-current': 'step' } : { class: cls }, [
         el('span', { class: 'dot' }, [icono(d[0])]),
-        el('div', { class: 'tx' }, [el('b', { text: d[1] }), el('small', { text: n <= actual ? detalle : '' })])
+        el('div', { class: 'tx' }, [el('b', { text: titulo }), el('small', { text: n <= actual ? detalle : '' })])
       ]);
       if (anima) li.style.setProperty('--d', (previa == null ? n : n - previa - 1) * 0.55 + 's');
-      if (n === 2 && n === actual) li.appendChild(el('span', { class: 'camion', 'aria-hidden': 'true' }));
+      if (n >= 2 && n <= 5 && n === actual) li.appendChild(el('span', { class: 'camion', 'aria-hidden': 'true' }));
       ol.appendChild(li);
     });
     ol.style.setProperty('--n', actual);
     etapaVista = actual; guardarEtapa(p.reference, actual);
     var caja = el('div', { class: 'seg' }, [ol]);
-    if (actual === 4 && (previa == null || previa < 4)) setTimeout(confeti, 600);
+    if (actual === FINAL && (previa == null || previa < FINAL)) setTimeout(confeti, 600);
     return caja;
   }
   function confeti() {
@@ -154,7 +164,7 @@
 
     if (ok) {
       limpiarCarrito();
-      if (p.estado_envio === 'DEVUELTO') tarjeta.appendChild(el('p', { class: 'suave', text: 'Este envío fue devuelto. Escríbenos por WhatsApp para ayudarte.' }));
+      if (p.estado_envio === 'DEVUELTO') tarjeta.appendChild(el('p', { class: 'suave', text: 'Devolución al remitente: este envío regresó. Escríbenos por WhatsApp para ayudarte.' }));
       if (p.transportadora || p.guia || p.link_rastreo) {
         var envio = el('div', { class: 'datos' });
         if (p.transportadora) envio.appendChild(el('div', { class: 'fila-r' }, [el('span', { class: 'suave', text: 'Transportadora' }), el('span', { text: p.transportadora })]));
@@ -162,7 +172,7 @@
         tarjeta.appendChild(envio);
         if (p.link_rastreo && /^https:\/\//i.test(p.link_rastreo)) {
           tarjeta.appendChild(el('a', { class: 'boton', href: p.link_rastreo, target: '_blank', rel: 'noopener noreferrer', text: 'Rastrear pedido' }));
-        } else if (p.estado_envio === 'EN_CAMINO') {
+        } else if (p.estado_envio !== 'PREPARANDO' && p.estado_envio !== 'ENTREGADO' && p.estado_envio !== 'DEVUELTO') {
           tarjeta.appendChild(el('p', { class: 'suave', text: 'Pronto verás aquí el botón para rastrear tu pedido.' }));
         }
       }

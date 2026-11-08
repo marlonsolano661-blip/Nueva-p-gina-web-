@@ -17,7 +17,7 @@ create table if not exists pedidos (
   estado_pago text not null default 'PENDING'
     check (estado_pago in ('PENDING','APPROVED','DECLINED','VOIDED','ERROR')),
   estado_envio text not null default 'PREPARANDO'
-    check (estado_envio in ('PREPARANDO','EN_CAMINO','EN_DESTINO','ENTREGADO','DEVUELTO')),
+    check (estado_envio in ('PREPARANDO','EN_CAMINO','CENTRO_ORIGEN','VIAJANDO','EN_DESTINO','EN_REPARTO','EN_OFICINA','NOVEDAD','ENTREGADO','DEVUELTO')),
   transportadora text,
   guia text,
   monto_centavos bigint not null check (monto_centavos > 0),
@@ -151,6 +151,10 @@ grant all on table ajustes, eventos to service_role;
 -- Enlace de rastreo de la transportadora (lo escribe Marlon en el panel; el cliente ve el botón "Rastrear pedido")
 alter table pedidos add column if not exists link_rastreo text;
 alter table pedidos add column if not exists visto_en timestamptz;  -- pedidos nuevos: null = todavía no lo has visto en el panel
+-- Estados de envío con los mismos pasos que muestra Interrapidísimo en su rastreo
+alter table pedidos drop constraint if exists pedidos_estado_envio_check;
+alter table pedidos add constraint pedidos_estado_envio_check
+  check (estado_envio in ('PREPARANDO','EN_CAMINO','CENTRO_ORIGEN','VIAJANDO','EN_DESTINO','EN_REPARTO','EN_OFICINA','NOVEDAD','ENTREGADO','DEVUELTO'));
 
 -- Pedidos por WhatsApp registrados en el panel (ver supabase/migracion-ventas-whatsapp.sql)
 create table if not exists ventas_whatsapp (

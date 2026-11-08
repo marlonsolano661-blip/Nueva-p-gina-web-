@@ -41,7 +41,7 @@
     var cli = p.cliente || {};
     var tel = String(cli.tel || '').replace(/\D/g, '');
     var sel = el('select', { 'aria-label': 'Estado de envío' });
-    [['PREPARANDO', 'Preparando'], ['EN_CAMINO', 'Enviado (en camino)'], ['EN_DESTINO', 'En destino (llegó a la ciudad)'], ['ENTREGADO', 'Entregado'], ['DEVUELTO', 'Devuelto']].forEach(function (o) {
+    [['PREPARANDO', 'Preparando tu pedido'], ['EN_CAMINO', 'Tu envío fue recogido'], ['CENTRO_ORIGEN', 'En Centro Logístico Origen'], ['VIAJANDO', 'Viajando a tu destino'], ['EN_DESTINO', 'En Centro Logístico Destino'], ['EN_REPARTO', 'En camino hacia ti'], ['EN_OFICINA', 'Disponible en oficina'], ['NOVEDAD', 'Novedad en la entrega'], ['ENTREGADO', 'Tu envío fue entregado'], ['DEVUELTO', 'Devolución al remitente']].forEach(function (o) {
       var op = el('option', { value: o[0], text: o[1] }); if (o[0] === p.estado_envio) op.selected = true; sel.appendChild(op);
     });
     var transp = el('input', { type: 'text', placeholder: 'Transportadora', maxlength: '40', 'aria-label': 'Transportadora' }); transp.value = p.transportadora || '';
@@ -64,7 +64,7 @@
     // Reenviar correo de envío: solo si el pedido ya fue enviado, tiene datos de seguimiento y la clienta dejó correo.
     var reenviar = el('button', { type: 'button', class: 'reenviar', text: 'Reenviar correo de envío' });
     function mostrarReenvio() {
-      var enviado = ['EN_CAMINO', 'EN_DESTINO', 'ENTREGADO'].indexOf(p.estado_envio) >= 0;
+      var enviado = ['PREPARANDO', 'DEVUELTO'].indexOf(p.estado_envio) < 0;
       var datos = !!(p.guia || p.transportadora || p.link_rastreo);
       reenviar.hidden = !(aprobado && enviado && datos && (p.cliente || {}).email);
     }
