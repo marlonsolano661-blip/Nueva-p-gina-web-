@@ -79,8 +79,18 @@
     '.rcols-h .rey{margin-bottom:.8rem}',
     '.rcols-h h2{font-size:clamp(34px,8vw,64px);line-height:1;margin:0}',
     '.rcols-h i{display:block;width:44px;height:1px;background:var(--mv);margin:1.3rem auto 0}',
-    '.rcov-tx::after{content:"";display:block;width:44px;height:1px;background:var(--ch);margin-top:2.6rem}',
-    '@media(min-width:900px){.rcov-tx::after{display:none}}'
+    /* ---- Colecciones estilo moderno: texto a la izquierda y botón redondo con flecha ---- */
+    '.rcov-ph[data-ver]{cursor:pointer}',
+    '.rcov .rc2{flex-direction:row;align-items:flex-end;justify-content:space-between;gap:1.2rem;text-align:left;padding:1.6rem 1.4rem 2.2rem}',
+    '.rc2-t{min-width:0}',
+    '.rcov .rc2 .rey{margin-bottom:.6rem;letter-spacing:.4em}',
+    '.rcov .rc2 .rey b{font-weight:500;color:var(--mv)}',
+    '.rcov .rc2 h2{font-size:clamp(36px,8.4vw,64px);margin:0 0 .5rem}',
+    '.rcov .rc2 p{margin:0;font-size:.9rem;line-height:1.5;max-width:22rem}',
+    '.rarr{flex:none;width:3.6rem;height:3.6rem;border-radius:50%;border:1px solid var(--mv);background:var(--mv);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;transition:background .3s,color .3s,transform .3s}',
+    '.rarr svg{width:1.3rem;height:1.3rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}',
+    '.rarr:hover{background:#fff;color:var(--mv);transform:translateX(3px)}',
+    '@media(min-width:900px){.rcov .rc2{padding:4rem 6vw;align-items:flex-end}}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -119,12 +129,13 @@
   function portadas() {
     var L = conProductos();
     if (!L.length) return '';
-    return '<div class="rcols" id="colecciones"><div class="rcols-h"><div class="rey">Marlon Footwear</div><h2>Nuestras colecciones</h2><i aria-hidden="true"></i></div>' + L.map(function (k) {
+    return '<div class="rcols" id="colecciones"><div class="rcols-h"><div class="rey">Marlon Footwear</div><h2>Nuestras colecciones</h2><i aria-hidden="true"></i></div>' + L.map(function (k, i) {
       var ps = deColeccion(k.id), n = ps.length;
       var f = k.portada ? { src: k.portada, cover: true } : (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? { src: foto(q), cover: false } : null; })();
-      return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
-        '<div class="rcov-tx"><div class="rey">Colección</div><h2>' + E(k.nombre) + '</h2><p>' + E(frase(k, n)) + '</p>' +
-        '<button class="rbtn" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">Ver colección</button></div></section>';
+      var num = (i < 9 ? '0' : '') + (i + 1);
+      return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph" data-ver="' + E(k.id) + '">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
+        '<div class="rcov-tx rc2"><div class="rc2-t"><div class="rey"><b>' + num + '</b> · Colección</div><h2>' + E(k.nombre) + '</h2><p>' + E(frase(k, n)) + '</p></div>' +
+        '<button class="rarr" type="button" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></section>';
     }).join('') + '</div><div class="rall"><button data-ver="">Ver todos los modelos</button></div>';
   }
 
