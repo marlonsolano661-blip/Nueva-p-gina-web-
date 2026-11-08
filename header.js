@@ -127,3 +127,27 @@
   function iniciar() { var d = document.getElementById('dr'); if (!d) return; new MutationObserver(function () { ajustar(); }).observe(d, { childList: true }); ajustar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
+
+/* Encabezado estilo Wild Diva: franja negra con el nombre de la tienda, barra negra con MENÚ, inicio, buscar y MI BOLSA, y el logo centrado debajo. */
+(function () {
+  'use strict';
+  var CASA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5L12 4l8.5 7.5"/><path d="M6 10v9.5h4.5V14h3v5.5H18V10"/></svg>';
+  function armar() {
+    var bar = document.querySelector('header.bar'); if (!bar || bar.classList.contains('wd')) return;
+    var ann = document.querySelector('.hd-ann'); if (ann) ann.textContent = 'Marlon Footwear Colombia';
+    var mb = bar.querySelector('.mb'), bag = bar.querySelector('.bag'), logo = bar.querySelector('.logo'), wm = bar.querySelector('.wm'), sp = bar.querySelector('.sp');
+    if (mb && !mb.querySelector('.wd-t')) { var t = document.createElement('span'); t.className = 'wd-t'; t.textContent = 'Menú'; mb.appendChild(t); }
+    var casa = document.createElement('button'); casa.type = 'button'; casa.className = 'wd-casa'; casa.setAttribute('data-n', 'go'); casa.setAttribute('data-p', 'home'); casa.setAttribute('aria-label', 'Inicio'); casa.innerHTML = CASA;
+    if (mb) { bar.insertBefore(mb, bar.firstChild); mb.insertAdjacentElement('afterend', casa); }
+    var bus = bar.querySelector('.hd-s'); if (bus) casa.insertAdjacentElement('afterend', bus);
+    if (sp && bus) bus.insertAdjacentElement('afterend', sp);
+    if (bag && !bag.querySelector('.wd-t')) { var b = document.createElement('span'); b.className = 'wd-t'; b.textContent = 'Mi bolsa'; bag.insertBefore(b, bag.firstChild); bar.appendChild(bag); }
+    if (logo || wm) {
+      var marca = document.createElement('div'); marca.className = 'wd-marca';
+      if (logo) marca.appendChild(logo); if (wm) marca.appendChild(wm);
+      bar.insertAdjacentElement('afterend', marca);
+    }
+    bar.classList.add('wd'); document.body.classList.add('wd-on');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armar); else armar();
+})();

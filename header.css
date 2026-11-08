@@ -85,3 +85,17 @@ html body .dr .drf .dcb .btn{min-height:2.9rem;padding:0 1rem;border-radius:0;fo
 html body .dr .drf .cta .btn.wa,html body .dr .drf .cta .btn.wa b{text-transform:none!important;letter-spacing:.02em!important}
 html body .dr .drf .cta .btn.wa b{text-decoration:underline!important;text-underline-offset:4px}
 html body .dr .drf .cta .btn.wa span{text-decoration:underline;text-underline-offset:4px}
+/* Encabezado estilo Wild Diva */
+html body .hd-ann{background:#000;color:#fff;font:400 .95rem "Courier New",Courier,monospace;letter-spacing:.08em;padding:.85rem 1rem .4rem;border:0}
+html body header.bar.wd{display:flex;align-items:center;gap:.9rem;background:#000;border-bottom:0;padding:.75rem 1.1rem;padding-top:calc(.75rem + env(safe-area-inset-top,0px))}
+html body header.bar.wd .sp{flex:1}
+html body header.bar.wd .mb,html body header.bar.wd .bag,html body header.bar.wd .hd-s,html body header.bar.wd .wd-casa{display:flex;align-items:center;gap:.55rem;width:auto;height:2.4rem;padding:0;border:0;background:none;color:#fff;cursor:pointer;position:relative}
+html body header.bar.wd svg{width:1.45rem;height:1.45rem;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html body header.bar.wd .wd-t{font:400 1.05rem "Courier New",Courier,monospace;letter-spacing:.1em;text-transform:uppercase;color:#fff;white-space:nowrap}
+html body header.bar.wd .bag #cnt{position:static;min-width:0;height:auto;margin-left:.35rem;border-radius:0;background:none;color:#fff;font:400 1.05rem "Courier New",Courier,monospace}
+html body header.bar.wd .spg{background:#fff}
+.wd-marca{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:1.1rem 1rem .9rem;background:#fff;border-bottom:1px solid #eee}
+html body .wd-marca .logo{display:block;border:0;background:none;padding:0;color:#111;cursor:pointer}
+html body .wd-marca .logo svg{height:2.4rem;width:auto}
+html body .wd-marca .wm{border:0;background:none;padding:0;cursor:pointer;font:500 .95rem Jost,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#111}
+@media (max-width:380px){html body header.bar.wd{gap:.7rem}html body header.bar.wd .wd-t{font-size:.92rem;letter-spacing:.06em}}
