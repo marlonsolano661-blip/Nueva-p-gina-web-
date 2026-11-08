@@ -119,3 +119,13 @@ html body header.bar.wd .wd-t,html body header.bar.wd .bag #cnt{color:#111}
 html body header.bar.wd .wd-logo{color:#111}
 html body header.bar.wd .wd-logo svg{fill:#111}
 html body header.bar.wd .spg{background:#111}
+/* Redes sociales en el menú, con sus colores */
+.hd-redes{display:flex;gap:.9rem;padding:1.4rem 1.6rem 0}
+.hd-red{display:grid;place-items:center;width:2.9rem;height:2.9rem;border-radius:50%;text-decoration:none;transition:transform .2s ease}
+.hd-red:active{transform:scale(.92)}
+.hd-red svg{width:1.45rem;height:1.45rem}
+.hd-ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285aeb 90%)}
+.hd-ig svg{fill:none;stroke:#fff;stroke-width:1.8}
+.hd-ig svg .hd-pt{fill:#fff;stroke:none}
+.hd-fb{background:#1877f2}
+.hd-fb svg{fill:#fff;stroke:none}

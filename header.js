@@ -37,7 +37,15 @@
       '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
       '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
-      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + carrusel();
+      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + redes() + carrusel();
+  }
+  /* Redes sociales en el menú (con color). Para cambiar los enlaces, edita REDES. Si un enlace está vacío, ese ícono no se muestra. */
+  var REDES = { instagram: '', facebook: '' };
+  function redes() {
+    var h = '';
+    if (REDES.instagram) h += '<a class="hd-red hd-ig" href="' + E(REDES.instagram) + '" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Marlon Footwear"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" class="hd-pt"/></svg></a>';
+    if (REDES.facebook) h += '<a class="hd-red hd-fb" href="' + E(REDES.facebook) + '" target="_blank" rel="noopener noreferrer" aria-label="Facebook de Marlon Footwear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.7v3h2.6V21z"/></svg></a>';
+    return h ? '<div class="hd-redes">' + h + '</div>' : '';
   }
   function nivel2() {
     return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Colección</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
