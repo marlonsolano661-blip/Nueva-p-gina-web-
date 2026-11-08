@@ -32,7 +32,7 @@
     })(t0);
   }
 
-  // Cinta con texto que se desplaza (decorativa; solo frases que ya están en la tienda).
+  // Cinta con texto que se desplaza: quitada de la página del producto (ya no se llama).
   function cinta(pd) {
     var sec = pd.closest('section');
     if (!sec || document.querySelector('#app .mfmq')) return;
@@ -96,7 +96,7 @@
       pd.classList.add('swap');
     }
     last.key = key; last.src = src;
-    cinta(pd); foto(pd); barra(pd);
+    foto(pd); barra(pd);
   }
 
   // Se ejecuta cada vez que la tienda vuelve a dibujar #app. Los cambios que hace este mismo script se descartan.
