@@ -48,3 +48,27 @@ html body .mn .hd-fv li button.hd-fvp{flex:1;width:auto;justify-content:flex-sta
 html body .mn .hd-fv li button.hd-fvx{flex:none;width:auto;display:block;padding:.4rem;font-family:inherit;font-weight:400;font-size:.85rem;letter-spacing:0;text-transform:none;color:#555}
 html body .mn .hd-fv li button::after{content:none}
 .hd-fvt b,.hd-fvt small{letter-spacing:0;text-transform:none}
+/* Menú con diseño: títulos grandes numerados, accesos en tarjetas con ícono y entrada suave */
+.hd-kk{font:500 .72rem Jost,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#111}
+html body .mn ul.hd-big{padding:.4rem 1.6rem 0}
+html body .mn .hd-big li{border-bottom:1px solid #ececec}
+html body .mn .hd-big li button{justify-content:flex-start;gap:.75rem;padding:1.15rem 0;font:500 2rem/1.05 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em;color:#111;transition:padding .35s ease}
+html body .mn .hd-big li button:hover,html body .mn .hd-big li button:focus-visible{padding-left:.5rem}
+.hd-n{flex:none;width:1.3rem;font:400 .7rem Jost,sans-serif;letter-spacing:.12em;color:#9a9a9a;transform:translateY(-.55rem)}
+.hd-t{flex:1}
+html body .mn .hd-big .hd-sub::after{margin-left:auto}
+html body .mn ul.hd-tiles{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1.6rem;padding:0 1.6rem;border-top:0}
+html body .mn .hd-tiles li button{position:relative;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:1.4rem;min-height:6.4rem;padding:1rem;border-radius:14px;background:#f5f4f2;font:400 .9rem/1.25 Jost,sans-serif;color:#111;transition:background .25s}
+html body .mn .hd-tiles li button:hover{background:#ecebe8}
+.hd-tiles svg{width:1.45rem;height:1.45rem;fill:none;stroke:#111;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.hd-bd{position:absolute;top:.85rem;right:.9rem;min-width:1.35rem;height:1.35rem;padding:0 .35rem;border-radius:999px;background:#111;color:#fff;font:500 .72rem/1.35rem Jost,sans-serif;font-style:normal;text-align:center}
+html body .mn .hd-car h3{font:500 .72rem Jost,sans-serif;letter-spacing:.32em;text-transform:uppercase}
+.hd-car{border-top:0;margin-top:2rem}
+.hd-im{border-radius:10px}
+@media (prefers-reduced-motion:no-preference){
+body.mnopen .mn .hd-big li,body.mnopen .mn .hd-tiles li,body.mnopen .mn .hd-car{animation:hdUp .55s cubic-bezier(.2,.7,.2,1) both}
+body.mnopen .mn .hd-big li:nth-child(2){animation-delay:.05s}body.mnopen .mn .hd-big li:nth-child(3){animation-delay:.1s}
+body.mnopen .mn .hd-tiles li{animation-delay:.15s}body.mnopen .mn .hd-tiles li:nth-child(2){animation-delay:.19s}body.mnopen .mn .hd-tiles li:nth-child(3){animation-delay:.23s}body.mnopen .mn .hd-tiles li:nth-child(4){animation-delay:.27s}
+body.mnopen .mn .hd-car{animation-delay:.32s}
+}
+@keyframes hdUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
