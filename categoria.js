@@ -68,7 +68,12 @@
     'body #gr .pc .dots{justify-content:center;margin:0 0 10px}',
     'body #gr .pc .btn.s{width:auto;min-height:0;border:0;border-bottom:1px solid var(--mv);background:none;color:var(--mv);border-radius:0;padding:0 0 3px;font:400 11px Jost,sans-serif;letter-spacing:.28em}',
     'body #gr .pc .btn.s:hover{background:none;color:var(--or)}',
-    '@media(prefers-reduced-motion:reduce){.rh-ph img,.rcov-ph img{transition:none}}'
+    '@media(prefers-reduced-motion:reduce){.rh-ph img,.rcov-ph img{transition:none}}',
+    /* ---- Reseñas: estrellas llenas y doradas ---- */
+    '.rstar{color:#c9a24a;letter-spacing:.08em}',
+    /* ---- Medios de pago en "Pago seguro" ---- */
+    '.rpay{display:flex;flex-wrap:wrap;gap:5px;margin-top:.45rem}',
+    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -145,6 +150,44 @@
     try { history.replaceState(history.state, '', id ? '#' + id : location.pathname + location.search); } catch (e) { /* sin historial */ }
     draw(); (window.mfTop || function () { window.scrollTo(0, 0); })();
   }
+
+  /* ---- Detalles después de dibujar: estrellas de reseñas llenas y medios de pago en "Pago seguro" ---- */
+  function detalles() {
+    var app = document.getElementById('app'); if (!app) return;
+    [].forEach.call(app.querySelectorAll('.com .lc p:not([data-rs])'), function (p) {
+      p.setAttribute('data-rs', '1');
+      if (!/[☆★⭐]/.test(p.textContent)) return;
+      var w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), n, ts = [];
+      while ((n = w.nextNode())) ts.push(n);
+      ts.forEach(function (t) { t.nodeValue = t.nodeValue.replace(/\s*[☆★⭐]+\s*/g, ' ').replace(/\s+([”"])/g, '$1'); });
+      var s = document.createElement('span'); s.className = 'rstar'; s.setAttribute('aria-label', '5 estrellas'); s.textContent = '★★★★★';
+      p.insertBefore(document.createElement('br'), p.firstChild); p.insertBefore(s, p.firstChild);
+    });
+    var pg = app.querySelector('.ft3-tr a[href="#pagos"] span');
+    if (pg && !pg.querySelector('.rpay')) {
+      var sm = pg.querySelector('small'); if (sm) sm.textContent = 'Pagos protegidos con Wompi';
+      var d = document.createElement('span'); d.className = 'rpay'; d.setAttribute('aria-label', 'Medios de pago');
+      d.innerHTML = ['Nequi', 'PSE', 'Bancolombia', 'Visa', 'Mastercard', 'Amex'].map(function (x) { return '<i>' + x + '</i>'; }).join('');
+      pg.appendChild(d);
+    }
+  }
+  try {
+    var appEl = document.getElementById('app');
+    if (appEl) new MutationObserver(function () { try { detalles(); } catch (e) { /* nunca rompe la tienda */ } }).observe(appEl, { childList: true });
+    detalles();
+  } catch (e) { /* nada */ }
+
+  /* ---- La pestaña "% OFF" se esconde mientras la clienta baja por la página y vuelve cuando se detiene ---- */
+  (function () {
+    var tq = 0, y0 = window.scrollY || 0;
+    addEventListener('scroll', function () {
+      var t = document.querySelector('.mfp-tab'); if (!t) return;
+      var y = window.scrollY || 0;
+      if (Math.abs(y - y0) > 4) t.classList.add('hid');
+      y0 = y; clearTimeout(tq);
+      tq = setTimeout(function () { var x = document.querySelector('.mfp-tab'); if (x) x.classList.remove('hid'); }, 1200);
+    }, { passive: true });
+  })();
 
   window.mfRef = { ok: function () { try { return catalog().length > 0; } catch (e) { return false; } }, home: home, col: col, chip: chip };
 
