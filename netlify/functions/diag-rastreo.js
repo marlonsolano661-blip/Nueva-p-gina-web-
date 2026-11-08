@@ -32,8 +32,10 @@ exports.handler = async (event) => {
     buscar(html);
     let cola = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map((m) => new URL(m[1], base).href);
     // Lee los archivos de la app y los pedazos que estos cargan (máx. 30 archivos o ~8 segundos)
-    while (cola.length && vistos.size < 40 && Date.now() - T0 < 9000) {
-      const lote = cola.splice(0, 6).filter((s) => !vistos.has(s));
+    while (cola.length && vistos.size < 70 && Date.now() - T0 < 8000) {
+      const peso = (x) => (/MF-(Busqueda|Resultado)/.test(x) ? 3 : /MF-/.test(x) ? 2 : 0);
+      cola.sort((x, y) => peso(y) - peso(x));
+      const lote = cola.splice(0, 8).filter((s) => !vistos.has(s));
       lote.forEach((s) => vistos.add(s));
       const res = await Promise.all(lote.map((s) => traer(s).then((r) => ({ s, r })).catch(() => ({ s, r: null }))));
       for (const { s, r } of res) {
@@ -61,13 +63,17 @@ exports.handler = async (event) => {
         for (const m of r.texto.matchAll(/["'`]((?:\.{0,2}\/)?[\w\-./]+\.(?:m?js|json))["'`]/g)) if (!/^(?:\.\.?\/)?(?:node_modules|@)/.test(m[1])) agregar(m[1]);
         for (const m of r.texto.matchAll(/https:\/\/[a-z0-9.\-]+interrapidisimo\.com[\w\-./]*\.(?:m?js|json)/gi)) agregar(m[0]);
         // Pedazos de webpack: el nombre se arma como <id>.<hash>.js a partir de un mapa {id:"hash"}
-        for (const m of r.texto.matchAll(/(?:^|[{,])\s*("?[\w-]+"?)\s*:\s*"([a-f0-9]{16,20})"/g)) agregar(m[1].replace(/"/g, '') + '.' + m[2] + '.js', base);
-        if (!out.muestra) out.muestra = r.texto.length < 20000 ? r.texto.slice(0, 6000) : '';
+        // La carpeta de los pedazos es la "publicPath" de cada micro-frontend (o la carpeta del archivo)
+        const pp = /\.p\s*=\s*"(https?:[^"]+)"/.exec(r.texto);
+        const raiz = pp ? pp[1] : sb;
+        if (!/\/MF-[^/]+\/?$/.test(sb) || /remoteEntry/.test(s)) for (const m of r.texto.matchAll(/(?:^|[{,])\s*("?[\w-]+"?)\s*:\s*"([a-f0-9]{16,20})"/g)) { const n = new URL(m[1].replace(/"/g, '') + '.' + m[2] + '.js', raiz).href; if (/\/MF-/.test(raiz) || raiz === base) agregar(n); }
       }
     }
     out.pendientes = cola.length;
-    out.urls = [...urls].slice(0, 200);
-    out.api = [...api].slice(0, 250);
+    out.leidos = out.leidos.filter((x) => /MF-/.test(x));
+    out.urls = [...urls].filter((x) => !/siguetuenvio\.interrapidisimo\.com\/MF-|ngrx|angular/.test(x)).slice(0, 200);
+    out.api = [...api].filter((x) => !/\.css|remoteEntry|^\.\/|siguetuenvio\.interrapidisimo\.com\/MF-/.test(x)).slice(0, 250);
+    delete out.fragmentos;
   } catch (e) {
     out.error = String(e && e.message || e).slice(0, 300);
   }
