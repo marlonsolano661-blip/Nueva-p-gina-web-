@@ -73,22 +73,7 @@
     '.rstar{color:#c9a24a;letter-spacing:.08em}',
     /* ---- Medios de pago en "Pago seguro" ---- */
     '.rpay{display:flex;flex-wrap:wrap;gap:5px;margin-top:.45rem}',
-    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}',
-    /* ---- Separación: título antes de las colecciones y línea fina al final de cada una ---- */
-    '.rcols-h{text-align:center;padding:3.2rem 1.4rem 2.6rem;background:var(--cr);border-bottom:1px solid var(--ch)}',
-    '.rcols-h .rey{margin-bottom:.8rem}',
-    '.rcols-h h2{font-size:clamp(34px,8vw,64px);line-height:1;margin:0}',
-    '.rcols-h i{display:block;width:44px;height:1px;background:var(--mv);margin:1.3rem auto 0}',
-    /* ---- Colecciones como banner: foto completa con el nombre y el botón blanco encima, igual que el banner principal ---- */
-    '.rcov.rcb{display:block;position:relative;border-bottom:8px solid var(--cr);color:#fff}',
-    '.rcb .rcov-ph{aspect-ratio:4/5;max-height:86svh;cursor:pointer}',
-    '.rcb-ov{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.12) 38%,rgba(0,0,0,0) 60%)}',
-    '.rcb-t{position:absolute;left:0;right:0;top:9%;padding:0 1.2rem;text-align:center;display:flex;flex-direction:column;align-items:center;pointer-events:none}',
-    '.rcb-e{margin:0 0 .7rem;font:400 .62rem Jost,sans-serif;letter-spacing:.42em;text-transform:uppercase;opacity:.9}',
-    'body .rcb-t h2{margin:0 0 1.3rem;font:400 clamp(20px,5.6vw,34px)/1.2 Jost,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 1px 22px rgba(0,0,0,.25)}',
-    '.rcb-b{pointer-events:auto;font:500 .72rem Jost,sans-serif;letter-spacing:.26em;text-transform:uppercase;padding:1.05rem 2.1rem;border:1px solid #fff;border-radius:0;background:#fff;color:#0a0a0a;cursor:pointer;transition:background .35s,color .35s,border-color .35s}',
-    '.rcb-b:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}',
-    '@media(min-width:900px){.rcov.rcb{min-height:0}.rcb .rcov-ph{aspect-ratio:auto;height:min(86svh,780px)}.rcb-t{top:12%}}'
+    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -127,13 +112,12 @@
   function portadas() {
     var L = conProductos();
     if (!L.length) return '';
-    return '<div class="rcols" id="colecciones"><div class="rcols-h"><div class="rey">Marlon Footwear</div><h2>Nuestras colecciones</h2><i aria-hidden="true"></i></div>' + L.map(function (k, i) {
+    return '<div class="rcols" id="colecciones">' + L.map(function (k) {
       var ps = deColeccion(k.id), n = ps.length;
       var f = k.portada ? { src: k.portada, cover: true } : (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? { src: foto(q), cover: false } : null; })();
-      var num = (i < 9 ? '0' : '') + (i + 1);
-      return '<section class="rcov rcb" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph" data-ver="' + E(k.id) + '">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div><div class="rcb-ov"></div>' +
-        '<div class="rcb-t"><p class="rcb-e">Colección ' + num + '</p><h2>' + E(k.nombre) + '</h2>' +
-        '<button class="rcb-b" type="button" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">Ver colección</button></div></section>';
+      return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
+        '<div class="rcov-tx"><div class="rey">Colección</div><h2>' + E(k.nombre) + '</h2><p>' + E(frase(k, n)) + '</p>' +
+        '<button class="rbtn" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">Ver colección</button></div></section>';
     }).join('') + '</div><div class="rall"><button data-ver="">Ver todos los modelos</button></div>';
   }
 
