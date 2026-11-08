@@ -143,6 +143,11 @@
     if (wm) wm.remove(); // solo el logo MF, centrado dentro de la barra negra
     if (logo) { logo.classList.add('wd-logo'); bar.appendChild(logo); }
     bar.classList.add('wd'); document.body.classList.add('wd-on');
+    // Bolsa: parpadea suave mientras tenga productos; el destello de "agregado" se quita al terminar para que siga el parpadeo
+    var cnt = document.getElementById('cnt');
+    function lleno() { if (bag && cnt) bag.classList.toggle('wd-lleno', (parseInt(cnt.textContent, 10) || 0) > 0); }
+    if (cnt) { new MutationObserver(lleno).observe(cnt, { childList: true, characterData: true, subtree: true }); lleno(); }
+    if (bag) bag.addEventListener('animationend', function (e) { if (e.animationName === 'mfBolsa') bag.classList.remove('bump'); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armar); else armar();
 })();

@@ -98,9 +98,13 @@ html body header.bar.wd{position:sticky}
 html body header.bar.wd .wd-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin-top:calc(env(safe-area-inset-top,0px)/2);display:block;width:auto;height:auto;border:0;background:none;padding:.2rem;color:#fff;cursor:pointer}
 html body header.bar.wd .wd-logo svg{display:block;height:1.9rem;width:auto;fill:#fff;stroke:none}
 @media (max-width:380px){html body header.bar.wd{gap:.7rem}html body header.bar.wd .wd-t{font-size:.92rem;letter-spacing:.06em}}
-/* Bolsa animada: al agregar un producto, solo el ícono de la bolsa se rellena con colores que cambian suave (rosado, dorado, azul) y sube un poquito */
+/* Bolsa animada: al agregar un producto se rellena de colores y brilla; mientras la bolsa tenga productos sigue parpadeando suave */
+html body header.bar.wd .bag.wd-lleno svg{animation:mfBrillo 3.6s ease-in-out infinite}
+html body header.bar.wd .bag.wd-lleno svg path:first-child{animation:mfLatido 3.6s ease-in-out infinite}
 html body header.bar.wd .bag.bump svg{animation:mfBolsa 1.8s ease-in-out both}
 html body header.bar.wd .bag.bump svg path:first-child{animation:mfRelleno 1.8s ease-in-out both}
 @keyframes mfBolsa{0%{transform:none;filter:none}25%{transform:translateY(-3px) scale(1.12);filter:drop-shadow(0 0 4px rgba(255,79,163,.7))}50%{transform:translateY(-2px) scale(1.1);filter:drop-shadow(0 0 5px rgba(255,203,61,.7))}75%{transform:translateY(-1px) scale(1.05);filter:drop-shadow(0 0 4px rgba(94,224,255,.7))}100%{transform:none;filter:none}}
 @keyframes mfRelleno{0%{fill:rgba(255,255,255,0)}20%{fill:#ff4fa3}45%{fill:#ffcb3d}70%{fill:#5ee0ff}100%{fill:rgba(255,255,255,0)}}
-@media (prefers-reduced-motion:reduce){html body header.bar.wd .bag.bump svg,html body header.bar.wd .bag.bump svg path:first-child{animation:none}}
+@keyframes mfLatido{0%,100%{fill:rgba(255,79,163,.15)}25%{fill:rgba(255,79,163,.55)}50%{fill:rgba(255,203,61,.5)}75%{fill:rgba(94,224,255,.5)}}
+@keyframes mfBrillo{0%,100%{filter:drop-shadow(0 0 1px rgba(255,79,163,.25))}25%{filter:drop-shadow(0 0 4px rgba(255,79,163,.55))}50%{filter:drop-shadow(0 0 4px rgba(255,203,61,.5))}75%{filter:drop-shadow(0 0 4px rgba(94,224,255,.5))}}
+@media (prefers-reduced-motion:reduce){html body header.bar.wd .bag.bump svg,html body header.bar.wd .bag.bump svg path:first-child,html body header.bar.wd .bag.wd-lleno svg,html body header.bar.wd .bag.wd-lleno svg path:first-child{animation:none}}
