@@ -49,8 +49,8 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
 
-/* Renglón del producto: en lugar de la descripción larga, un solo renglón con las tallas disponibles y luego los colores.
-   Se arma con el inventario real (catalog()), así que se actualiza solo cuando cambian tallas o colores en el panel. */
+/* Descripción corta del producto (se escribe en el panel): detalle del modelo y, en la segunda línea, la altura.
+   Si un producto no tiene descripción, se muestra un renglón con las tallas y colores reales. */
 (function () {
   'use strict';
   function tallasTxt(t) {
@@ -64,9 +64,16 @@
     if (id == null) return;
     var p = null; try { p = (catalog() || []).filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { return; }
     if (!p) return;
-    var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
-    var txt = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
-    var el = document.createElement('p'); el.className = 'ds ds1'; el.title = txt; el.textContent = txt;
+    var el = document.createElement('p'); el.className = 'ds ds1';
+    var lineas = String(p.desc || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (lineas.length) {
+      // Descripción corta del panel: 1.ª línea = detalle del modelo, 2.ª línea = altura
+      var d1 = document.createElement('span'); d1.textContent = lineas[0]; el.appendChild(d1);
+      if (lineas[1]) { var d2 = document.createElement('b'); d2.textContent = lineas[1]; el.appendChild(d2); }
+    } else {
+      var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
+      el.textContent = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
+    }
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
   }
