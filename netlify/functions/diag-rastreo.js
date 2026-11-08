@@ -32,7 +32,7 @@ exports.handler = async (event) => {
     buscar(html);
     let cola = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map((m) => new URL(m[1], base).href);
     // Lee los archivos de la app y los pedazos que estos cargan (máx. 30 archivos o ~8 segundos)
-    while (cola.length && vistos.size < 40 && Date.now() - T0 < 8000) {
+    while (cola.length && vistos.size < 40 && Date.now() - T0 < 9000) {
       const lote = cola.splice(0, 6).filter((s) => !vistos.has(s));
       lote.forEach((s) => vistos.add(s));
       const res = await Promise.all(lote.map((s) => traer(s).then((r) => ({ s, r })).catch(() => ({ s, r: null }))));
@@ -60,6 +60,9 @@ exports.handler = async (event) => {
         if (Object.keys(out.fragmentos).length < 3) out.fragmentos[s] = [...r.texto.matchAll(/.{0,120}(?:manifest|remoteEntry|loadRemote|initFederation|\.json).{0,120}/g)].map((m) => m[0]).slice(0, 8);
         for (const m of r.texto.matchAll(/["'`]((?:\.{0,2}\/)?[\w\-./]+\.(?:m?js|json))["'`]/g)) if (!/^(?:\.\.?\/)?(?:node_modules|@)/.test(m[1])) agregar(m[1]);
         for (const m of r.texto.matchAll(/https:\/\/[a-z0-9.\-]+interrapidisimo\.com[\w\-./]*\.(?:m?js|json)/gi)) agregar(m[0]);
+        // Pedazos de webpack: el nombre se arma como <id>.<hash>.js a partir de un mapa {id:"hash"}
+        for (const m of r.texto.matchAll(/(?:^|[{,])\s*("?[\w-]+"?)\s*:\s*"([a-f0-9]{16,20})"/g)) agregar(m[1].replace(/"/g, '') + '.' + m[2] + '.js', base);
+        if (!out.muestra) out.muestra = r.texto.length < 20000 ? r.texto.slice(0, 6000) : '';
       }
     }
     out.pendientes = cola.length;
