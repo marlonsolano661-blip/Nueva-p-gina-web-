@@ -12,6 +12,19 @@ async function traer(url, ms) {
 exports.handler = async (event) => {
   const T0 = Date.now();
   const q = event.queryStringParameters || {};
+  // Prueba 2: estado de una guía con el mismo servicio que usa la página "Sigue tu envío" (sin captcha)
+  if (q.g) {
+    const g = String(q.g).replace(/\D/g, '').slice(0, 20);
+    if (!g) return { statusCode: 400, body: 'Guía inválida' };
+    const url = 'https://gateway.interrapidisimo.com/ServiciosTrackingSTE/api/v1/EstadoTracking/ObtenerEstadoTracking?numeroGuia=' + g;
+    let res;
+    try {
+      const r = await fetch(url, { headers: { Accept: 'application/json', Origin: 'https://siguetuenvio.interrapidisimo.com', Referer: 'https://siguetuenvio.interrapidisimo.com/' }, signal: AbortSignal.timeout(8000) });
+      const t = await r.text();
+      res = { status: r.status, tipo: r.headers.get('content-type'), cuerpo: t.slice(0, 12000) };
+    } catch (e) { res = { error: String(e && e.message || e) }; }
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(res, null, 1) };
+  }
   let u;
   try { u = new URL(String(q.u || '')); } catch (e) { u = null; }
   if (!u || u.protocol !== 'https:' || !PERMITIDO.test(u.hostname)) {
