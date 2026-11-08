@@ -79,18 +79,16 @@
     '.rcols-h .rey{margin-bottom:.8rem}',
     '.rcols-h h2{font-size:clamp(34px,8vw,64px);line-height:1;margin:0}',
     '.rcols-h i{display:block;width:44px;height:1px;background:var(--mv);margin:1.3rem auto 0}',
-    /* ---- Colecciones estilo moderno: texto a la izquierda y botón redondo con flecha ---- */
-    '.rcov-ph[data-ver]{cursor:pointer}',
-    '.rcov .rc2{flex-direction:row;align-items:flex-end;justify-content:space-between;gap:1.2rem;text-align:left;padding:1.6rem 1.4rem 2.2rem}',
-    '.rc2-t{min-width:0}',
-    '.rcov .rc2 .rey{margin-bottom:.6rem;letter-spacing:.4em}',
-    '.rcov .rc2 .rey b{font-weight:500;color:var(--mv)}',
-    '.rcov .rc2 h2{font-size:clamp(36px,8.4vw,64px);margin:0 0 .5rem}',
-    '.rcov .rc2 p{margin:0;font-size:.9rem;line-height:1.5;max-width:22rem}',
-    '.rarr{flex:none;width:3.6rem;height:3.6rem;border-radius:50%;border:1px solid var(--mv);background:var(--mv);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;transition:background .3s,color .3s,transform .3s}',
-    '.rarr svg{width:1.3rem;height:1.3rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}',
-    '.rarr:hover{background:#fff;color:var(--mv);transform:translateX(3px)}',
-    '@media(min-width:900px){.rcov .rc2{padding:4rem 6vw;align-items:flex-end}}'
+    /* ---- Colecciones como banner: foto completa con el nombre y el botón blanco encima, igual que el banner principal ---- */
+    '.rcov.rcb{display:block;position:relative;border-bottom:8px solid var(--cr);color:#fff}',
+    '.rcb .rcov-ph{aspect-ratio:4/5;max-height:86svh;cursor:pointer}',
+    '.rcb-ov{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.12) 38%,rgba(0,0,0,0) 60%)}',
+    '.rcb-t{position:absolute;left:0;right:0;top:9%;padding:0 1.2rem;text-align:center;display:flex;flex-direction:column;align-items:center;pointer-events:none}',
+    '.rcb-e{margin:0 0 .7rem;font:400 .62rem Jost,sans-serif;letter-spacing:.42em;text-transform:uppercase;opacity:.9}',
+    'body .rcb-t h2{margin:0 0 1.3rem;font:400 clamp(20px,5.6vw,34px)/1.2 Jost,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 1px 22px rgba(0,0,0,.25)}',
+    '.rcb-b{pointer-events:auto;font:500 .72rem Jost,sans-serif;letter-spacing:.26em;text-transform:uppercase;padding:1.05rem 2.1rem;border:1px solid #fff;border-radius:0;background:#fff;color:#0a0a0a;cursor:pointer;transition:background .35s,color .35s,border-color .35s}',
+    '.rcb-b:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}',
+    '@media(min-width:900px){.rcov.rcb{min-height:0}.rcb .rcov-ph{aspect-ratio:auto;height:min(86svh,780px)}.rcb-t{top:12%}}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -133,9 +131,9 @@
       var ps = deColeccion(k.id), n = ps.length;
       var f = k.portada ? { src: k.portada, cover: true } : (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? { src: foto(q), cover: false } : null; })();
       var num = (i < 9 ? '0' : '') + (i + 1);
-      return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph" data-ver="' + E(k.id) + '">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
-        '<div class="rcov-tx rc2"><div class="rc2-t"><div class="rey"><b>' + num + '</b> · Colección</div><h2>' + E(k.nombre) + '</h2><p>' + E(frase(k, n)) + '</p></div>' +
-        '<button class="rarr" type="button" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></section>';
+      return '<section class="rcov rcb" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph" data-ver="' + E(k.id) + '">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div><div class="rcb-ov"></div>' +
+        '<div class="rcb-t"><p class="rcb-e">Colección ' + num + '</p><h2>' + E(k.nombre) + '</h2>' +
+        '<button class="rcb-b" type="button" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">Ver colección</button></div></section>';
     }).join('') + '</div><div class="rall"><button data-ver="">Ver todos los modelos</button></div>';
   }
 
