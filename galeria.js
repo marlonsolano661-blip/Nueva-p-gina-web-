@@ -96,7 +96,7 @@
     var row = pi.querySelector(':scope > .row');
     if (row && !pi.querySelector(':scope > .eg-pay')) {
       var pay = document.createElement('div'); pay.className = 'eg-pay';
-      pay.innerHTML = '<p>Formas de pago:</p><div><span class="eg-nq">Nequi</span><span class="eg-pse">PSE</span><span class="eg-bc">Bancolombia</span><span class="eg-tj">Tarjeta</span></div>';
+      pay.innerHTML = '<p>Formas de pago:</p><div><span class="eg-lg eg-nq" role="img" aria-label="Nequi"></span><span class="eg-lg eg-bc" role="img" aria-label="Bancolombia"></span><span class="eg-lg eg-vi" role="img" aria-label="Visa"></span><span class="eg-lg eg-mc" role="img" aria-label="Mastercard"></span></div>';
       row.insertAdjacentElement('afterend', pay);
     }
   }
