@@ -98,3 +98,13 @@ html body header.bar.wd{position:sticky}
 html body header.bar.wd .wd-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin-top:calc(env(safe-area-inset-top,0px)/2);display:block;width:auto;height:auto;border:0;background:none;padding:.2rem;color:#fff;cursor:pointer}
 html body header.bar.wd .wd-logo svg{display:block;height:1.9rem;width:auto;fill:#fff;stroke:none}
 @media (max-width:380px){html body header.bar.wd{gap:.7rem}html body header.bar.wd .wd-t{font-size:.92rem;letter-spacing:.06em}}
+/* Bolsa animada: al agregar un producto salta, se mueve y cambia de colores */
+html body header.bar.wd .bag.bump{animation:mfSalto .9s cubic-bezier(.3,1.5,.5,1) both}
+html body header.bar.wd .bag.bump svg{animation:mfColor 1.1s ease both}
+html body header.bar.wd .bag.bump .wd-t,html body header.bar.wd .bag.bump #cnt{animation:mfTexto 1.1s ease both}
+html body header.bar.wd .bag.bump::after{content:"";position:absolute;right:1.6rem;top:50%;width:2.6rem;height:2.6rem;margin-top:-1.3rem;border-radius:50%;border:2px solid #ff4fa3;animation:mfOnda .8s ease-out both;pointer-events:none}
+@keyframes mfSalto{0%{transform:none}15%{transform:translateY(-6px) scale(1.08)}30%{transform:translateY(0) rotate(-4deg)}45%{transform:rotate(3.5deg)}60%{transform:rotate(-2deg)}75%{transform:rotate(1deg)}100%{transform:none}}
+@keyframes mfColor{0%{stroke:#fff}20%{stroke:#ff4fa3}45%{stroke:#ffcb3d}70%{stroke:#5ee0ff}100%{stroke:#fff}}
+@keyframes mfTexto{0%{color:#fff}20%{color:#ff4fa3}45%{color:#ffcb3d}70%{color:#5ee0ff}100%{color:#fff}}
+@keyframes mfOnda{0%{opacity:.9;transform:scale(.4);border-color:#ff4fa3}60%{border-color:#ffcb3d}100%{opacity:0;transform:scale(1.6);border-color:#5ee0ff}}
+@media (prefers-reduced-motion:reduce){html body header.bar.wd .bag.bump,html body header.bar.wd .bag.bump svg,html body header.bar.wd .bag.bump .wd-t,html body header.bar.wd .bag.bump #cnt,html body header.bar.wd .bag.bump::after{animation:none}}
