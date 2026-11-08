@@ -73,7 +73,14 @@
     '.rstar{color:#c9a24a;letter-spacing:.08em}',
     /* ---- Medios de pago en "Pago seguro" ---- */
     '.rpay{display:flex;flex-wrap:wrap;gap:5px;margin-top:.45rem}',
-    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}'
+    '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}',
+    /* ---- Separación: título antes de las colecciones y línea fina al final de cada una ---- */
+    '.rcols-h{text-align:center;padding:3.2rem 1.4rem 2.6rem;background:var(--cr);border-bottom:1px solid var(--ch)}',
+    '.rcols-h .rey{margin-bottom:.8rem}',
+    '.rcols-h h2{font-size:clamp(34px,8vw,64px);line-height:1;margin:0}',
+    '.rcols-h i{display:block;width:44px;height:1px;background:var(--mv);margin:1.3rem auto 0}',
+    '.rcov-tx::after{content:"";display:block;width:44px;height:1px;background:var(--ch);margin-top:2.6rem}',
+    '@media(min-width:900px){.rcov-tx::after{display:none}}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -112,7 +119,7 @@
   function portadas() {
     var L = conProductos();
     if (!L.length) return '';
-    return '<div class="rcols" id="colecciones">' + L.map(function (k) {
+    return '<div class="rcols" id="colecciones"><div class="rcols-h"><div class="rey">Marlon Footwear</div><h2>Nuestras colecciones</h2><i aria-hidden="true"></i></div>' + L.map(function (k) {
       var ps = deColeccion(k.id), n = ps.length;
       var f = k.portada ? { src: k.portada, cover: true } : (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? { src: foto(q), cover: false } : null; })();
       return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
