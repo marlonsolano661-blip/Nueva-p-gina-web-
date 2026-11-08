@@ -32,20 +32,34 @@ exports.handler = async (event) => {
     buscar(html);
     let cola = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map((m) => new URL(m[1], base).href);
     // Lee los archivos de la app y los pedazos que estos cargan (máx. 30 archivos o ~8 segundos)
-    while (cola.length && vistos.size < 30 && Date.now() - T0 < 8000) {
+    while (cola.length && vistos.size < 40 && Date.now() - T0 < 8000) {
       const lote = cola.splice(0, 6).filter((s) => !vistos.has(s));
       lote.forEach((s) => vistos.add(s));
       const res = await Promise.all(lote.map((s) => traer(s).then((r) => ({ s, r })).catch(() => ({ s, r: null }))));
       for (const { s, r } of res) {
         if (!r) { out.leidos.push(s + ' (error)'); continue; }
         out.leidos.push(s + ' (' + r.status + ', ' + r.tipo.split(';')[0] + ', ' + r.texto.length + ')');
-        if (!/javascript|ecmascript/i.test(r.tipo) && /^\s*</.test(r.texto)) continue;
-        buscar(r.texto);
+        if (r.status !== 200 || (/^\s*</.test(r.texto) && !/javascript|json/i.test(r.tipo))) continue;
         const sb = new URL('.', s).href;
-        for (const m of r.texto.matchAll(/["'`]((?:[\w\-./]*\/)?[\w\-.]+\.[a-f0-9]{8,20}\.(?:m?js))["'`]/g)) {
-          try { const n = new URL(m[1], sb).href; if (PERMITIDO.test(new URL(n).hostname) && !vistos.has(n)) cola.push(n); } catch (e) { /* nada */ }
+        const agregar = (x, b) => { try { const n = new URL(x, b || sb).href; if (!vistos.has(n) && !cola.includes(n)) cola.push(n); } catch (e) { /* nada */ } };
+        // Manifiestos de micro-frontends (JSON): nombre -> remoteEntry, y remoteEntry -> archivos expuestos
+        if (/json/i.test(r.tipo) || /^\s*[{[]/.test(r.texto)) {
+          out.json = out.json || {}; out.json[s] = r.texto.slice(0, 1500);
+          try {
+            const j = JSON.parse(r.texto);
+            if (j && typeof j === 'object' && !Array.isArray(j)) {
+              Object.values(j).forEach((v) => { if (typeof v === 'string' && /^https?:|\.m?js(on)?$/.test(v)) agregar(v); });
+              (j.exposes || []).forEach((e) => { if (e && e.outFileName) agregar(e.outFileName); });
+            }
+          } catch (e) { /* no es JSON */ }
+          buscar(r.texto);
+          continue;
         }
-        for (const m of r.texto.matchAll(/https:\/\/[a-z0-9.\-]+interrapidisimo\.com[\w\-./]*remoteEntry\.m?js/gi)) if (!vistos.has(m[0])) cola.push(m[0]);
+        buscar(r.texto);
+        if (!out.fragmentos) out.fragmentos = {};
+        if (Object.keys(out.fragmentos).length < 3) out.fragmentos[s] = [...r.texto.matchAll(/.{0,120}(?:manifest|remoteEntry|loadRemote|initFederation|\.json).{0,120}/g)].map((m) => m[0]).slice(0, 8);
+        for (const m of r.texto.matchAll(/["'`]((?:\.{0,2}\/)?[\w\-./]+\.(?:m?js|json))["'`]/g)) if (!/^(?:\.\.?\/)?(?:node_modules|@)/.test(m[1])) agregar(m[1]);
+        for (const m of r.texto.matchAll(/https:\/\/[a-z0-9.\-]+interrapidisimo\.com[\w\-./]*\.(?:m?js|json)/gi)) agregar(m[0]);
       }
     }
     out.pendientes = cola.length;
