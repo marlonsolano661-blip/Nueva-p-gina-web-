@@ -110,3 +110,12 @@ html body header.bar.wd .bag.bump svg path:first-child{animation:mfRelleno 1.8s 
 @media (prefers-reduced-motion:reduce){html body header.bar.wd .bag.bump svg,html body header.bar.wd .bag.bump svg path:first-child,html body header.bar.wd .bag.wd-lleno svg,html body header.bar.wd .bag.wd-lleno svg path:first-child{animation:none}}
 /* Una sola búsqueda: la lupa de la barra negra. Se oculta la barra grande "Buscar" que salía debajo del encabezado */
 html body form.sq#sf{display:none!important}
+/* Encabezado en fondo blanco: franja y barra blancas, íconos, textos y logo en negro */
+html body .hd-ann{background:#fff;color:#111;border-bottom:0}
+html body header.bar.wd{background:#fff;border-bottom:1px solid #e6e6e6}
+html body header.bar.wd .mb,html body header.bar.wd .bag,html body header.bar.wd .hd-s{color:#111}
+html body header.bar.wd svg{stroke:#111}
+html body header.bar.wd .wd-t,html body header.bar.wd .bag #cnt{color:#111}
+html body header.bar.wd .wd-logo{color:#111}
+html body header.bar.wd .wd-logo svg{fill:#111}
+html body header.bar.wd .spg{background:#111}
