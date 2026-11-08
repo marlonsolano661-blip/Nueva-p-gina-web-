@@ -2,6 +2,7 @@
 [build]
   publish = "."
   # Ahorro de créditos: Netlify solo construye main y las vistas previas de un pull request. Los push sueltos a otras ramas no se construyen.
+  # La vista previa usa las llaves de prueba de Wompi y su propia SITE_URL (variables "Deploy Previews" en Netlify).
   ignore = "if [ \"$BRANCH\" = \"main\" ] || [ \"$CONTEXT\" = \"deploy-preview\" ]; then exit 1; else exit 0; fi"
 
 [functions]
