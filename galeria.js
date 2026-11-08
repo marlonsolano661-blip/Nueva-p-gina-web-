@@ -49,8 +49,8 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
 
-/* Renglón del producto: en lugar de la descripción larga, un solo renglón con las tallas disponibles y luego los colores.
-   Se arma con el inventario real (catalog()), así que se actualiza solo cuando cambian tallas o colores en el panel. */
+/* Descripción corta del producto (se escribe en el panel): detalle del modelo y, en la segunda línea, la altura.
+   Si un producto no tiene descripción, se muestra un renglón con las tallas y colores reales. */
 (function () {
   'use strict';
   function tallasTxt(t) {
@@ -64,14 +64,51 @@
     if (id == null) return;
     var p = null; try { p = (catalog() || []).filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { return; }
     if (!p) return;
-    var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
-    var txt = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
-    var el = document.createElement('p'); el.className = 'ds ds1'; el.title = txt; el.textContent = txt;
+    var el = document.createElement('p'); el.className = 'ds ds1';
+    var lineas = String(p.desc || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (lineas.length) {
+      // Descripción corta del panel: 1.ª línea = detalle del modelo, 2.ª línea = altura
+      var d1 = document.createElement('span'); d1.textContent = lineas[0]; el.appendChild(d1);
+      if (lineas[1]) { var d2 = document.createElement('b'); d2.textContent = lineas[1]; el.appendChild(d2); }
+    } else {
+      var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
+      el.textContent = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
+    }
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
   }
+  // Ficha estilo EGO: color, "Talla" con la guía a la derecha, lista desplegable de tallas, un botón principal y formas de pago.
+  function ego() {
+    var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
+    var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
+    if (id == null) return;
+    var tl = pi.querySelector(':scope > .tl');
+    if (tl && !pi.querySelector(':scope > .eg-sel')) {
+      var lb = tl.previousElementSibling, gl = pi.querySelector(':scope > .gl');
+      var fila = document.createElement('div'); fila.className = 'eg-sh';
+      if (lb && lb.classList.contains('lb')) fila.appendChild(lb);
+      if (gl) fila.appendChild(gl);
+      pi.insertBefore(fila, tl);
+      var bs = tl.querySelectorAll('.sz');
+      if (bs.length) {
+        var sel = document.createElement('select'); sel.className = 'eg-sel'; sel.setAttribute('aria-label', 'Elige tu talla');
+        var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Elige tu talla'; sel.appendChild(o0);
+        Array.prototype.forEach.call(bs, function (x) { var o = document.createElement('option'); o.value = x.getAttribute('data-t'); o.textContent = 'Talla ' + x.getAttribute('data-t'); if (x.classList.contains('on')) o.selected = true; sel.appendChild(o); });
+        sel.addEventListener('change', function () { var t = sel.value; Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (x) { if (x.getAttribute('data-t') === t && !x.classList.contains('on')) x.click(); }); });
+        tl.insertAdjacentElement('afterend', sel); tl.classList.add('eg-oculto');
+      }
+    }
+    var add = pi.querySelector(':scope > .row [data-n="add"]');
+    if (add) { var ya = !!pi.querySelector('.tl .sz.on'), txt = ya ? 'Agregar a la bolsa' : 'Elige tu talla'; if (add.textContent !== txt) add.textContent = txt; add.classList.toggle('eg-falta', !ya); }
+    var row = pi.querySelector(':scope > .row');
+    if (row && !pi.querySelector(':scope > .eg-pay')) {
+      var pay = document.createElement('div'); pay.className = 'eg-pay';
+      pay.innerHTML = '<p>Formas de pago:</p><div><span class="eg-lg eg-nq" role="img" aria-label="Nequi"></span><span class="eg-lg eg-bc" role="img" aria-label="Bancolombia"></span><span class="eg-lg eg-vi" role="img" aria-label="Visa"></span><span class="eg-lg eg-mc" role="img" aria-label="Mastercard"></span><span class="eg-lg eg-ax" role="img" aria-label="American Express"></span></div>';
+      row.insertAdjacentElement('afterend', pay);
+    }
+  }
   var pend = false;
-  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } }); }
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ego(); } catch (e) { /* queda la ficha original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

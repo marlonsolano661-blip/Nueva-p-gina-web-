@@ -37,7 +37,15 @@
       '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
       '<li><button type="button" data-mn="share">Comparte tus MF</button></li>' +
-      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + carrusel();
+      '<li><button type="button" data-mn="wa">Pedir por WhatsApp</button></li></ul>' + redes() + carrusel();
+  }
+  /* Redes sociales en el menú (con color). Para cambiar los enlaces, edita REDES. Si un enlace está vacío, ese ícono no se muestra. */
+  var REDES = { instagram: 'https://www.instagram.com/marlonfootwear', facebook: 'https://www.facebook.com/share/1CXYsBtK9Z/' };
+  function redes() {
+    var h = '';
+    if (REDES.instagram) h += '<a class="hd-red hd-ig" href="' + E(REDES.instagram) + '" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Marlon Footwear"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" class="hd-pt"/></svg></a>';
+    if (REDES.facebook) h += '<a class="hd-red hd-fb" href="' + E(REDES.facebook) + '" target="_blank" rel="noopener noreferrer" aria-label="Facebook de Marlon Footwear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.7v3h2.6V21z"/></svg></a>';
+    return h ? '<div class="hd-redes">' + h + '</div>' : '';
   }
   function nivel2() {
     return '<div class="hd-mh"><button type="button" data-hd="atras" class="hd-back">Colección</button><button type="button" data-hd="cerrar" aria-label="Cerrar menú">' + X + '</button></div>' +
@@ -107,4 +115,47 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { cerrarMenu(); buscador(false); } });
   if (menu()) pintar(nivel1());
+})();
+
+/* Bolsa estilo Miss Lola: solo ordena y renombra lo que ya dibuja la tienda (no cambia el carrito ni el pago). */
+(function () {
+  'use strict';
+  function ajustar() {
+    var d = document.getElementById('dr'); if (!d) return;
+    var h2 = d.querySelector('.drh h2'); if (h2 && h2.textContent !== 'Bolsa de compras') h2.textContent = 'Bolsa de compras';
+    var p = d.querySelector('.drh p'); if (p) p.remove();
+    Array.prototype.forEach.call(d.querySelectorAll('.bl'), function (l) {
+      var bi = l.querySelector('.bi'), lp = l.querySelector('.lp'), info = bi && bi.querySelector('p');
+      if (bi && lp && info && lp.parentNode !== bi) bi.insertBefore(lp, info.nextSibling);
+    });
+    var pay = d.querySelector('.drf .cta .btn:not(.wa)'), tt = d.querySelectorAll('.drf .tt span');
+    if (pay && tt.length > 1 && !pay.querySelector('.ml-t')) pay.innerHTML = 'Pagar en línea <span class="ml-t">| ' + tt[tt.length - 1].textContent + '</span>';
+    var sigue = d.querySelector('.drf > .lk[data-n="bagclose"]'); if (sigue) sigue.classList.add('ml-sigue');
+  }
+  function iniciar() { var d = document.getElementById('dr'); if (!d) return; new MutationObserver(function () { ajustar(); }).observe(d, { childList: true }); ajustar(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();
+
+/* Encabezado estilo Wild Diva: franja negra con el nombre de la tienda, barra negra con MENÚ, buscar y MI BOLSA, y el logo MF en el centro de la barra. */
+(function () {
+  'use strict';
+  function armar() {
+    var bar = document.querySelector('header.bar'); if (!bar || bar.classList.contains('wd')) return;
+    var ann = document.querySelector('.hd-ann'); if (ann) ann.textContent = 'Marlon Footwear Colombia';
+    var mb = bar.querySelector('.mb'), bag = bar.querySelector('.bag'), logo = bar.querySelector('.logo'), wm = bar.querySelector('.wm'), sp = bar.querySelector('.sp');
+    if (mb && !mb.querySelector('.wd-t')) { var t = document.createElement('span'); t.className = 'wd-t'; t.textContent = 'Menú'; mb.appendChild(t); }
+    if (mb) bar.insertBefore(mb, bar.firstChild);
+    var bus = bar.querySelector('.hd-s'); if (bus && mb) mb.insertAdjacentElement('afterend', bus);
+    if (sp && bus) bus.insertAdjacentElement('afterend', sp);
+    if (bag && !bag.querySelector('.wd-t')) { var b = document.createElement('span'); b.className = 'wd-t'; b.textContent = 'Mi bolsa'; bag.insertBefore(b, bag.firstChild); bar.appendChild(bag); }
+    if (wm) wm.remove(); // solo el logo MF, centrado dentro de la barra negra
+    if (logo) { logo.classList.add('wd-logo'); bar.appendChild(logo); }
+    bar.classList.add('wd'); document.body.classList.add('wd-on');
+    // Bolsa: parpadea suave mientras tenga productos; el destello de "agregado" se quita al terminar para que siga el parpadeo
+    var cnt = document.getElementById('cnt');
+    function lleno() { if (bag && cnt) bag.classList.toggle('wd-lleno', (parseInt(cnt.textContent, 10) || 0) > 0); }
+    if (cnt) { new MutationObserver(lleno).observe(cnt, { childList: true, characterData: true, subtree: true }); lleno(); }
+    if (bag) bag.addEventListener('animationend', function (e) { if (e.animationName === 'mfBolsa') bag.classList.remove('bump'); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armar); else armar();
 })();
