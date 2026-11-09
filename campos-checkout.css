@@ -21,3 +21,14 @@ html body .ckt .mf-ship>div b{display:block;font-family:inherit;font-weight:600;
 html body .ckt .mf-ship small{display:block;margin-top:.3rem;font-family:inherit;font-weight:400;font-size:.9rem;line-height:1.45;color:#333}
 html body .ckt .mf-ship>b{flex:none;font-family:inherit;font-weight:600;font-size:1rem;line-height:1.35;color:#111;white-space:nowrap}
 html body .ckt .mf-ship>b{max-width:42%;text-align:right}
+/* Checkout estilo Shopify: datos en blanco y resumen del pedido en gris muy claro; detalles verdes al escribir y marcar */
+html body .ckt,html body .ck-main{background:#fff!important}
+html body .ck-side{background:#f5f5f5!important;border-left:1px solid #e3e3e3!important}
+@media(max-width:959px){html body .ck-side{border-left:0!important;border-bottom:1px solid #e3e3e3!important}}
+html body .ckt .mf-fl input,html body .ckt .mf-fl select,html body .ckt .fg input,html body .ckt .fg textarea,html body .ck-pais,html body .ck-ship,html body .ck-sum .dcb input,html body .ck-mp,html body .ck-pn input,html body .ck-pn select{border-color:#d4d4d4!important}
+html body .ck-pn{background:#f5f5f5!important}
+html body .ck-th b{border-color:#f5f5f5!important}
+html body .ckt .mf-fl input:focus,html body .ckt .mf-fl select:focus,html body .ckt .fg input:focus,html body .ckt .fg textarea:focus,html body .ck-pn input:focus,html body .ck-pn select:focus,html body .ck-sum .dcb input:focus{border-color:#3a8273!important;box-shadow:0 0 0 1px #3a8273!important;outline:0!important}
+html body .ckt .mf-chk input:checked{background:#3a8273!important;border-color:#3a8273!important}
+html body .ck-mo:has(input:checked){box-shadow:inset 0 0 0 1.5px #3a8273!important}
+html body .ck-mo input,html body .ck-pn .ck-acp input{accent-color:#3a8273!important}

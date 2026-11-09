@@ -128,9 +128,18 @@
       var bi = l.querySelector('.bi'), lp = l.querySelector('.lp'), info = bi && bi.querySelector('p');
       if (bi && lp && info && lp.parentNode !== bi) bi.insertBefore(lp, info.nextSibling);
     });
-    var pay = d.querySelector('.drf .cta .btn:not(.wa)'), tt = d.querySelectorAll('.drf .tt span');
-    if (pay && tt.length > 1 && !pay.querySelector('.ml-t')) pay.innerHTML = 'Pagar en línea <span class="ml-t">| ' + tt[tt.length - 1].textContent + '</span>';
-    var sigue = d.querySelector('.drf > .lk[data-n="bagclose"]'); if (sigue) sigue.classList.add('ml-sigue');
+    // Pie de la bolsa estilo EGO: TOTAL y dos botones lado a lado (Seguir comprando | Pagar)
+    var pay = d.querySelector('.drf .cta .btn:not(.wa)');
+    if (pay && pay.textContent !== 'Pagar') pay.textContent = 'Pagar';
+    var tt = d.querySelector('.drf .tt span'); if (tt && tt.textContent !== 'Total:') tt.textContent = 'Total:';
+    var cta = d.querySelector('.drf .cta'), sigue = d.querySelector('.drf > .lk[data-n="bagclose"]');
+    if (cta && sigue) {
+      sigue.classList.add('ml-sigue');
+      var par = cta.querySelector('.ml-par');
+      if (!par) { par = document.createElement('div'); par.className = 'ml-par'; cta.insertBefore(par, cta.firstChild); }
+      par.appendChild(sigue);
+      if (pay) par.appendChild(pay);
+    }
   }
   function iniciar() { var d = document.getElementById('dr'); if (!d) return; new MutationObserver(function () { ajustar(); }).observe(d, { childList: true }); ajustar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
