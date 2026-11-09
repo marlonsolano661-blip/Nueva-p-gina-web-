@@ -181,3 +181,50 @@
     return nav0.apply(this, arguments);
   };
 })();
+
+/* Tarjeta "¡Listo! Ya está en tu bolsa": reemplaza el aviso "Agregado a tu bolsa / Ver bolsa".
+   Muestra arriba la foto, nombre, color, talla, precio y cuántos productos lleva la bolsa.
+   Se cierra sola a los 3,5 s o al tocarla. Si algo falla, se usa el aviso normal. */
+(function () {
+  'use strict';
+  if (window.__mfTarjeta || typeof toast !== 'function') return;
+  window.__mfTarjeta = 1;
+  var css = '#addc{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + .75rem);z-index:95;width:min(92vw,25rem);display:flex;gap:.85rem;align-items:center;padding:.65rem .9rem .65rem .65rem;background:var(--w);color:var(--k);border-radius:1.1rem;box-shadow:0 14px 40px rgba(0,0,0,.16),0 2px 6px rgba(0,0,0,.06);transform:translate(-50%,-140%) scale(.96);opacity:0;transition:transform .5s var(--ease),opacity .3s;pointer-events:none;cursor:pointer}'
+    + '#addc.on{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}'
+    + '#addc .ac-im{position:relative;flex:0 0 3.8rem;height:3.8rem;border-radius:.8rem;background:var(--gs)}'
+    + '#addc .ac-im img{width:100%;height:100%;object-fit:cover;display:block;border-radius:.8rem}#addc .ac-im svg{width:100%;height:100%}'
+    + '#addc .ac-im i{position:absolute;right:-.35rem;bottom:-.35rem;width:1.35rem;height:1.35rem;border-radius:50%;background:var(--gr);color:var(--w);font:600 .72rem/1.35rem Figtree,system-ui,sans-serif;text-align:center;font-style:normal;border:2px solid var(--w)}'
+    + '#addc.on .ac-im i{animation:acpop .5s .25s both}@keyframes acpop{from{transform:scale(0)}60%{transform:scale(1.25)}}'
+    + '#addc .ac-tx{flex:1;display:flex;flex-direction:column;min-width:0;line-height:1.3}'
+    + '#addc .ac-tx small{font-size:.75rem;font-weight:600;color:var(--gr)}'
+    + "#addc .ac-tx b{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+    + '#addc .ac-tx span{font-size:.8rem;color:var(--g3)}'
+    + '#addc .ac-n{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:3.2rem;padding:.4rem .5rem;border-radius:.8rem;background:var(--gs);line-height:1.1}'
+    + '#addc .ac-n b{font-size:1.15rem}#addc .ac-n small{font-size:.62rem;color:var(--g3)}'
+    + '@media (prefers-reduced-motion:reduce){#addc{transition:opacity .2s}#addc.on .ac-im i{animation:none}}';
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  var c = document.createElement('div'); c.id = 'addc'; c.setAttribute('role', 'status'); c.setAttribute('aria-live', 'polite'); document.body.appendChild(c);
+  var timer, antes = {};
+  function clave(l) { return l.id + '|' + l.talla + '|' + (l.color || ''); }
+  function foto() { var m = {}; CART.forEach(function (l) { m[clave(l)] = l.q; }); return m; }
+  /* Justo antes de agregar, guarda cómo estaba la bolsa para saber qué producto entró. */
+  document.addEventListener('click', function (e) { if (e.target.closest('[data-n="add"]')) antes = foto(); }, true);
+  function tarjeta(l) {
+    var n = CART.reduce(function (a, x) { return a + x.q; }, 0);
+    var t = document.getElementById('toast'); if (t) t.classList.remove('on');
+    c.innerHTML = '<div class="ac-im">' + imgH(l) + '<i>✓</i></div><div class="ac-tx"><small>¡Listo! Ya está en tu bolsa</small><b>' + esc(l.name) + '</b><span>' + (l.color ? esc(l.color) + ' · ' : '') + 'Talla ' + esc(l.talla) + ' · ' + fmt(l.price) + '</span></div><div class="ac-n"><b>' + n + '</b><small>' + (n === 1 ? 'producto' : 'productos') + '</small></div>';
+    c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');
+    clearTimeout(timer); timer = setTimeout(function () { c.classList.remove('on'); }, 3500);
+  }
+  c.onclick = function () { c.classList.remove('on'); clearTimeout(timer); };
+  var base = toast;
+  toast = function (m) {
+    if (m === 'Agregado a tu bolsa') {
+      try {
+        var l = CART.filter(function (x) { return (antes[clave(x)] || 0) < x.q; })[0] || CART[CART.length - 1];
+        if (l) { tarjeta(l); return; }
+      } catch (e) { /* si algo falla, aviso normal */ }
+    }
+    return base.apply(this, arguments);
+  };
+})();
