@@ -139,3 +139,14 @@ html body .dr .drf .ml-par .btn{background:#3a8273;color:#fff;border:2px solid #
 html body .dr .drf .ml-par .btn:hover{background:#2f6c5f;border-color:#2f6c5f}
 html body .dr .drf .ml-par .btn:disabled{opacity:.45}
 
+/* Bolsa sin parpadeo de colores: contorno más marcado y un solo color suave fijo cuando tiene productos */
+html body header.bar.wd .bag svg{stroke-width:1.9}
+html body header.bar.wd .bag.wd-lleno svg,html body header.bar.wd .bag.wd-lleno svg path:first-child{animation:none!important;filter:none!important}
+html body header.bar.wd .bag.wd-lleno svg path:first-child{fill:#f7cfdd}
+html body header.bar.wd .bag.bump svg{animation:mfBolsa .6s ease-out both!important;filter:none!important}
+html body header.bar.wd .bag.bump svg path:first-child{animation:none!important;fill:#f7cfdd}
+@keyframes mfBolsa{0%{transform:none;filter:none}40%{transform:translateY(-2px) scale(1.1);filter:none}100%{transform:none;filter:none}}
+html body header.bar.wd{border-bottom:1px solid #d6d6d2}
+/* Letras del encabezado más marcadas (MENÚ, MI BOLSA y el número) */
+html body header.bar.wd .wd-t,html body header.bar.wd .bag #cnt{font-weight:700;color:#000;-webkit-font-smoothing:auto}
+html body header.bar.wd svg{stroke:#000}
