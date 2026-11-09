@@ -134,11 +134,17 @@
     });
   }
 
-  // Arma la lista. Si DATA/recortes.js trae MF_VITRINA, salen exactamente esos productos en ese orden
+  // Lista elegida en el panel (Vitrina) si existe; si no, la de DATA/recortes.js (MF_VITRINA).
+  function listaFija() {
+    var c = window.MF_CONTENIDO && window.MF_CONTENIDO.vitrina;
+    if (Array.isArray(c) && c.length) return c.map(String);
+    return Array.isArray(window.MF_VITRINA) ? window.MF_VITRINA.map(String) : [];
+  }
+  // Arma la lista. Si el panel (o DATA/recortes.js) trae una lista, salen exactamente esos productos en ese orden
   // (de cada uno se usa el recorte sin fondo o su primera foto con fondo blanco; si no tiene, su primera foto).
   // Si no hay lista, la vitrina elige sola los productos con foto de fondo blanco.
   function elegir() {
-    var P = productos(), fija = Array.isArray(window.MF_VITRINA) ? window.MF_VITRINA.map(String) : [];
+    var P = productos(), fija = listaFija();
     var orden, max;
     if (fija.length) {
       orden = fija.map(function (id) { return P.filter(function (p) { return p && String(p.id) === id; })[0]; }).filter(Boolean);
@@ -276,7 +282,15 @@
   function fin(sec) { setTimeout(function () { sec.classList.remove('ready', 'in'); }, 2000); }
   // Si el catálogo del servidor llega después, se vuelve a revisar con los productos definitivos
   var nProd = -1;
-  setInterval(function () { var n = productos().length; if (nProd >= 0 && n !== nProd && !armando) LISTA = null; nProd = n; }, 1500);
+  setInterval(function () {
+    var n = productos().length + '|' + listaFija().join(',');
+    if (nProd !== -1 && n !== nProd && !armando) {
+      LISTA = null;
+      // si la vitrina ya estaba en pantalla con datos viejos, se rehace con los definitivos
+      var vieja = app.querySelector('[data-rnew="home"] .vt'); if (vieja) { vieja.parentNode.removeChild(vieja); programar(); }
+    }
+    nProd = n;
+  }, 1500);
 
   /* ================= Transición con la foto viajando ================= */
   var LAST = null; // id del último producto abierto (para el regreso)
