@@ -1,6 +1,6 @@
 /* Vitrina + movimiento de la tienda (inspirado en las tiendas "perchero" de moda):
-   1) VITRINA en el inicio: los zapatos en fila sobre una repisa. Solo entran fotos con FONDO BLANCO (se revisa el
-      borde de cada foto en el navegador) o los recortes sin fondo de DATA/recortes.js. El riel se desliza con la
+   1) VITRINA en el inicio: los zapatos en fila sobre una repisa. Salen los productos de la lista MF_VITRINA
+      (DATA/recortes.js), usando de cada uno su foto con FONDO BLANCO (se revisa el borde en el navegador). El riel se desliza con la
       física nativa del teléfono; el zapato del centro crece un poco al llegar. Abajo, una cinta que se desplaza.
    2) TRANSICIÓN: al tocar un zapato (vitrina o catálogo), su foto viaja hasta la ficha del producto mientras el
       resto de la página se desenfoca. Al volver ("← Colección"), hace el camino de regreso.
@@ -102,7 +102,7 @@
   }
   function recorte(p) { var R = window.MF_RECORTES || {}; return (p && (p.recorte || R[p.id])) || ''; }
   function agotado(p) { return Array.isArray(p.tallas) && !p.tallas.length; }
-  function fotos(p) { var L = (p && p.imgs && p.imgs.length ? p.imgs : [p && p.img]).filter(Boolean); return L.slice(0, 3); }
+  function fotos(p) { var L = (p && p.imgs && p.imgs.length ? p.imgs : [p && p.img]).filter(Boolean); return L.slice(0, 5); }
   // Shopify entrega la foto al tamaño pedido: miniatura para revisar el fondo, mediana para mostrar.
   function tam(u, w) { return /cdn\.shopify\.com/.test(u) ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'width=' + w : u; }
 
@@ -134,17 +134,29 @@
     });
   }
 
-  // Arma la lista: primero los recortes sin fondo; luego, por producto, la primera foto con fondo blanco.
+  // Arma la lista. Si DATA/recortes.js trae MF_VITRINA, salen exactamente esos productos en ese orden
+  // (de cada uno se usa el recorte sin fondo o su primera foto con fondo blanco; si no tiene, su primera foto).
+  // Si no hay lista, la vitrina elige sola los productos con foto de fondo blanco.
   function elegir() {
-    var all = productos().filter(function (p) { return p && p.id != null && !agotado(p); });
-    var dest = all.filter(function (p) { return p.destacado; }), resto = all.filter(function (p) { return !p.destacado; });
-    var orden = dest.concat(resto).slice(0, 40);
+    var P = productos(), fija = Array.isArray(window.MF_VITRINA) ? window.MF_VITRINA.map(String) : [];
+    var orden, max;
+    if (fija.length) {
+      orden = fija.map(function (id) { return P.filter(function (p) { return p && String(p.id) === id; })[0]; }).filter(Boolean);
+      max = orden.length;
+    } else {
+      var all = P.filter(function (p) { return p && p.id != null && !agotado(p); });
+      orden = all.filter(function (p) { return p.destacado; }).concat(all.filter(function (p) { return !p.destacado; })).slice(0, 40);
+      max = 14;
+    }
     return Promise.all(orden.map(function (p) {
       if (recorte(p)) return Promise.resolve({ p: p, src: recorte(p) });
       var L = fotos(p), k = 0;
-      var prueba = function () { if (k >= L.length) return null; var u = L[k++]; return esBlanca(u).then(function (si) { return si ? { p: p, src: tam(u, 700) } : prueba(); }); };
+      var prueba = function () {
+        if (k >= L.length) return fija.length && L.length ? { p: p, src: tam(L[0], 700) } : null;
+        var u = L[k++]; return esBlanca(u).then(function (si) { return si ? { p: p, src: tam(u, 700) } : prueba(); });
+      };
       return Promise.resolve(prueba());
-    })).then(function (r) { guardarMemo(); return r.filter(Boolean).slice(0, 14); });
+    })).then(function (r) { guardarMemo(); return r.filter(Boolean).slice(0, max); });
   }
 
   /* ================= Vitrina ================= */
