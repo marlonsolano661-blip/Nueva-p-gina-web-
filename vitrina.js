@@ -51,11 +51,12 @@
     '.vt-tag{position:absolute;left:.55rem;top:.55rem;z-index:1;font:500 .58rem/1 Jost,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;background:#fff;color:#0a0a0a;padding:.38rem .5rem}',
     /* nombre y precio del zapato enfocado */
     '.vt-now{max-width:1240px;margin:0 auto;padding:1.3rem 1.25rem 0;min-height:7.2rem;text-align:center}',
-    '.vt-now-in{display:block;transition:opacity .35s ease,transform .45s ' + EASE + ',filter .35s ease}',
-    '.vt-now-in.sw{opacity:0;transform:translateY(.5rem);filter:blur(4px)}',
-    '.vt-now b{display:block;font:500 clamp(1.25rem,4.6vw,1.7rem)/1.1 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-transform:none}',
-    '.vt-now span{display:block;font:400 .9rem/1.4 Jost,system-ui,sans-serif;color:#0a0a0a;margin:.35rem 0 .8rem;letter-spacing:.04em}',
-    '.vt-now small{display:block;font:400 .78rem/1.4 Jost,system-ui,sans-serif;color:#767672}',
+    /* centrado por estructura (flex), no por text-align: en Safari el bloque no se encoge ni se va a la izquierda durante el cambio */
+    '.vt-now-in{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;text-align:center;transition:opacity .3s ease,transform .4s ' + EASE + '}',
+    '.vt-now-in.sw{opacity:0;transform:translateY(.4rem)}',
+    '.vt-now-in>b{display:block;width:100%;font:500 clamp(1.25rem,4.6vw,1.7rem)/1.15 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-transform:none;text-align:center}',
+    '.vt-now-in>i{display:block;width:100%;font:normal 400 .9rem/1.4 Jost,system-ui,sans-serif;color:#0a0a0a;margin:.35rem 0 .8rem;letter-spacing:.04em;text-align:center}',
+    '.vt-now-in>small{display:block;width:100%;font:400 .78rem/1.4 Jost,system-ui,sans-serif;color:#767672;text-align:center}',
     '.vt-go{display:inline-flex;align-items:center;gap:.5rem;min-height:2.75rem;padding:0 1.5rem;border:1px solid #0a0a0a;border-radius:999px;background:#0a0a0a;color:#fff;font:500 .7rem/1 Jost,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}',
     '.vt-go:hover{background:#fff;color:#0a0a0a}',
     /* cinta que se desplaza */
@@ -139,7 +140,7 @@
       '<div class="vt-hd"><div><span class="vt-k">Edición limitada</span><h2>La vitrina</h2></div>' +
       '<p class="vt-hint">' + (canHover ? 'Pasa el cursor por cada modelo' : 'Desliza para ver cada modelo') + '</p></div>' +
       '<div class="vt-rail" role="list">' + items + '</div>' +
-      '<div class="vt-now" aria-live="polite"><span class="vt-now-in"></span></div>' +
+      '<div class="vt-now" aria-live="polite"><div class="vt-now-in"></div></div>' +
       '<div class="vt-mq" aria-hidden="true"><div class="vt-mq-t">' + t + t + '</div></div></section>';
   }
 
@@ -149,7 +150,7 @@
   function etiqueta(sec, id) {
     var box = sec.querySelector('.vt-now-in'); if (!box) return;
     var p = id != null ? porId(id) : null;
-    var nuevo = p ? '<b>' + E(p.name) + '</b><span>' + money(p.price) + '</span><button class="vt-go" type="button" data-vt-go="' + E(p.id) + '">' + (agotado(p) ? 'Ver modelo' : 'Ver modelo') + ' <span aria-hidden="true">→</span></button>'
+    var nuevo = p ? '<b>' + E(p.name) + '</b><i>' + money(p.price) + '</i><button class="vt-go" type="button" data-vt-go="' + E(p.id) + '">Ver modelo <span aria-hidden="true">→</span></button>'
       : '<small>' + (canHover ? 'Elige un modelo de la repisa' : 'Toca un modelo para verlo de cerca') + '</small>';
     if (box.getAttribute('data-k') === String(id)) return;
     box.setAttribute('data-k', String(id));
