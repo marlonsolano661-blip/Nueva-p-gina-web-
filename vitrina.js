@@ -181,7 +181,8 @@
     var home = app.querySelector('[data-rnew="home"]');
     if (!home || home.querySelector('.vt')) return;
     var sel = elegir(); if (sel.L.length < 3) return;
-    var hero = home.querySelector('#rh');
+    // Va justo debajo de la portada: la de siempre (#rh) o el carrusel de banners del panel (#bns), el que exista.
+    var hero = home.querySelector('#bns') || home.querySelector('#rh');
     var tmp = document.createElement('div'); tmp.innerHTML = html(sel);
     var sec = tmp.firstChild;
     if (hero && hero.nextSibling) home.insertBefore(sec, hero.nextSibling); else home.appendChild(sec);
