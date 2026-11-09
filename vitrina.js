@@ -2,10 +2,9 @@
    1) VITRINA en el inicio: los zapatos en fila sobre una repisa. Salen los productos de la lista MF_VITRINA
       (DATA/recortes.js), usando de cada uno su foto con FONDO BLANCO (se revisa el borde en el navegador). El riel se desliza con la
       física nativa del teléfono; el zapato del centro crece un poco al llegar. Abajo, nombre, precio y "Ver modelo".
-   2) TRANSICIÓN: al tocar un zapato (vitrina o catálogo), su foto viaja hasta la ficha del producto mientras el
-      resto de la página se desenfoca. Al volver ("← Colección"), hace el camino de regreso.
+   2) Al tocar un zapato se abre su producto por la misma navegación de la tienda (con su línea rosa de carga).
    3) CATÁLOGO en PC: al pasar el mouse por un modelo, ese se acerca y los demás se desenfocan.
-   No cambia datos, precios, ids, carrito ni pagos: solo agrega una sección visual y envuelve la navegación existente.
+   No cambia datos, precios, ids, carrito ni pagos: solo agrega una sección visual; la navegación es la de siempre.
    Si este archivo falla o no carga, la tienda funciona igual que antes. */
 (function () {
   'use strict';
@@ -15,7 +14,6 @@
 
   var reduce = false, canHover = false;
   try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; canHover = matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { /* sin matchMedia */ }
-  var VT = !reduce && typeof document.startViewTransition === 'function';
   var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (m) { return '&#' + m.charCodeAt(0) + ';'; }); };
   var money = function (n) { return '$' + Math.round(Number(n) || 0).toLocaleString('es-CO'); };
   var EASE = 'cubic-bezier(.22,.9,.24,1)';
@@ -74,19 +72,7 @@
     '  html body #gr:has(.pc:hover) .pc:not(:hover) .im,html body #app .grid:has(.pc:hover) .pc:not(:hover) .im{filter:blur(2.5px) saturate(.6);opacity:.45;transform:scale(.97)}',
     '  html body #gr .pc:hover .im img,html body #app .grid .pc:hover .im img{transform:scale(1.07)}',
     '  html body #gr:has(.pc:hover) .pc:not(:hover) h3,html body #gr:has(.pc:hover) .pc:not(:hover) .pr{opacity:.45;transition:opacity .5s}',
-    '}',
-
-    /* ---------- Transición tarjeta → producto ---------- */
-    'html.vt-morph header.bar{view-transition-name:vt-bar}',
-    'html.vt-morph #app.pgin{animation:none}',
-    'html.vt-morph .pd.fresh .im.big,html.vt-morph .pd.fresh .im.big img{animation:none}',
-    '::view-transition-group(vt-bar){animation:none}',
-    '::view-transition-group(vt-hero){animation-duration:.72s;animation-timing-function:' + EASE + ';z-index:5}',
-    '::view-transition-old(vt-hero),::view-transition-new(vt-hero){height:100%;width:100%;object-fit:cover;animation-duration:.72s;animation-timing-function:' + EASE + '}',
-    '::view-transition-old(root){animation:vtOut .5s ease both}',
-    '::view-transition-new(root){animation:vtIn .6s .12s ' + EASE + ' both}',
-    '@keyframes vtOut{to{opacity:0;filter:blur(10px);transform:scale(.985)}}',
-    '@keyframes vtIn{from{opacity:0;filter:blur(10px)}}'
+    '}'
   ].join('\n');
   var st = document.createElement('style'); st.setAttribute('data-vitrina', '1'); st.textContent = css; document.head.appendChild(st);
 
@@ -284,90 +270,27 @@
     nProd = n;
   }, 1500);
 
-  /* ================= Transición con la foto viajando ================= */
-  var LAST = null; // id del último producto abierto (para el regreso)
-  function limpiar() { [].forEach.call(document.querySelectorAll('[data-vt-n]'), function (el) { el.style.viewTransitionName = ''; el.removeAttribute('data-vt-n'); }); }
-  function nombrar(el) { if (el) { el.style.viewTransitionName = 'vt-hero'; el.setAttribute('data-vt-n', '1'); } }
-  function destinoProducto() {
-    var g = app.querySelector('.pd .gal'); if (!g) return null;
-    var big = g.querySelector('.gsl-s') || g.querySelector('.im.big');
-    return big && big.offsetWidth ? big : g;
-  }
-  function destinoTarjeta(id) {
-    if (id == null) return null;
-    var q = '[data-id="' + String(id).replace(/"/g, '') + '"]';
-    var c = app.querySelector('#gr .pc' + q + ' .im') || app.querySelector('.vt-it[data-vt="' + String(id).replace(/"/g, '') + '"] .vt-fig') || app.querySelector('.pc' + q + ' .im');
-    if (!c) return null;
-    var r = c.getBoundingClientRect();
-    return r.bottom > 0 && r.top < innerHeight ? c : null; // solo si queda a la vista
-  }
-
-  function viajar(desde, cambiar, hasta) {
-    if (!VT || window.__vtEnCurso) { cambiar(); return; }
-    window.__vtEnCurso = true;
-    nombrar(desde);
-    document.documentElement.classList.add('vt-morph');
-    var tr;
-    try {
-      tr = document.startViewTransition(function () {
-        limpiar();
-        cambiar();
-        // galeria.js arma el carrusel justo después: se espera un instante para que la foto destino ya exista
-        return new Promise(function (ok) { setTimeout(function () { nombrar(hasta()); ok(); }, 40); });
-      });
-    } catch (e) { window.__vtEnCurso = false; document.documentElement.classList.remove('vt-morph'); limpiar(); cambiar(); return; }
-    var listo = function () { limpiar(); document.documentElement.classList.remove('vt-morph'); window.__vtEnCurso = false; };
-    tr.finished.then(listo, listo);
-  }
-
-  function abrirProducto(id, desde) {
-    if (typeof window.nav !== 'function') return false;
-    LAST = id;
-    viajar(desde, function () { window.nav('prod', id); }, destinoProducto);
-    return true;
+  /* ================= Abrir producto ================= */
+  // Se abre con la misma navegación de la tienda (como tocar una tarjeta del catálogo), así sale la línea rosa de carga.
+  function abrirProducto(id) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.hidden = true; b.setAttribute('data-n', 'prod'); b.setAttribute('data-id', id);
+    document.body.appendChild(b);
+    try { b.click(); } finally { b.parentNode && b.parentNode.removeChild(b); }
   }
 
   // Vitrina: si el zapato tocado no está en el centro, primero viaja al centro; si ya está, abre el producto.
   document.addEventListener('click', function (e) {
     var t = e.target; if (!t || !t.closest) return;
     var go = t.closest('[data-vt-go]');
-    if (go) {
-      var id = go.getAttribute('data-vt-go'), sec = go.closest('.vt');
-      var it = sec && sec.querySelector('.vt-it[data-vt="' + id.replace(/"/g, '') + '"] .vt-fig');
-      abrirProducto(id, it);
-      return;
-    }
+    if (go) { abrirProducto(go.getAttribute('data-vt-go')); return; }
     var it2 = t.closest('.vt-it');
     if (!it2) return;
     var sec2 = it2.closest('.vt'), m = sec2 && sec2._vt;
     if (m && m.movido()) return; // fue un arrastre, no un clic
     if (m && !it2.classList.contains('on')) { m.ir([].indexOf.call(it2.parentNode.children, it2)); return; }
-    abrirProducto(it2.getAttribute('data-vt'), it2.querySelector('.vt-fig'));
+    abrirProducto(it2.getAttribute('data-vt'));
   });
-
-  // Catálogo y "También te puede gustar": se envuelve el clic original de la tienda (se vuelve a lanzar tal cual dentro de la transición).
-  var paso = false;
-  document.addEventListener('click', function (e) {
-    if (!VT || paso || window.__vtEnCurso || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var t = e.target; if (!t || !t.closest) return;
-    var a = t.closest('[data-n]'); if (!a) return;
-    if (t.closest('.cv-bag,.cv-fav,.vt')) return;
-    var n = a.getAttribute('data-n');
-    var desde = null, hasta = null;
-    if (n === 'prod') {
-      var pc = a.closest('.pc');
-      desde = (pc && pc.querySelector('.im')) || a.querySelector('img');
-      var id = a.getAttribute('data-id'); LAST = id;
-      hasta = destinoProducto;
-    } else if (n === 'go' && (a.getAttribute('data-p') === 'col' || a.getAttribute('data-p') === 'home') && app.querySelector('.pd')) {
-      desde = destinoProducto();
-      var back = LAST || (new URLSearchParams(location.search).get('producto'));
-      hasta = function () { return destinoTarjeta(back); };
-    } else return;
-    if (!desde) return;
-    e.preventDefault(); e.stopImmediatePropagation();
-    viajar(desde, function () { paso = true; try { a.click(); } finally { paso = false; } }, hasta);
-  }, true);
 
   /* ================= Arranque ================= */
   var pend = false;
