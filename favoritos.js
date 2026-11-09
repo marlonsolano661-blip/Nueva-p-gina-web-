@@ -28,3 +28,10 @@
   }, true);
   window.addEventListener('storage', function (e) { if (e.key === K) { F = leer(); } });
 })();
+
+/* Carga "La vitrina" y las animaciones de navegación (vitrina.js) con su lista de fotos sin fondo (DATA/recortes.js).
+   Se cargan en orden y sin bloquear la página. Si no cargan, la tienda funciona igual. */
+(function () {
+  if (window.__mfVitrinaCarga || !document.getElementById('app')) return; window.__mfVitrinaCarga = 1;
+  ['DATA/recortes.js', 'vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
+})();
