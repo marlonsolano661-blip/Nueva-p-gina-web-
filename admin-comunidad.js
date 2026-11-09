@@ -61,3 +61,10 @@
     },
   };
 })();
+
+/* Carga la sección "Vitrina" del panel (admin-vitrina.js) y la lista por defecto de la tienda (DATA/recortes.js).
+   Si no cargan, el resto del panel funciona igual. */
+(function () {
+  if (window.__mfVitrinaPanel || !document.getElementById('tabs')) return; window.__mfVitrinaPanel = 1;
+  ['DATA/recortes.js', 'admin-vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
+})();
