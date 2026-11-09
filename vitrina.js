@@ -1,7 +1,7 @@
 /* Vitrina + movimiento de la tienda (inspirado en las tiendas "perchero" de moda):
    1) VITRINA en el inicio: los zapatos en fila sobre una repisa. Salen los productos de la lista MF_VITRINA
       (DATA/recortes.js), usando de cada uno su foto con FONDO BLANCO (se revisa el borde en el navegador). El riel se desliza con la
-      física nativa del teléfono; el zapato del centro crece un poco al llegar. Abajo, una cinta que se desplaza.
+      física nativa del teléfono; el zapato del centro crece un poco al llegar. Abajo, nombre, precio y "Ver modelo".
    2) TRANSICIÓN: al tocar un zapato (vitrina o catálogo), su foto viaja hasta la ficha del producto mientras el
       resto de la página se desenfoca. Al volver ("← Colección"), hace el camino de regreso.
    3) CATÁLOGO en PC: al pasar el mouse por un modelo, ese se acerca y los demás se desenfocan.
@@ -41,18 +41,13 @@
     '.vt-tag{position:absolute;left:0;top:0;z-index:1;font:500 .58rem/1 Jost,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;background:#0a0a0a;color:#fff;padding:.38rem .5rem}',
     '.vt-ar{display:none}',
     /* nombre y precio del zapato del centro */
-    '.vt-now{max-width:1240px;margin:0 auto;padding:1.3rem 1.25rem 0;min-height:7.2rem;text-align:center}',
+    '.vt-now{max-width:1240px;margin:0 auto;padding:1.1rem 1.25rem 2.4rem;min-height:6rem;text-align:center}',
     '.vt-now-in{display:flex;flex-direction:column;align-items:center;width:100%;text-align:center}',
     '.vt-now-in>b{display:block;width:100%;font:500 clamp(1.3rem,4.8vw,1.8rem)/1.15 "Cormorant Garamond",Georgia,serif;color:#0a0a0a;text-transform:none;text-align:center}',
     '.vt-now-in>i{display:block;width:100%;font:normal 400 .9rem/1.4 Jost,system-ui,sans-serif;color:#0a0a0a;margin:.35rem 0 .8rem;letter-spacing:.04em;text-align:center}',
-    '.vt-go{display:inline-flex;align-items:center;gap:.5rem;min-height:2.75rem;padding:0 1.5rem;border:1px solid #0a0a0a;border-radius:999px;background:#0a0a0a;color:#fff;font:500 .7rem/1 Jost,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}',
-    '.vt-go:hover{background:#fff;color:#0a0a0a}',
-    /* cinta que se desplaza */
-    '.vt-mq{margin-top:1.6rem;background:#0a0a0a;color:#fff;overflow:hidden;white-space:nowrap;padding:.9rem 0;border-top:3px solid #f7b6d2}',
-    '.vt-mq-t{display:inline-flex;animation:vtMq 30s linear infinite;will-change:transform}',
-    '.vt-mq span{font:500 .68rem/1 Jost,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;padding:0 1.4rem}',
-    '.vt-mq i{font-style:normal;color:#f7b6d2}',
-    '@keyframes vtMq{to{transform:translateX(-50%)}}',
+    /* "Ver modelo": enlace discreto (texto subrayado), no un botón grande */
+    '.vt-go{display:inline-flex;align-items:center;gap:.4rem;min-height:2.75rem;padding:0 .2rem;border:0;background:none;color:#0a0a0a;font:500 .72rem/1 Jost,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;text-decoration:underline;text-underline-offset:.45em;text-decoration-thickness:1px;cursor:pointer;-webkit-tap-highlight-color:transparent}',
+    '.vt-go:hover{text-decoration-thickness:2px}',
     /* entrada suave al aparecer */
     '.vt.ready .vt-in{opacity:0;transform:translateY(1.2rem)}',
     '.vt.ready.in .vt-in{animation:vtUp .8s ' + EASE + ' both;animation-delay:calc(var(--i) * 60ms)}',
@@ -70,7 +65,7 @@
     '  .vt-ar.p{left:max(1.5rem,calc(50vw - 600px))}.vt-ar.n{right:max(1.5rem,calc(50vw - 600px))}',
     '  .vt-it:focus-visible .vt-fig{outline:1px solid #0a0a0a;outline-offset:4px}',
     '}',
-    '@media(prefers-reduced-motion:reduce){.vt-mq-t,.vt.ready.in .vt-in,.vt.ready.in .vt-hd>*{animation:none}.vt.ready .vt-in,.vt.ready .vt-hd>*{opacity:1;transform:none}}',
+    '@media(prefers-reduced-motion:reduce){.vt.ready.in .vt-in,.vt.ready.in .vt-hd>*{animation:none}.vt.ready .vt-in,.vt.ready .vt-hd>*{opacity:1;transform:none}}',
 
     /* ---------- Catálogo en PC: enfoque al pasar el mouse ---------- */
     '@media(hover:hover) and (pointer:fine) and (min-width:800px) and (prefers-reduced-motion:no-preference){',
@@ -166,7 +161,6 @@
   }
 
   /* ================= Vitrina ================= */
-  var MQ = ['Marlon Footwear', 'Ediciones limitadas', 'Envíos a toda Colombia', 'Pocas unidades por modelo', 'Nueva temporada'];
   var FL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>', FR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
   function html(L) {
     var items = L.map(function (x, i) {
@@ -174,15 +168,13 @@
       return '<button class="vt-it" type="button" role="listitem" style="--i:' + i + '" data-vt="' + E(p.id) + '" aria-label="' + E(p.name + ', ' + money(p.price)) + '">' +
         '<span class="vt-in"><span class="vt-fig"><img src="' + E(x.src) + '" alt="" draggable="false" ' + (i > 3 ? 'loading="lazy" ' : '') + 'decoding="async"></span></span></button>';
     }).join('');
-    var t = MQ.map(function (x) { return '<span>' + E(x) + '</span><i aria-hidden="true">✦</i>'; }).join('');
     return '<section class="vt' + (reduce ? '' : ' ready') + '" id="vitrina" aria-label="La vitrina">' +
       '<div class="vt-hd"><div><span class="vt-k">Edición limitada</span><h2>La vitrina</h2></div>' +
       '<p class="vt-hint">' + (canHover ? 'Arrastra o usa las flechas' : 'Desliza para ver cada modelo') + '</p></div>' +
       '<div class="vt-stage"><button class="vt-ar p" type="button" aria-label="Modelo anterior">' + FL + '</button>' +
       '<div class="vt-rail" role="list">' + items + '</div>' +
       '<button class="vt-ar n" type="button" aria-label="Modelo siguiente">' + FR + '</button></div>' +
-      '<div class="vt-now" aria-live="polite"><div class="vt-now-in"></div></div>' +
-      '<div class="vt-mq" aria-hidden="true"><div class="vt-mq-t">' + t + t + '</div></div></section>';
+      '<div class="vt-now" aria-live="polite"><div class="vt-now-in"></div></div></section>';
   }
 
   function porId(id) { return productos().filter(function (p) { return String(p.id) === String(id); })[0] || null; }
