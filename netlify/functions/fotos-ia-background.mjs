@@ -1,8 +1,9 @@
 // Fotos de producto con IA (Gemini por el AI Gateway de Netlify). Función de fondo (formato moderno de Netlify,
 // que es el que recibe las credenciales del AI Gateway): responde 202 al instante y trabaja hasta 15 min.
 // La llama el botón "Crear fotos con IA" del panel, con la clave del panel (ADMIN_TOKEN):
-//   POST /api/fotos-ia-background  { src: <foto principal>, trabajo: "IA-xxxx", colores: [{n,h}], porColor: 1|2 }
-// Por cada color crea 1 foto (misma pose) o 2 (misma pose + vista lateral) con un prompt fijo que sirve para cualquier zapato.
+//   POST /api/fotos-ia-background  { src: <foto principal>, trabajo: "IA-xxxx", colores: [{n,h}], porColor: 1|2|3, soloPar: bool }
+// Por cada color crea 1 foto (misma pose), 2 (+ vista lateral) o 3 (+ el par junto sin piernas, fondo blanco de catálogo).
+// soloPar: solo el par junto. Prompt fijo que sirve para cualquier zapato.
 // Logo MF en la plantilla: solo si la foto original muestra el zapato SIN pies/piernas y con la plantilla vacía a la vista
 // (una revisión previa con IA lo decide). Si no, el logo ni se envía, así que no puede aparecer en la piel ni en el fondo.
 // Las fotos quedan en el bucket "productos" y el resultado en eventos (tipo "fotos_ia", referencia = trabajo).
@@ -18,8 +19,8 @@ const MODELOS = ['gemini-3-pro-image-preview', 'gemini-2.5-flash-image'];
 // Prompt fijo de la tienda: sirve para cualquier zapato. La foto subida es la referencia exacta del modelo.
 const BASE = 'You are editing a professional e-commerce product photo of a shoe for an online store. The attached photo is the exact ' +
   'reference of the product. Keep the EXACT same shoe model: same shape, toe, straps, buckles, embellishments, stitching, materials, ' +
-  'heel shape and heel height, sole and proportions. Do not add, remove or redesign any detail. Keep the same soft neutral studio ' +
-  'background and the same soft professional lighting as the reference. If legs or feet appear, keep them natural and realistic. ' +
+  'heel shape and heel height, sole and proportions. Do not add, remove or redesign any detail. Soft professional lighting. ' +
+  'If legs or feet appear, keep them natural and realistic. ' +
   'Photorealistic, sharp focus, high detail, full shoe visible. ';
 // Marca: el logo MF estampado en la plantilla, como en los zapatos de lujo. Si no llega el logo, no se pide.
 const MARCA = 'BRAND STAMP: the second attached image is the MF brand logo (the letters M and F joined, thin lines). Print this exact ' +
@@ -35,9 +36,16 @@ const LOGO_URL = `${process.env.URL || 'https://tienda.mfcol.com'}/assets/brand/
 const COLOR = (n, h) => `Make the shoe in the color ${n} (approximately ${h}): recolor ONLY the main material of the shoe (upper, straps, ` +
   'insole and sole edge). Parts that are transparent or clear stay transparent; metal hardware, rhinestones and other embellishments ' +
   'keep their finish unless they are obviously the same material as the main color. ';
+const FONDO = 'Keep the same soft neutral background as the reference. ';
 const VISTAS = [
-  'Keep the same pose, camera angle and framing as the reference photo.',
-  'Show the shoe from a different angle: a clean side profile (outer side) of one shoe, heel on the left and toe on the right, centered with margin.',
+  FONDO + 'Keep the same pose, camera angle and framing as the reference photo.',
+  FONDO + 'Show the shoe from a different angle: a clean side profile (outer side) of one shoe, heel on the left and toe on the right, centered with margin.',
+  // El par junto: sin personas, de catálogo. Sirve aunque la foto original tenga piernas.
+  'Create a new catalog photo of the PAIR of shoes together, without any person: no feet, no legs, no hands, no clothing. ' +
+  'Both shoes stand side by side on the floor in a three-quarter front view, toes pointing to the front-left, one shoe slightly behind ' +
+  'the other so the platform, the straps and the heel of both are clearly visible. Pure white seamless studio background with a soft ' +
+  'natural contact shadow under the shoes, like a luxury e-commerce catalog photo. Ignore the original background, floor, box, props ' +
+  'and any text from the reference.',
 ];
 const RE_HEX = /^#[0-9a-fA-F]{6}$/;
 const MAX_COLORES = 6;
@@ -106,9 +114,11 @@ export default async (req) => {
   const colores = (Array.isArray(b.colores) ? b.colores : [])
     .map((k) => ({ n: String(k && k.n || '').trim().slice(0, 30), h: String(k && k.h || '') }))
     .filter((k) => k.n && RE_HEX.test(k.h)).slice(0, MAX_COLORES);
-  const porColor = Number(b.porColor) === 2 ? 2 : 1;
+  // Vistas pedidas (índices de VISTAS): 1 = misma pose, 2 = + de lado, 3 = + el par junto; soloPar = solo el par.
+  const nv = Number(b.porColor) === 3 ? 3 : Number(b.porColor) === 2 ? 2 : 1;
+  const vistas = b.soloPar === true ? [2] : [0, 1, 2].slice(0, nv);
   if (!colores.length) { await fin({ error: 'Agrega al menos un color sin foto para que la IA lo cree' }); return; }
-  const pedidas = colores.length * porColor;
+  const pedidas = colores.length * vistas.length;
 
   const hoy = Date.now() - 24 * 3600 * 1000;
   const recientes = (await db.eventosPorTipo(c, ['fotos_ia'], 100)) || [];
@@ -132,13 +142,15 @@ export default async (req) => {
   try { const l = await fetch(LOGO_URL, { signal: AbortSignal.timeout(10000) }); if (l.ok) logo = Buffer.from(await l.arrayBuffer()).toString('base64'); } catch (e) { logo = null; }
   if (!logo) console.error('[fotos-ia] no se pudo leer el logo; las fotos salen sin marca');
   const ai = new GoogleGenAI({}); // GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL los pone el AI Gateway
-  // Con pies de la modelo o sin plantilla vacía a la vista: fotos sin logo.
-  if (logo && !(await admiteLogo(ai, img, mime))) logo = null;
+  // Con pies de la modelo o sin plantilla vacía a la vista: sin logo en las vistas que copian la foto original.
+  // El par junto no lleva personas, así que ahí siempre puede ir el logo en la plantilla.
+  const logoPose = logo && vistas.some((v) => v < 2) && (await admiteLogo(ai, img, mime)) ? logo : null;
   const fotos = [], errores = [];
   for (const k of colores) {
-    for (let v = 0; v < porColor; v++) {
+    for (const v of vistas) {
+      const lg = v === 2 ? logo : logoPose;
       try {
-        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v] + ' ' + (logo ? MARCA : SIN_MARCA), logo);
+        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v] + ' ' + (lg ? MARCA : SIN_MARCA), lg);
         const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
         const slug = k.n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').slice(0, 20);
         const url = await db.subirFoto(c, `ia-${Date.now()}-${slug}-${v + 1}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
@@ -146,5 +158,5 @@ export default async (req) => {
       } catch (e) { errores.push({ color: k.n, vista: v + 1, error: String(e.message || e).slice(0, 300) }); }
     }
   }
-  await fin({ src, fotos, errores, marca: !!logo });
+  await fin({ src, fotos, errores, marca: !!(logo || logoPose) });
 };
