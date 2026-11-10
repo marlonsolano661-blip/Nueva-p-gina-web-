@@ -134,6 +134,8 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (n) { return "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
   var foto = function (k) { return (window.OUTFIT_IMG && OUTFIT_IMG[k]) || ""; };
+  /* Foto en alta calidad (outfits-img/<nombre>.jpg); si todavía no está subida, usa la versión liviana. */
+  var ponerFoto = function (img, k) { img.onerror = function () { img.onerror = null; img.src = foto(k); }; img.src = "outfits-img/" + k + ".jpg"; };
   var CAT = {};
   var prod = function (id) { return CAT[id] || RESPALDO[id] || { id: id, name: "Tacón MF", price: null, colors: [], tallas: [] }; };
   var colorDe = function (p, n) { return (p.colors || []).filter(function (c) { return String(c.n).toLowerCase() === String(n).toLowerCase(); })[0] || {}; };
@@ -142,7 +144,8 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
 
   var figs = OUTFITS.map(function (L, i) {
     var b = document.createElement("div"); b.className = "fig";
-    b.innerHTML = '<img src="' + foto(L.angulos[0][1]) + '" alt="Modelo con el look ' + L.nombre + '">';
+    b.innerHTML = '<img alt="Modelo con el look ' + L.nombre + '">';
+    ponerFoto(b.querySelector("img"), L.angulos[0][1]);
     b.addEventListener("click", function () { if (i !== active) go(i); });
     $("stage").appendChild(b); return b;
   });
@@ -192,11 +195,11 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
 
   function setAngle(i) {
     angle = i; var img = figs[active].querySelector("img"); img.style.opacity = 0;
-    setTimeout(function () { img.src = foto(OUTFITS[active].angulos[i][1]); img.style.opacity = 1; }, reduce ? 0 : 200);
+    setTimeout(function () { ponerFoto(img, OUTFITS[active].angulos[i][1]); img.style.opacity = 1; }, reduce ? 0 : 200);
     Array.prototype.forEach.call(document.querySelectorAll(".angle"), function (b) { b.setAttribute("aria-pressed", b.dataset.a == i); });
   }
   function go(i) {
-    if (angle) figs[active].querySelector("img").src = foto(OUTFITS[active].angulos[0][1]);
+    if (angle) ponerFoto(figs[active].querySelector("img"), OUTFITS[active].angulos[0][1]);
     active = (i + n) % n; angle = 0; $("hint").textContent = ""; $("sizeBox").classList.remove("need");
     layout(); panel();
   }
