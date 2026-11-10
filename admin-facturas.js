@@ -20,7 +20,11 @@
   var peso = function (n) { return '$' + Math.round(Number(n) || 0).toLocaleString('es-CO'); };
   function siguiente() { var n = parseInt(leer(KN, 1), 10) || 1; return 'MF-' + String(n).padStart(4, '0'); }
   function subtotal() { return F.items.reduce(function (t, i) { return t + (+i.cant || 0) * (+i.precio || 0); }, 0); }
-  function descuento() { return Math.round(subtotal() * (Math.min(90, Math.max(0, +F.desc || 0)) / 100)); }
+  function descuento() {
+    if (+F.descPesos > 0) return Math.min(subtotal(), Math.round(+F.descPesos)); // pedidos de WhatsApp: el descuento viene en pesos
+    return Math.round(subtotal() * (Math.min(90, Math.max(0, +F.desc || 0)) / 100));
+  }
+  function etqDesc(f) { return +f.descPesos > 0 ? 'Descuento' : 'Descuento (' + f.desc + '%)'; }
   var GAR_MESES = 3;
   function garHasta(f) {
     var d = new Date(f && f.creado ? f.creado : Date.now()), dia = d.getDate();
@@ -54,6 +58,7 @@
     if (act) lin.push(act);
     return lin.length ? lin : [''];
   }
+
   function crearPDF(f, em) {
     var W = 595, H = 842, M = 48, pags = [], cs = null, y = 0;
     function pag() { cs = []; pags.push(cs); y = H - M; }
@@ -106,7 +111,7 @@
     var xr = cTot - 6, xl = 380;
     function fila(a, b, o) { txt(a, xl, y, o && o.g ? 12 : 10, { b: o && o.g, c: o && o.g ? null : GR }); txt(b, xr, y, o && o.g ? 12 : 10, { der: 1, b: o && o.g }); y -= o && o.g ? 18 : 15; }
     fila('Subtotal', peso(f.subtotal));
-    if (f.descuento > 0) fila('Descuento (' + f.desc + '%)', '-' + peso(f.descuento));
+    if (f.descuento > 0) fila(etqDesc(f), '-' + peso(f.descuento));
     fila('Envio', f.envio > 0 ? peso(f.envio) : 'Sin costo');
     linea(xl, y + 8, W - M, y + 8, [20, 20, 20], .8); y -= 4;
     fila('TOTAL', peso(f.total), { g: 1 });
@@ -185,20 +190,21 @@
   }
   function duplicar(f) {
     F = nueva(); F.cliente = Object.assign({}, f.cliente); F.items = f.items.map(function (i) { return Object.assign({}, i); });
-    F.desc = f.desc; F.envio = f.envio; F.pago = f.pago; F.estado = f.estado; F.nota = f.nota; ULTIMA = null; pintar(); window.scrollTo(0, 0);
+    F.desc = f.desc; F.descPesos = f.descPesos || 0; F.envio = f.envio; F.pago = f.pago; F.estado = f.estado; F.nota = f.nota; ULTIMA = null; pintar(); window.scrollTo(0, 0);
   }
 
   var refTot = null;
   function actTotales() {
     if (!refTot) return;
     refTot.textContent = '';
-    [['Subtotal', peso(subtotal())], F.desc > 0 ? ['Descuento (' + F.desc + '%)', '-' + peso(descuento())] : null, ['Envío', +F.envio > 0 ? peso(F.envio) : 'Sin costo'], ['Total', peso(total())]].forEach(function (r, k, a) {
+    [['Subtotal', peso(subtotal())], descuento() > 0 ? [etqDesc(F), '-' + peso(descuento())] : null, ['Envío', +F.envio > 0 ? peso(F.envio) : 'Sin costo'], ['Total', peso(total())]].forEach(function (r, k, a) {
       if (!r) return; refTot.appendChild(el('div', { class: 'linea' + (r[0] === 'Total' ? ' tot' : '') }, [el('span', { text: r[0] }), el('span', { text: r[1] })]));
     });
   }
 
   function pintar() {
     var c = root(); c.textContent = ''; refTot = null;
+    if (F.waId && !ULTIMA) c.appendChild(el('p', { class: 'alerta', text: 'Datos traídos del pedido de WhatsApp de ' + (F.cliente.nombre || 'la clienta') + '. Revísalos, completa la cédula si la tienes y pulsa «Crear factura».' }));
     c.appendChild(el('p', { class: 'nota', text: 'Crea el comprobante con los datos de la clienta y envíaselo por WhatsApp. Cada comprobante incluye la garantía de 3 meses por defectos de fabricación, con su fecha de vencimiento. Es un comprobante de venta, no una factura electrónica de la DIAN.' }));
     if (ULTIMA) {
       c.appendChild(el('p', { class: 'nota', text: 'Comprobante listo ✓' }));
@@ -248,7 +254,9 @@
       refTot = el('div', { class: 'form' });
       c.appendChild(el('div', { class: 'form' }, [
         el('h3', { text: 'Total' }),
-        entrada(F, 'desc', 'Descuento (%)', { type: 'number', im: 'numeric', num: 1, cb: actTotales }),
+        +F.descPesos > 0
+          ? entrada(F, 'descPesos', 'Descuento (COP) · viene del pedido de WhatsApp', { type: 'number', im: 'numeric', num: 1, cb: actTotales })
+          : entrada(F, 'desc', 'Descuento (%)', { type: 'number', im: 'numeric', num: 1, cb: actTotales }),
         entrada(F, 'envio', 'Envío (COP)' + (TARIFA ? ' · tarifa del panel ' + peso(TARIFA) : ''), { type: 'number', im: 'numeric', num: 1, cb: actTotales }),
         campo('Medio de pago', pagoSel), campo('Estado', estSel),
         entrada(F, 'nota', 'Nota (opcional)', { max: '200' }),
@@ -264,7 +272,7 @@
         var f = {
           numero: 'MF-' + String(n).padStart(4, '0'), creado: ahora.toISOString(), fecha: ahora.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
           cliente: Object.assign({}, F.cliente), items: F.items.map(function (i) { return { nombre: i.nombre.trim(), talla: String(i.talla || '').trim(), cant: +i.cant, precio: +i.precio }; }),
-          desc: Math.min(90, Math.max(0, +F.desc || 0)), subtotal: subtotal(), descuento: descuento(), envio: +F.envio || 0, total: total(), pago: F.pago, estado: F.estado, nota: (F.nota || '').trim(),
+          desc: +F.descPesos > 0 ? 0 : Math.min(90, Math.max(0, +F.desc || 0)), descPesos: +F.descPesos > 0 ? Math.round(+F.descPesos) : 0, waId: F.waId || null, subtotal: subtotal(), descuento: descuento(), envio: +F.envio || 0, total: total(), pago: F.pago, estado: F.estado, nota: (F.nota || '').trim(),
         };
         try { crearPDF(f, emisor()); } catch (e) { return A.msg('No se pudo crear el PDF: ' + e.message, true); }
         guardar(KN, n + 1); var h = leer(KH, []); h.unshift(f); guardar(KH, h.slice(0, 100));
@@ -294,14 +302,48 @@
     } }));
   }
 
-  function abrir() {
-    F = nueva(); ULTIMA = null; pintar();
+  function cargarDatos() {
     return Promise.all([
       A.api('admin-tienda?recurso=productos').then(function (d) { PRODS = (d.productos || []).filter(function (p) { return p && p.nombre; }); }),
       A.api('admin-tienda?recurso=envio').then(function (d) { TARIFA = Number(d.tarifa) || 0; }),
-    ]).then(function () { F.envio = TARIFA; pintar(); });
+    ]);
   }
-  window.mfAdminFacturas = { abrir: abrir, _crearPDF: crearPDF };
+  function abrir() {
+    F = nueva(); ULTIMA = null; pintar();
+    return cargarDatos().then(function () { F.envio = TARIFA; pintar(); });
+  }
+
+  /* ---------- Conexión con Pedidos WhatsApp ---------- */
+  var PAGO_WA = { Transferencia: 'Transferencia', Nequi: 'Nequi', Daviplata: 'Daviplata', Bancolombia: 'Bancolombia', Efectivo: 'Efectivo' };
+  // Comprobante ya hecho para ese pedido (el historial vive en este dispositivo)
+  function deWhatsapp(id) { if (id == null) return null; return leer(KH, []).filter(function (f) { return f && f.waId != null && String(f.waId) === String(id); })[0] || null; }
+  function desdeVenta(v) {
+    var f = nueva();
+    f.cliente = { nombre: v.cliente || '', doc: '', tel: v.telefono || '', email: '', ciudad: v.ciudad || '', dir: '' };
+    f.items = (v.items || []).map(function (i) { return { nombre: [i.nombre, i.color].filter(Boolean).join(' - '), talla: i.talla || '', cant: +i.cant || 1, precio: +i.precio || 0 }; });
+    f.desc = 0; f.descPesos = +v.descuento || 0; f.envio = +v.envio || 0;
+    f.pago = PAGO_WA[v.metodo_pago] || 'Otro'; f.estado = v.estado_pago === 'PAGADO' ? 'Pagado' : 'Pendiente de pago';
+    f.nota = v.nota || ''; f.waId = v.id;
+    return f;
+  }
+  // Abre Facturas con los datos del pedido; si ese pedido ya tiene comprobante, lo muestra para reenviarlo
+  function desdeWhatsapp(v) {
+    mostrar();
+    var hecha = deWhatsapp(v.id);
+    if (hecha) { ULTIMA = hecha; F = nueva(); } else { ULTIMA = null; F = desdeVenta(v); }
+    pintar();
+    return cargarDatos().then(function () { if (!ULTIMA && !F.items.length) F.envio = TARIFA; pintar(); });
+  }
+  window.mfAdminFacturas = { abrir: abrir, desdeWhatsapp: desdeWhatsapp, deWhatsapp: deWhatsapp, _crearPDF: crearPDF };
+
+  function mostrar() {
+    var tabs = document.getElementById('tabs'), volver = document.getElementById('volver');
+    if (tabs) tabs.hidden = true; if (volver) volver.hidden = false;
+    var t = document.getElementById('titulo'); if (t) t.textContent = 'Facturas';
+    var ay = document.getElementById('ayuda'); if (ay) ay.hidden = true;
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-facturas'); });
+    A.msg(''); window.scrollTo(0, 0);
+  }
 
   /* Se agrega solo el botón "Facturas" al inicio del panel y su sección; no hace falta tocar otro archivo. */
   function montar() {
@@ -318,12 +360,7 @@
       b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), 'Facturas', el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]);
       tabs.appendChild(b);
     }
-    b.addEventListener('click', function () {
-      tabs.hidden = true; volver.hidden = false; document.getElementById('titulo').textContent = 'Facturas';
-      var ay = document.getElementById('ayuda'); if (ay) ay.hidden = true;
-      document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-facturas'); });
-      A.msg(''); window.scrollTo(0, 0); abrir().catch(A.falla);
-    });
+    b.addEventListener('click', function () { mostrar(); abrir().catch(A.falla); });
   }
   montar();
 })();
