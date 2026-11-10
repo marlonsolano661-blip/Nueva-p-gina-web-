@@ -1,8 +1,8 @@
 /* Botón "✨ Crear fotos con IA" en el formulario de producto del panel.
-   Flujo: subir la foto principal → agregar los colores → tocar el botón. La IA (función fotos-ia-background, con un
-   prompt fijo de la tienda) crea 1 o 2 fotos por cada color que todavía no tiene foto: la misma pose en ese color y,
-   si se piden 2, también una vista lateral. Las fotos entran a la galería por el mismo camino que "+ Agregar fotos"
-   y cada color queda con su foto. Nada se publica hasta que la persona revisa y toca "Guardar". Lo carga sugerir-color.js. */
+   Flujo en un solo recuadro: 1) subir la foto principal, 2) tocar los colores deseados, 3) "Crear fotos".
+   La IA (función fotos-ia-background, con un prompt fijo de la tienda) crea 1 o 2 fotos por color: de frente como la
+   foto original y, si se piden 2, también de lado. Las fotos entran a la galería por el mismo camino que "+ Agregar fotos",
+   y cada color se agrega solo a los colores del producto con su foto. Nada se publica hasta que la persona revisa y toca "Guardar". Lo carga sugerir-color.js. */
 (function () {
   'use strict';
   if (typeof document === 'undefined') return;
@@ -21,29 +21,37 @@
     });
   }
 
+  // Los mismos nombres y códigos de la paleta del panel, para que el color quede igual en la tienda
+  var COLORES = [['Negro', '#111111'], ['Blanco', '#FFFFFF'], ['Nude', '#E0B89E'], ['Beige', '#D8C3A5'], ['Camel', '#B98550'],
+    ['Café', '#5C3A21'], ['Dorado', '#C9A227'], ['Plata', '#C0C0C0'], ['Rojo', '#C00000'], ['Vinotinto', '#6D1A2B'],
+    ['Rosado', '#F4A6B8'], ['Fucsia', '#D81B7A'], ['Azul', '#1F4FA3'], ['Verde', '#2E7D32']];
+
   function filaColor(nombre) {
     var r = null;
     document.querySelectorAll('#f-cols .color').forEach(function (f) { if (f.querySelector('input.cnom').value.trim().toLowerCase() === nombre.toLowerCase()) r = f; });
     return r;
   }
-  function coloresSinFoto() {
-    var out = [];
-    document.querySelectorAll('#f-cols .color').forEach(function (f) {
-      var n = f.querySelector('input.cnom').value.trim(), h = f.querySelector('input.chex').value.trim(), fo = f.querySelector('select.cfoto');
-      if (n && /^#[0-9a-fA-F]{6}$/.test(h) && !(fo && fo.value)) out.push({ n: n, h: h });
-    });
-    return out;
+  // Agrega el color a "Colores" del producto (si no estaba) y le pone su foto (si no tenía)
+  function ponerColor(nombre, url) {
+    var f = filaColor(nombre);
+    if (!f) {
+      var b = document.querySelector('.paleta:not(.ia-paleta) button.pal[data-n="' + nombre + '"]');
+      if (b) b.click();
+      f = filaColor(nombre);
+    }
+    var fo = f && f.querySelector('select.cfoto');
+    if (fo && !fo.value) { fo.value = url; fo.dispatchEvent(new Event('change', { bubbles: true })); }
   }
 
-  function crear(entrada, boton, cuantas) {
+  function crear(entrada, boton, cuantas, chips) {
     var m = M();
     if (!m) return;
     var rejilla = entrada.parentNode.querySelector('.fotos');
     var principal = rejilla && rejilla.querySelector('.foto img');
-    if (!principal) return m.msg('Primero sube la foto principal del producto', true);
-    var colores = coloresSinFoto();
-    if (!colores.length) return m.msg('Agrega abajo los colores que quieres (toca un color de la lista). La IA crea las fotos de los colores que todavía no tienen foto.', true);
-    if (colores.length > 6) return m.msg('Máximo 6 colores por tanda: quita algunos o asígnales foto', true);
+    if (!principal) return m.msg('Primero sube la foto del zapato con "+ Agregar fotos" (paso 1)', true);
+    var colores = Array.prototype.map.call(chips.querySelectorAll('button.pal.on'), function (b) { return { n: b.getAttribute('data-n'), h: b.getAttribute('data-h') }; });
+    if (!colores.length) return m.msg('Toca uno o más colores (paso 2) y luego "Crear fotos"', true);
+    if (colores.length > 6) return m.msg('Máximo 6 colores por vez', true);
     var porColor = Number(cuantas.value) === 2 ? 2 : 1, total = colores.length * porColor;
     var antes = rejilla.querySelectorAll('.foto').length;
     if (antes + total > 30) return m.msg('Máximo 30 fotos por producto: quita algunas antes', true);
@@ -53,6 +61,7 @@
     var trabajo = 'IA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     boton.disabled = true; cuantas.disabled = true;
     var soltar = function () { boton.disabled = false; cuantas.disabled = false; };
+    var quitarMarcas = function () { chips.querySelectorAll('button.pal.on').forEach(function (b) { b.classList.remove('on'); }); };
     m.msg('La IA está creando ' + total + ' foto(s)… no cierres esta página.');
     m.api('fotos-ia-background', { method: 'POST', body: { src: principal.getAttribute('src'), trabajo: trabajo, colores: colores, porColor: porColor } })
       .then(function () {
@@ -80,15 +89,11 @@
           return hastaQue(function () { return rejilla.querySelectorAll('.foto').length >= antes + archivos.length; }, 300000);
         }).then(function () {
           var urls = Array.prototype.map.call(rejilla.querySelectorAll('.foto img'), function (i) { return i.getAttribute('src'); }).slice(antes);
-          fotos.forEach(function (x, i) {
-            if (x.vista !== 1 || !urls[i]) return;
-            var f = filaColor(x.color), fo = f && f.querySelector('select.cfoto');
-            if (fo && !fo.value) { fo.value = urls[i]; fo.dispatchEvent(new Event('change', { bubbles: true })); }
-          });
-          soltar();
+          fotos.forEach(function (x, i) { if (x.vista === 1 && urls[i]) ponerColor(x.color, urls[i]); });
+          soltar(); quitarMarcas();
           var faltan = (d.errores || []).length;
           m.msg('Listas ' + fotos.length + ' foto(s) con IA ✓' + (faltan ? ' (' + faltan + ' no salieron)' : '') +
-            ' Revísalas, quita las que no se parezcan al zapato real y toca "Guardar" abajo.', faltan > 0);
+            ' Ya quedaron en las fotos y en los colores. Revísalas, quita las que no se parezcan al zapato real y toca "Guardar" abajo.', faltan > 0);
         });
       })
       .catch(function (e) { soltar(); m.falla(e); });
@@ -98,21 +103,34 @@
     var entrada = document.getElementById('f-file');
     if (!entrada || entrada.dataset.ia) return;
     entrada.dataset.ia = '1';
-    var cuantas = document.createElement('select');
-    cuantas.setAttribute('aria-label', 'Fotos por color');
-    [['1', '1 foto por color'], ['2', '2 fotos por color (+ vista lateral)']].forEach(function (o) {
-      var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; cuantas.appendChild(op);
+    var nuevo = function (tag, cls, txt) { var n = document.createElement(tag); if (cls) n.className = cls; if (txt) n.textContent = txt; return n; };
+    var caja = nuevo('div', 'ia-fotos');
+    caja.style.cssText = 'border:1.5px solid var(--g2,#ddd);border-radius:1rem;padding:.9rem;margin:.8rem 0;';
+    caja.appendChild(nuevo('b', '', '✨ Crear fotos con IA'));
+    caja.appendChild(nuevo('p', 'nota', '1. Sube arriba la foto del zapato con "+ Agregar fotos".'));
+    caja.appendChild(nuevo('p', 'nota', '2. Toca los colores en que lo quieres:'));
+    var chips = nuevo('div', 'paleta ia-paleta');
+    COLORES.forEach(function (k) {
+      var b = nuevo('button', 'pal');
+      b.type = 'button'; b.setAttribute('data-n', k[0]); b.setAttribute('data-h', k[1]);
+      var i = nuevo('i'); i.style.background = k[1];
+      b.appendChild(i); b.appendChild(nuevo('span', '', k[0]));
+      b.addEventListener('click', function () { b.classList.toggle('on'); });
+      chips.appendChild(b);
     });
-    var boton = document.createElement('button');
-    boton.type = 'button'; boton.className = 'claro'; boton.textContent = '✨ Crear fotos con IA';
-    boton.addEventListener('click', function () { crear(entrada, boton, cuantas); });
-    var caja = document.createElement('div');
-    caja.className = 'ia-fotos';
-    var nota = document.createElement('p');
-    nota.className = 'nota';
-    nota.textContent = 'Con IA: sube la foto principal, agrega los colores abajo y toca el botón. Crea las fotos de los colores que aún no tienen foto.';
-    caja.appendChild(nota); caja.appendChild(cuantas); caja.appendChild(boton);
-    entrada.parentNode.insertBefore(caja, entrada);
+    caja.appendChild(chips);
+    caja.appendChild(nuevo('p', 'nota', '3. ¿Cuántas fotos por color?'));
+    var cuantas = nuevo('select');
+    cuantas.setAttribute('aria-label', 'Fotos por color');
+    [['1', '1 foto por color'], ['2', '2 fotos por color (una de lado)']].forEach(function (o) {
+      var op = nuevo('option', '', o[1]); op.value = o[0]; cuantas.appendChild(op);
+    });
+    caja.appendChild(cuantas);
+    var boton = nuevo('button', '', '✨ Crear fotos');
+    boton.type = 'button'; boton.style.marginTop = '.7rem';
+    boton.addEventListener('click', function () { crear(entrada, boton, cuantas, chips); });
+    caja.appendChild(boton);
+    entrada.parentNode.appendChild(caja); // debajo de las fotos del producto
   }
   new MutationObserver(poner).observe(document.documentElement, { childList: true, subtree: true });
 })();
