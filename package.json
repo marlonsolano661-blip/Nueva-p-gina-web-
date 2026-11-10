@@ -11,5 +11,8 @@
     "test:front": "node test/frontend.e2e.js",
     "test:tienda": "node test/tienda.e2e.js",
     "verificar": "node scripts/verificar-despliegue.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0"
   }
 }
