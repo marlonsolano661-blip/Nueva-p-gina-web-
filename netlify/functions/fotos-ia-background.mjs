@@ -1,9 +1,9 @@
 // Fotos de producto con IA (Gemini por el AI Gateway de Netlify). Función de fondo (formato moderno de Netlify,
 // que es el que recibe las credenciales del AI Gateway): responde 202 al instante y trabaja hasta 15 min.
-// Toma UNA foto del bucket 'productos' y crea variantes de color y de ángulo. Cada foto queda en el bucket
-// y las URLs se guardan en eventos (tipo 'fotos_ia').
-//   GET /.netlify/functions/fotos-ia-background?t=<token>&src=<url de la foto>
-// El token es de un solo uso: vive en ajustes (clave 'fotos_ia_token') y se borra al empezar.
+// La llama el botón "Crear fotos con IA" del panel, con la clave del panel (ADMIN_TOKEN):
+//   POST /api/fotos-ia-background  { src: <foto principal>, trabajo: "IA-xxxx", colores: [{n,h}], porColor: 1|2 }
+// Por cada color crea 1 foto (misma pose) o 2 (misma pose + vista lateral) con un prompt fijo que sirve para cualquier zapato.
+// Las fotos quedan en el bucket "productos" y el resultado en eventos (tipo "fotos_ia", referencia = trabajo).
 import crypto from 'crypto';
 import process from 'process';
 import { GoogleGenAI } from '@google/genai';
@@ -13,18 +13,21 @@ import db from '../../lib/db.js';
 const { cfg } = configMod;
 const MODELOS = ['gemini-3-pro-image-preview', 'gemini-2.5-flash-image'];
 
-const BASE = 'Edit this product photo of a women\'s high-heel sandal. Keep the EXACT same shoe design: square open toe, ' +
-  'clear transparent vinyl toe strap, thin diagonal strap covered in small silver rhinestones crossing the instep, thin ankle strap ' +
-  'with a small metal buckle, and a thin clear transparent acrylic stiletto heel (about 10 cm). Keep the same model\'s legs and skin, ' +
-  'the same soft light-grey studio background and the same soft professional lighting. Photorealistic e-commerce product photography, ' +
-  'sharp focus, high detail. Do not add text, logos or watermarks. ';
-
-const PEDIDOS = [
-  { id: 'negro', prompt: BASE + 'Change ONLY the color of the insole, sole edge and ankle strap from nude/beige to glossy black. Rhinestones stay silver, toe strap and heel stay transparent. Same pose and framing.' },
-  { id: 'dorado', prompt: BASE + 'Change ONLY the color of the insole, sole edge and ankle strap from nude/beige to metallic gold, and make the rhinestones golden-champagne. Toe strap and heel stay transparent. Same pose and framing.' },
-  { id: 'lateral', prompt: BASE + 'Show ONE foot wearing the nude sandal in a clean side profile view (outer side), heel on the left, toes on the right, the full shoe visible including the whole clear heel, centered with margin.' },
-  { id: 'trasera', prompt: BASE + 'Show the nude sandal worn on one foot from a three-quarter back view so the heel counter, the ankle strap with buckle and the clear stiletto heel are clearly visible, full shoe in frame, centered with margin.' },
+// Prompt fijo de la tienda: sirve para cualquier zapato. La foto subida es la referencia exacta del modelo.
+const BASE = 'You are editing a professional e-commerce product photo of a shoe for an online store. The attached photo is the exact ' +
+  'reference of the product. Keep the EXACT same shoe model: same shape, toe, straps, buckles, embellishments, stitching, materials, ' +
+  'heel shape and heel height, sole and proportions. Do not add, remove or redesign any detail. Keep the same soft neutral studio ' +
+  'background and the same soft professional lighting as the reference. If legs or feet appear, keep them natural and realistic. ' +
+  'Photorealistic, sharp focus, high detail, full shoe visible. No text, logos or watermarks. ';
+const COLOR = (n, h) => `Make the shoe in the color ${n} (approximately ${h}): recolor ONLY the main material of the shoe (upper, straps, ` +
+  'insole and sole edge). Parts that are transparent or clear stay transparent; metal hardware, rhinestones and other embellishments ' +
+  'keep their finish unless they are obviously the same material as the main color. ';
+const VISTAS = [
+  'Keep the same pose, camera angle and framing as the reference photo.',
+  'Show the shoe from a different angle: a clean side profile (outer side) of one shoe, heel on the left and toe on the right, centered with margin.',
 ];
+const RE_HEX = /^#[0-9a-fA-F]{6}$/;
+const MAX_COLORES = 6;
 
 async function generar(ai, img, mime, prompt) {
   const fallos = [];
@@ -44,45 +47,63 @@ async function generar(ai, img, mime, prompt) {
   throw new Error(fallos.join(' | '));
 }
 
+const RE_TRABAJO = /^IA-[a-z0-9]{6,24}$/;
+const MAX_FOTOS_DIA = 40; // fotos por día entre todas las tandas, para no gastar créditos de más
+
+function fuenteValida(c, src) {
+  return src.startsWith(`${c.db}/storage/v1/object/public/productos/`) || /^https:\/\/cdn\.shopify\.com\/[^\s"'<>]{4,400}$/.test(src);
+}
+
 export default async (req) => {
   const c = cfg('admin');
-  const q = new URL(req.url).searchParams;
-  const guardado = await db.getAjuste(c, 'fotos_ia_token');
-  const token = guardado && typeof guardado.token === 'string' ? guardado.token : '';
-  const t = String(q.get('t') || '');
-  if (token.length < 24 || t.length !== token.length || !crypto.timingSafeEqual(Buffer.from(t), Buffer.from(token))) {
-    console.error('[fotos-ia] token inválido');
+  const auth = String(req.headers.get('authorization') || '');
+  const t = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!t || t.length !== c.admin.length || !crypto.timingSafeEqual(Buffer.from(t), Buffer.from(c.admin))) {
+    console.error('[fotos-ia] no autorizado');
     return;
   }
-  await db.setAjuste(c, 'fotos_ia_token', { token: '', usado: new Date().toISOString() }); // un solo uso
+  let b = {};
+  try { b = await req.json(); } catch (e) { b = {}; }
+  const trabajo = String(b.trabajo || '');
+  if (!RE_TRABAJO.test(trabajo)) { console.error('[fotos-ia] trabajo inválido'); return; }
+  const fin = (detalle) => db.registrarEvento(c, 'fotos_ia', trabajo, detalle);
 
-  // Solo nombres de variables presentes (nunca valores), para diagnosticar el AI Gateway.
-  const entorno = ['GEMINI_API_KEY', 'GOOGLE_GEMINI_BASE_URL', 'GOOGLE_API_KEY', 'GOOGLE_VERTEX_BASE_URL', 'NETLIFY_AI_GATEWAY_KEY', 'NETLIFY_AI_GATEWAY_URL']
-    .filter((k) => String(process.env[k] || '').trim());
+  const colores = (Array.isArray(b.colores) ? b.colores : [])
+    .map((k) => ({ n: String(k && k.n || '').trim().slice(0, 30), h: String(k && k.h || '') }))
+    .filter((k) => k.n && RE_HEX.test(k.h)).slice(0, MAX_COLORES);
+  const porColor = Number(b.porColor) === 2 ? 2 : 1;
+  if (!colores.length) { await fin({ error: 'Agrega al menos un color sin foto para que la IA lo cree' }); return; }
+  const pedidas = colores.length * porColor;
 
-  const src = String(q.get('src') || '');
-  if (!src.startsWith(`${c.db}/storage/v1/object/public/productos/`)) {
-    await db.registrarEvento(c, 'fotos_ia', null, { error: 'Foto de origen inválida', entorno });
+  const hoy = Date.now() - 24 * 3600 * 1000;
+  const recientes = (await db.eventosPorTipo(c, ['fotos_ia'], 100)) || [];
+  const usadas = recientes.filter((e) => new Date(e.creado_en).getTime() > hoy)
+    .reduce((n, e) => n + ((e.detalle && Array.isArray(e.detalle.fotos)) ? e.detalle.fotos.length : 0), 0);
+  if (usadas + pedidas > MAX_FOTOS_DIA) {
+    await fin({ error: `Límite diario de ${MAX_FOTOS_DIA} fotos con IA: hoy quedan ${Math.max(0, MAX_FOTOS_DIA - usadas)}. Pide menos colores o intenta mañana.` });
     return;
   }
-  if (!process.env.GEMINI_API_KEY) {
-    await db.registrarEvento(c, 'fotos_ia', null, { error: 'El AI Gateway no entregó GEMINI_API_KEY', entorno });
-    return;
-  }
+  const src = String(b.src || '').trim();
+  if (!fuenteValida(c, src)) { await fin({ error: 'La foto principal debe estar subida en la tienda' }); return; }
+  if (!process.env.GEMINI_API_KEY) { await fin({ error: 'La IA no está disponible en este momento (AI Gateway sin credenciales)' }); return; }
   const r = await fetch(src, { signal: AbortSignal.timeout(20000) });
-  if (!r.ok) { await db.registrarEvento(c, 'fotos_ia', null, { error: `No se pudo leer la foto (${r.status})`, entorno }); return; }
+  if (!r.ok) { await fin({ error: `No se pudo leer la foto principal (${r.status})` }); return; }
   const mime = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
+  if (!/^image\/(jpeg|png|webp)$/.test(mime)) { await fin({ error: 'La foto principal debe ser JPG, PNG o WEBP' }); return; }
   const img = Buffer.from(await r.arrayBuffer()).toString('base64');
 
   const ai = new GoogleGenAI({}); // GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL los pone el AI Gateway
   const fotos = [], errores = [];
-  for (const p of PEDIDOS) {
-    try {
-      const g = await generar(ai, img, mime, p.prompt);
-      const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
-      const url = await db.subirFoto(c, `ia-${Date.now()}-${p.id}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
-      fotos.push({ id: p.id, url, modelo: g.model });
-    } catch (e) { errores.push({ id: p.id, error: String(e.message || e).slice(0, 400) }); }
+  for (const k of colores) {
+    for (let v = 0; v < porColor; v++) {
+      try {
+        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v]);
+        const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
+        const slug = k.n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').slice(0, 20);
+        const url = await db.subirFoto(c, `ia-${Date.now()}-${slug}-${v + 1}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
+        fotos.push({ color: k.n, vista: v + 1, url });
+      } catch (e) { errores.push({ color: k.n, vista: v + 1, error: String(e.message || e).slice(0, 300) }); }
+    }
   }
-  await db.registrarEvento(c, 'fotos_ia', null, { src, fotos, errores, entorno });
+  await fin({ src, fotos, errores });
 };

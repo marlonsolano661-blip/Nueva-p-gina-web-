@@ -50,4 +50,9 @@
   }
   var api = { hexARgb: hexARgb, distancia: distancia, dominantes: dominantes, asignar: asignar };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else raiz.MFSugerirColor = api;
+  // En el panel también carga el botón "Crear fotos con IA" del formulario de producto
+  if (raiz.document && raiz.document.createElement) {
+    var s = raiz.document.createElement('script'); s.src = 'admin-fotos-ia.js'; s.defer = true;
+    (raiz.document.head || raiz.document.documentElement).appendChild(s);
+  }
 })(typeof window !== 'undefined' ? window : this);
