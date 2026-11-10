@@ -142,9 +142,21 @@
     // Botones − y + de la cantidad en la bolsa, en el mismo rosado
     'html body .qs button[data-n="q"]{background:#f7cfdd!important;color:#0a0a0a!important;border-color:#f7cfdd!important}',
     'html body .qs button[data-n="q"]:active{background:#f0b9cc!important}',
+    'html body .eg-sel.eg-aviso{animation:egAviso 1.6s ease-out}',
+    '@keyframes egAviso{0%,40%{border-color:#e89bb7;box-shadow:0 0 0 4px #f7cfdd}100%{box-shadow:0 0 0 0 rgba(247,207,221,0)}}',
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
+  // Botón "Elige tu talla" sin talla elegida: en vez del aviso, se desliza hasta la lista de tallas y la resalta.
+  window.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.btn[data-n="add"]') : null; if (!b) return;
+    var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.tl .sz.on')) return;
+    var sel = pi.querySelector('.eg-sel') || pi.querySelector('.tl'); if (!sel) return;
+    e.preventDefault(); e.stopPropagation();
+    sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    sel.classList.remove('eg-aviso'); void sel.offsetWidth; sel.classList.add('eg-aviso');
+    setTimeout(function () { try { sel.focus({ preventScroll: true }); } catch (x) { /* nada */ } }, 450);
+  }, true);
   var pend = false;
   function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ego(); } catch (e) { /* queda la ficha original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
