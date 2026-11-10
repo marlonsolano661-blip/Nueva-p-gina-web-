@@ -71,25 +71,29 @@ async function generar(ai, img, mime, prompt, logo) {
   throw new Error(fallos.join(' | '));
 }
 
+// Modelos de TEXTO por el AI Gateway de Netlify. Los Gemini 2.5 de texto NO están disponibles en el gateway
+// ("unable to find suitable provider"); se prueban los Gemini 3 y, de respaldo, los de imagen (que sí responden texto).
+const MODELOS_TEXTO = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash-image'];
+async function textoIA(ai, parts, etiqueta) {
+  for (const model of MODELOS_TEXTO) {
+    try {
+      const r = await ai.models.generateContent({ model, contents: [{ role: 'user', parts }], config: model.includes('image') ? { responseModalities: ['TEXT'] } : {} });
+      const ps = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
+      const txt = ps.map((x) => x.text || '').join(' ').trim();
+      if (txt) return txt;
+    } catch (e) { console.error(`[${etiqueta}] ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
+  }
+  return '';
+}
+const jsonDe = (txt) => JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+
 // Revisión previa: ¿el zapato está puesto (pies/piernas) y se ve la plantilla vacía? Ante cualquier duda o error: sin logo.
 const REVISION = 'Look at this shoe product photo and answer ONLY with JSON like {"pies": true, "plantilla": false}. ' +
   '"pies": true if any human foot, toe or leg is inside, wearing or touching the shoe. ' +
   '"plantilla": true if the inner insole (footbed) of at least one shoe is clearly visible and empty (nothing on it).';
 async function admiteLogo(ai, img, mime) {
-  for (const model of ['gemini-2.5-flash', 'gemini-2.5-flash-lite']) {
-    try {
-      const r = await ai.models.generateContent({
-        model,
-        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: REVISION }] }],
-        config: { responseMimeType: 'application/json' },
-      });
-      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
-      const txt = parts.map((x) => x.text || '').join('');
-      const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-      return j.pies === false && j.plantilla === true;
-    } catch (e) { console.error(`[fotos-ia] revisión ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
-  }
-  return false;
+  const txt = await textoIA(ai, [{ inlineData: { mimeType: mime, data: img } }, { text: REVISION }], 'fotos-ia revisión');
+  try { const j = jsonDe(txt); return j.pies === false && j.plantilla === true; } catch (e) { return false; }
 }
 
 // Cerebro 1: ficha técnica del zapato, escrita por un modelo experto a partir de la foto original.
@@ -99,15 +103,8 @@ const ANALISIS = 'You are a senior footwear product expert. Study ONLY the shoe 
   '(patent, matte, suede, transparent vinyl, metallic...), insole and sole edge, embellishments. Do not mention people, background, ' +
   'props or the color of the main material.';
 async function describir(ai, img, mime) {
-  for (const model of ['gemini-2.5-pro', 'gemini-2.5-flash']) {
-    try {
-      const r = await ai.models.generateContent({ model, contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: ANALISIS }] }] });
-      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
-      const txt = parts.map((x) => x.text || '').join(' ').replace(/\s+/g, ' ').trim();
-      if (txt.length > 40) return txt.slice(0, 1200);
-    } catch (e) { console.error(`[fotos-ia] análisis ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
-  }
-  return '';
+  const txt = (await textoIA(ai, [{ inlineData: { mimeType: mime, data: img } }, { text: ANALISIS }], 'fotos-ia análisis')).replace(/\s+/g, ' ').trim();
+  return txt.length > 40 ? txt.slice(0, 1200) : '';
 }
 
 // Cerebro 3: revisor. Compara la foto creada con la original. Si el revisor falla o no responde, la foto se acepta.
@@ -118,20 +115,8 @@ const CONTROL = (color, par, conLogo) => 'Image A is the reference product photo
   (conLogo ? 'the MF logo appears anywhere other than the inner insole, appears more than once, or is deformed; ' : 'B contains any logo, text or watermark; ') +
   'or B looks broken, blurry or unrealistic. Otherwise "ok" is true.';
 async function revisar(ai, img, mime, g, prompt) {
-  for (const model of ['gemini-2.5-flash', 'gemini-2.5-flash-lite']) {
-    try {
-      const r = await ai.models.generateContent({
-        model,
-        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { inlineData: { mimeType: g.mime, data: g.buf.toString('base64') } }, { text: prompt }] }],
-        config: { responseMimeType: 'application/json' },
-      });
-      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
-      const txt = parts.map((x) => x.text || '').join('');
-      const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-      return { ok: j.ok !== false, motivo: String(j.motivo || '').slice(0, 200) };
-    } catch (e) { console.error(`[fotos-ia] revisión final ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
-  }
-  return { ok: true, motivo: 'sin revisión' };
+  const txt = await textoIA(ai, [{ inlineData: { mimeType: mime, data: img } }, { inlineData: { mimeType: g.mime, data: g.buf.toString('base64') } }, { text: prompt }], 'fotos-ia revisión final');
+  try { const j = jsonDe(txt); return { ok: j.ok !== false, motivo: String(j.motivo || '').slice(0, 200) }; } catch (e) { return { ok: true, motivo: 'sin revisión' }; }
 }
 
 const RE_TRABAJO = /^IA-[a-z0-9]{6,24}$/;
