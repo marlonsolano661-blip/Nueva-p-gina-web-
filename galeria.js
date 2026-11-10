@@ -152,6 +152,9 @@
     'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn,html body .dr .dcb .btn{background:#02836f!important;color:#fff!important;border:2px solid #02836f!important}',
     'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .dr .dcb .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#016a5a!important;border-color:#016a5a!important}',
     'html body #app .stk.eg-stk .btn{border:0!important}',
+    'html body .btn.eg-carga[data-n="add"],html body .btn.eg-carga[data-n="add"]:active,html body .btn.eg-carga[data-n="add"]:hover{position:relative;color:transparent!important;background:#cdc7c8!important;border-color:#cdc7c8!important;pointer-events:none}',
+    "html body .btn.eg-carga[data-n='add']::after{content:'';position:absolute;left:50%;top:50%;width:1.35rem;height:1.35rem;margin:-.7rem 0 0 -.7rem;border:2px solid #3a3a3a;border-top-color:transparent;border-radius:50%;animation:egGira .7s linear infinite}",
+    '@keyframes egGira{to{transform:rotate(360deg)}}',
     'html body .eg-sel.eg-aviso{animation:egAviso 1.6s ease-out}',
     'html body .eg-dd .eg-sel{text-align:left;cursor:pointer}',
     "html body .eg-dd.ab .eg-sel{border-color:#111;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='1.8'%3E%3Cpath d='M6 15l6-6 6 6'/%3E%3C/svg%3E\")}",
@@ -165,10 +168,27 @@
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
-  // Botón "Elige tu talla" sin talla elegida: en vez del aviso, se desliza hasta las tallas y abre la lista (como EGO).
+  // Botón "Elige tu talla / Agregar a la bolsa" como EGO: sin talla baja hasta las tallas y abre la lista; con talla, círculo cargando y se abre la bolsa.
   window.addEventListener('click', function (e) {
     var b = e.target && e.target.closest ? e.target.closest('.btn[data-n="add"]') : null; if (!b) return;
-    var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.tl .sz.on')) return;
+    var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
+    if (pi.querySelector('.tl .sz.on')) {
+      // Con talla: como EGO, el botón muestra un círculo cargando y luego se abre la ventana de la bolsa
+      e.preventDefault(); e.stopPropagation();
+      if (b.classList.contains('eg-carga')) return;
+      b.classList.add('eg-carga'); b.setAttribute('aria-busy', 'true');
+      var pid = b.getAttribute('data-id');
+      setTimeout(function () {
+        var ok = false;
+        try { ok = add(pid); } catch (x) { ok = false; }
+        b.classList.remove('eg-carga'); b.removeAttribute('aria-busy');
+        if (!ok) return;
+        try { draw(); } catch (x) { /* nada */ }
+        try { bagBump(); } catch (x) { /* nada */ }
+        try { openBag(); } catch (x) { /* nada */ }
+      }, 750);
+      return;
+    }
     var dd = pi.querySelector('.eg-dd'), sel = dd ? dd.querySelector('.eg-sel') : pi.querySelector('.tl'); if (!sel) return;
     e.preventDefault(); e.stopPropagation();
     if (dd && dd.abrir) dd.abrir(true);
