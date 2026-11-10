@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ideas de outfits · Marlon Footwear</title>
+<meta name="description" content="Looks completos para combinar tus tacones Marlon Footwear. Mira cada outfit de frente y de lado y agrega tu par a la bolsa.">
+<meta property="og:title" content="Ideas de outfits · Marlon Footwear"><meta property="og:type" content="website">
+<link rel="icon" href="assets/brand/avatar-negro-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Figtree:wght@400;500;600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Pasarela de outfits. Las fotos de estudio tienen el mismo fondo que la página,
+   así las modelos quedan en fila sin recortarlas. */
+:root{--k:#0a0a0a;--w:#fff;--g:#6b6b66;--l:#e4e4e0;--bg:#f6f6f4;--o:#b08d57;--err:#a3261b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--k);font:400 1rem/1.6 Figtree,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--k);outline-offset:3px}
+.top{background:var(--w);border-bottom:1px solid var(--l);padding:calc(.8rem + env(safe-area-inset-top)) 1.1rem .8rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.top img{height:2.1rem;width:auto;display:block}
+.top a.v{font:500 .72rem Jost,Helvetica,sans-serif;letter-spacing:.22em;text-transform:uppercase;text-decoration:none;color:var(--k)}
+.wrap{max-width:1240px;margin:0 auto;padding:1.8rem 1.2rem 3.5rem}
+.head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:.6rem 2rem}
+.k{font:500 .7rem Jost,Helvetica,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--o);margin:0 0 .5rem}
+h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;margin:0;text-wrap:balance}
+.lead{max-width:42ch;margin:0;color:var(--g)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:1.4rem;margin-top:1.4rem}
+@media(min-width:960px){.layout{grid-template-columns:minmax(0,1fr) 360px;gap:2rem;align-items:start}}
+
+/* Pasarela */
+.runway{user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.stage{position:relative;height:clamp(440px,72vh,720px);overflow:hidden}
+.fig{position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:3/4;transform-origin:50% 100%;cursor:pointer;
+  transition:transform .7s cubic-bezier(.2,.7,.2,1),filter .7s,opacity .7s;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 76%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 24%,#000 76%,transparent)}
+.fig img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:opacity .35s}
+.fig[aria-current="true"]{cursor:default}
+.ctrl{display:flex;align-items:center;gap:.9rem;margin-top:.9rem}
+.arrow{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--k);background:transparent;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;transition:background .2s,color .2s}
+.arrow:hover{background:var(--k);color:var(--w)}
+.steps{flex:1;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;min-width:0}
+.step{background:none;border:0;border-top:1px solid var(--l);padding:.5rem 0 0;cursor:pointer;text-align:left;font:500 .66rem Jost,Helvetica,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.step[aria-current="true"]{border-top:2px solid var(--k);color:var(--k)}
+
+/* Panel */
+.panel{background:var(--w);border:1px solid var(--l);padding:1.3rem;display:grid;gap:1.15rem}
+@media(min-width:960px){.panel{position:sticky;top:1.2rem}}
+.p-top{display:flex;justify-content:space-between;align-items:baseline}
+.p-top h2{font:500 .7rem Jost,Helvetica,sans-serif;letter-spacing:.3em;text-transform:uppercase;margin:0;color:var(--o)}
+.p-top span{font:500 .72rem Jost,Helvetica,sans-serif;letter-spacing:.12em;color:var(--g)}
+.look-name{font:500 2.1rem/1 "Cormorant Garamond",Georgia,serif;margin:0}
+.lbl{font:500 .66rem Jost,Helvetica,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--g);margin:0 0 .5rem}
+.angles{display:flex;gap:.5rem}
+.angle{border:1px solid var(--l);background:var(--bg);padding:0;width:62px;cursor:pointer;display:grid;text-align:center}
+.angle img{width:100%;aspect-ratio:3/4;object-fit:cover}
+.angle small{font-size:.7rem;padding:.2rem 0}
+.angle[aria-pressed="true"]{border-color:var(--k);box-shadow:0 0 0 1px var(--k)}
+.prod{display:grid;grid-template-columns:88px minmax(0,1fr);gap:.9rem;align-items:center;text-decoration:none;color:inherit}
+.prod img{width:88px;height:88px;object-fit:cover;background:var(--bg)}
+.prod strong{display:block;font:600 1.35rem/1.1 "Cormorant Garamond",Georgia,serif}
+.prod .meta{display:block;font-size:.85rem;color:var(--g);margin-top:.2rem}
+.prod .price{display:block;font-weight:600;margin-top:.3rem;font-variant-numeric:tabular-nums}
+.sizes{display:flex;flex-wrap:wrap;gap:.4rem}
+.size{min-width:44px;height:40px;border:1px solid var(--l);background:transparent;cursor:pointer;font-weight:500;font-variant-numeric:tabular-nums}
+.size[aria-pressed="true"]{background:var(--k);color:var(--w);border-color:var(--k)}
+.size:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.need .size:not(:disabled){border-color:var(--err)}
+.hint{font-size:.8rem;color:var(--err);margin:.4rem 0 0;min-height:1.2em}
+.pieces{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.35rem}
+.pieces li{font-size:.82rem;padding:.3rem .65rem;background:var(--bg);border:1px solid var(--l)}
+.actions{display:grid;gap:.5rem}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .75rem Jost,Helvetica,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn.o{background:transparent;color:var(--k);min-height:44px}
+.toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--k);color:var(--w);padding:.75rem 1rem;font-size:.9rem;display:flex;gap:1rem;align-items:center;transition:.3s;z-index:20;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast a{color:var(--w);font-weight:600}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header class="top"><a href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="v" href="index.html">← Volver a la tienda</a></header>
+
+<div class="wrap">
+  <div class="head">
+    <div><p class="k">Ideas de outfits</p><h1>Cómo combinar tus tacones</h1></div>
+    <p class="lead">Looks completos de pies a cabeza. Cambia de look con las flechas o deslizando, y mira cada outfit de frente y de lado.</p>
+  </div>
+  <div class="layout">
+    <section class="runway" aria-label="Pasarela de outfits">
+      <div class="stage" id="stage"></div>
+      <div class="ctrl">
+        <button class="arrow" id="prev" type="button" aria-label="Look anterior">←</button>
+        <div class="steps" id="steps"></div>
+        <button class="arrow" id="next" type="button" aria-label="Look siguiente">→</button>
+      </div>
+    </section>
+    <aside class="panel" aria-live="polite">
+      <div class="p-top"><h2>En este look</h2><span id="count"></span></div>
+      <p class="look-name" id="lookName"></p>
+      <div id="anglesWrap"><p class="lbl">Ángulos</p><div class="angles" id="angles"></div></div>
+      <a class="prod" id="prod" href="index.html"><img id="prodImg" src="" alt=""><div><strong id="prodName"></strong><span class="meta" id="prodMeta"></span><span class="price" id="prodPrice"></span></div></a>
+      <div id="sizeBox"><p class="lbl">Elige tu talla</p><div class="sizes" id="sizes"></div><p class="hint" id="hint"></p></div>
+      <div><p class="lbl">Para combinar</p><ul class="pieces" id="pieces"></ul></div>
+      <div class="actions">
+        <button class="btn" id="add" type="button">Agregar a la bolsa</button>
+        <a class="btn o" id="seeProd" href="index.html">Ver el tacón en la tienda</a>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"><span>Añadido a la bolsa</span><a href="index.html">Ver bolsa</a></div>
+
+<script src="outfits-img/negro-jean-frente.js"></script>
+<script src="outfits-img/negro-jean-lado.js"></script>
+<script src="outfits-img/camel-vestido-frente.js"></script>
+<script src="outfits-img/camel-falda-frente.js"></script>
+<script>
+/* ================================================================
+   OUTFITS — para agregar o cambiar un look edita solo esta lista.
+   producto: id del tacón en el catálogo (panel de la tienda)
+   color:    nombre del color tal como está en el catálogo
+   angulos:  fotos de la modelo; la primera es la de la pasarela
+   ================================================================ */
+var OUTFITS = [
+  { nombre: "Jean clásico", producto: "sandalia-miel-elite-mf", color: "Negro",
+    angulos: [["Frente", "negro-jean-frente"], ["Lado", "negro-jean-lado"]],
+    piezas: ["Camisa blanca", "Jean recto tiro alto", "Cinturón blanco", "Accesorios dorados"] },
+  { nombre: "Vestido camel", producto: "sandalia-miel-elite-mf", color: "Camel",
+    angulos: [["Frente", "camel-vestido-frente"]],
+    piezas: ["Vestido midi de punto acanalado", "Pulseras doradas", "Aretes de argolla"] },
+  { nombre: "Falda de jean", producto: "sandalia-miel-elite-mf", color: "Camel",
+    angulos: [["Frente", "camel-falda-frente"]],
+    piezas: ["Top crema de tiras", "Minifalda de jean", "Cinturón camel"] }
+];
+/* Datos de respaldo si el catálogo no responde (el precio real siempre lo confirma el servidor al pagar). */
+var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name: "Sandalia Miel Élite MF", price: 199900, colors: [], tallas: ["34","35","36","37","38","39","40"] } };
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+  var foto = function (k) { return (window.OUTFIT_IMG && OUTFIT_IMG[k]) || ""; };
+  var CAT = {};
+  var prod = function (id) { return CAT[id] || RESPALDO[id] || { id: id, name: "Tacón MF", price: null, colors: [], tallas: [] }; };
+  var colorDe = function (p, n) { return (p.colors || []).filter(function (c) { return String(c.n).toLowerCase() === String(n).toLowerCase(); })[0] || {}; };
+  var n = OUTFITS.length, active = 0, angle = 0, size = null;
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var figs = OUTFITS.map(function (L, i) {
+    var b = document.createElement("div"); b.className = "fig";
+    b.innerHTML = '<img src="' + foto(L.angulos[0][1]) + '" alt="Modelo con el look ' + L.nombre + '">';
+    b.addEventListener("click", function () { if (i !== active) go(i); });
+    $("stage").appendChild(b); return b;
+  });
+  var steps = OUTFITS.map(function (L, i) {
+    var s = document.createElement("button"); s.type = "button"; s.className = "step";
+    s.textContent = String(i + 1).padStart(2, "0") + " · " + L.nombre;
+    s.addEventListener("click", function () { go(i); });
+    $("steps").appendChild(s); return s;
+  });
+
+  function layout() {
+    var w = $("stage").clientWidth, figW = $("stage").clientHeight * 0.75, gap = Math.min(figW * 0.5, w * 0.3);
+    figs.forEach(function (f, i) {
+      var k = ((i - active) % n + n + Math.floor(n / 2)) % n - Math.floor(n / 2), a = Math.abs(k);
+      f.style.transform = "translateX(calc(-50% + " + (k * gap) + "px)) scale(" + (1 - a * 0.14) + ")";
+      f.style.filter = a ? "blur(" + (a * 2.5) + "px)" : "none";
+      f.style.opacity = a > 2 ? 0 : (a ? 0.5 : 1);
+      f.style.zIndex = 10 - a;
+      f.setAttribute("aria-current", a === 0); f.setAttribute("aria-hidden", a !== 0);
+    });
+    steps.forEach(function (s, i) { s.setAttribute("aria-current", i === active); });
+  }
+
+  function panel() {
+    var L = OUTFITS[active], p = prod(L.producto), c = colorDe(p, L.color);
+    $("count").textContent = (active + 1) + " / " + n;
+    $("lookName").textContent = L.nombre;
+    $("prodImg").src = c.img || p.img || foto(L.angulos[0][1]); $("prodImg").alt = p.name + " color " + L.color;
+    $("prodName").textContent = p.name;
+    $("prodMeta").textContent = "Color " + L.color;
+    $("prodPrice").textContent = p.price != null ? fmt(p.price) : "";
+    var href = "index.html?producto=" + encodeURIComponent(L.producto);
+    $("prod").href = href; $("seeProd").href = href;
+    $("add").textContent = "Agregar a la bolsa" + (p.price != null ? " · " + fmt(p.price) : "");
+    $("pieces").innerHTML = L.piezas.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    $("anglesWrap").hidden = L.angulos.length < 2;
+    $("angles").innerHTML = L.angulos.map(function (a, i) {
+      return '<button class="angle" type="button" data-a="' + i + '" aria-pressed="' + (i === angle) + '"><img src="' + foto(a[1]) + '" alt=""><small>' + a[0] + "</small></button>";
+    }).join("");
+    var todas = ["34", "35", "36", "37", "38", "39", "40"], hay = p.tallas && p.tallas.length ? p.tallas.map(String) : todas;
+    if (size && hay.indexOf(size) < 0) size = null;
+    $("sizes").innerHTML = todas.map(function (s) {
+      var ok = hay.indexOf(s) > -1;
+      return '<button class="size" type="button" data-s="' + s + '" aria-pressed="' + (s === size) + '"' + (ok ? "" : ' disabled aria-label="Talla ' + s + ' agotada"') + ">" + s + "</button>";
+    }).join("");
+  }
+
+  function setAngle(i) {
+    angle = i; var img = figs[active].querySelector("img"); img.style.opacity = 0;
+    setTimeout(function () { img.src = foto(OUTFITS[active].angulos[i][1]); img.style.opacity = 1; }, reduce ? 0 : 200);
+    Array.prototype.forEach.call(document.querySelectorAll(".angle"), function (b) { b.setAttribute("aria-pressed", b.dataset.a == i); });
+  }
+  function go(i) {
+    if (angle) figs[active].querySelector("img").src = foto(OUTFITS[active].angulos[0][1]);
+    active = (i + n) % n; angle = 0; $("hint").textContent = ""; $("sizeBox").classList.remove("need");
+    layout(); panel();
+  }
+
+  $("prev").addEventListener("click", function () { go(active - 1); });
+  $("next").addEventListener("click", function () { go(active + 1); });
+  document.addEventListener("keydown", function (e) { if (e.key === "ArrowLeft") go(active - 1); if (e.key === "ArrowRight") go(active + 1); });
+  $("angles").addEventListener("click", function (e) { var b = e.target.closest(".angle"); if (b) setAngle(+b.dataset.a); });
+  $("sizes").addEventListener("click", function (e) {
+    var b = e.target.closest(".size"); if (!b || b.disabled) return;
+    size = b.dataset.s; $("hint").textContent = ""; $("sizeBox").classList.remove("need");
+    Array.prototype.forEach.call(document.querySelectorAll(".size"), function (x) { x.setAttribute("aria-pressed", x === b); });
+  });
+  var x0 = null;
+  $("stage").addEventListener("pointerdown", function (e) { x0 = e.clientX; });
+  $("stage").addEventListener("pointerup", function (e) { if (x0 === null) return; var dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1)); });
+
+  /* Agrega a la misma bolsa de la tienda (mf_cart). El servidor recalcula el precio al pagar. */
+  $("add").addEventListener("click", function () {
+    if (!size) { $("hint").textContent = "Elige tu talla para continuar."; $("sizeBox").classList.add("need"); return; }
+    var L = OUTFITS[active], p = prod(L.producto), c = colorDe(p, L.color), cart = [];
+    try { cart = JSON.parse(localStorage.getItem("mf_cart")) || []; } catch (e) {}
+    var l = cart.filter(function (x) { return String(x.id) === String(p.id) && x.talla === size && (x.color || "") === L.color; })[0];
+    if (l) l.q++; else cart.push({ id: p.id, name: p.name, price: p.price, img: c.img || p.img || "", talla: size, color: L.color, q: 1 });
+    try { localStorage.setItem("mf_cart", JSON.stringify(cart)); } catch (e) {}
+    var t = $("toast"); t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("on"); }, 3500);
+  });
+
+  addEventListener("resize", layout);
+  layout(); panel();
+  /* Nombre, precio, fotos y tallas disponibles desde el catálogo de la tienda */
+  fetch((window.MF_API_BASE || "") + "/api/catalogo").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d || !Array.isArray(d.productos)) return;
+    d.productos.forEach(function (p) { CAT[p.id] = p; }); panel();
+  }).catch(function () {});
+})();
+</script>
+</body></html>
