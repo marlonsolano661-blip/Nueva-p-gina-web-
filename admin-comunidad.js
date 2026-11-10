@@ -66,5 +66,5 @@
    Si no cargan, el resto del panel funciona igual. */
 (function () {
   if (window.__mfVitrinaPanel || !document.getElementById('tabs')) return; window.__mfVitrinaPanel = 1;
-  ['DATA/recortes.js', 'admin-vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
+  ['DATA/recortes.js', 'admin-vitrina.js', 'admin-paleta.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
 })();
