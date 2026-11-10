@@ -12,7 +12,21 @@ const { cfg } = configMod;
 const json = (status, body) => new Response(JSON.stringify(body), {
   status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
 });
-const MODELOS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+// Modelos de TEXTO por el AI Gateway de Netlify. Los Gemini 2.5 de texto NO están disponibles en el gateway
+// ("unable to find suitable provider"); se prueban los Gemini 3 y, de respaldo, los de imagen (que sí responden texto).
+const MODELOS_TEXTO = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash-image'];
+async function textoIA(ai, parts, etiqueta) {
+  for (const model of MODELOS_TEXTO) {
+    try {
+      const r = await ai.models.generateContent({ model, contents: [{ role: 'user', parts }], config: model.includes('image') ? { responseModalities: ['TEXT'] } : {} });
+      const ps = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
+      const txt = ps.map((x) => x.text || '').join(' ').trim();
+      if (txt) return txt;
+    } catch (e) { console.error(`[${etiqueta}] ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
+  }
+  return '';
+}
+const jsonDe = (txt) => JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
 
 function fuenteValida(c, src) {
   return src.startsWith(`${c.db}/storage/v1/object/public/productos/`) || /^https:\/\/cdn\.shopify\.com\/[^\s"'<>]{4,400}$/.test(src);
@@ -52,23 +66,16 @@ export default async (req) => {
     const usados = prods.map((p) => String(p.nombre || '').trim()).filter(Boolean).slice(0, 200);
     const enUso = new Set(usados.map((n) => n.toLowerCase()));
     const ai = new GoogleGenAI({}); // GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL los pone el AI Gateway
-    for (const model of MODELOS) {
-      try {
-        const g = await ai.models.generateContent({
-          model,
-          contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: PROMPT(usados) }] }],
-          config: { responseMimeType: 'application/json' },
-        });
-        const parts = (g.candidates && g.candidates[0] && g.candidates[0].content && g.candidates[0].content.parts) || [];
-        const txt = parts.map((x) => x.text || '').join('');
-        const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-        let nombre = String(j.nombre || '').replace(/["<>]/g, '').trim().slice(0, 60);
-        const descripcion = String(j.descripcion || '').replace(/[<>]/g, '').trim().slice(0, 400);
-        if (!nombre || !descripcion) continue;
+    const txt = await textoIA(ai, [{ inlineData: { mimeType: mime, data: img } }, { text: PROMPT(usados) }], 'textos-ia');
+    try {
+      const j = jsonDe(txt);
+      let nombre = String(j.nombre || '').replace(/["<>]/g, '').trim().slice(0, 60);
+      const descripcion = String(j.descripcion || '').replace(/[<>]/g, '').trim().slice(0, 400);
+      if (nombre && descripcion) {
         if (enUso.has(nombre.toLowerCase())) nombre = nombre + ' MF';
         return json(200, { nombre, descripcion });
-      } catch (e) { console.error(`[textos-ia] ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
-    }
+      }
+    } catch (e) { console.error('[textos-ia] respuesta sin JSON válido'); }
     return json(502, { error: 'La IA no pudo escribir el nombre esta vez. Inténtalo de nuevo.' });
   } catch (e) {
     console.error('[textos-ia]', e && e.message ? e.message : e);
