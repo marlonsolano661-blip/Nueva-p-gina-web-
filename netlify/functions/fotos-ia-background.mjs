@@ -6,6 +6,8 @@
 // soloPar: solo el par junto. Prompt fijo que sirve para cualquier zapato.
 // Logo MF en la plantilla: solo si la foto original muestra el zapato SIN pies/piernas y con la plantilla vacía a la vista
 // (una revisión previa con IA lo decide). Si no, el logo ni se envía, así que no puede aparecer en la piel ni en el fondo.
+// Tres pasos por tanda ("varios cerebros"): 1) un modelo experto describe el zapato con precisión (ficha técnica que se suma
+// al prompt), 2) el modelo de imagen crea la foto, 3) un revisor la compara con la original y, si falla, se rehace una vez.
 // Las fotos quedan en el bucket "productos" y el resultado en eventos (tipo "fotos_ia", referencia = trabajo).
 import crypto from 'crypto';
 import process from 'process';
@@ -90,6 +92,48 @@ async function admiteLogo(ai, img, mime) {
   return false;
 }
 
+// Cerebro 1: ficha técnica del zapato, escrita por un modelo experto a partir de la foto original.
+const ANALISIS = 'You are a senior footwear product expert. Study ONLY the shoe in this photo and write a precise technical description ' +
+  'in English for an image generator, 60 to 110 words, plain text: shoe type, toe shape, heel type and approximate height in cm, ' +
+  'platform (yes or no, approximate front height), every strap (where it goes, width, how many), buckle or closure, materials and finish ' +
+  '(patent, matte, suede, transparent vinyl, metallic...), insole and sole edge, embellishments. Do not mention people, background, ' +
+  'props or the color of the main material.';
+async function describir(ai, img, mime) {
+  for (const model of ['gemini-2.5-pro', 'gemini-2.5-flash']) {
+    try {
+      const r = await ai.models.generateContent({ model, contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: ANALISIS }] }] });
+      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
+      const txt = parts.map((x) => x.text || '').join(' ').replace(/\s+/g, ' ').trim();
+      if (txt.length > 40) return txt.slice(0, 1200);
+    } catch (e) { console.error(`[fotos-ia] análisis ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
+  }
+  return '';
+}
+
+// Cerebro 3: revisor. Compara la foto creada con la original. Si el revisor falla o no responde, la foto se acepta.
+const CONTROL = (color, par, conLogo) => 'Image A is the reference product photo. Image B was generated from it. Answer ONLY with JSON like ' +
+  '{"ok": true, "motivo": "short reason"}. "ok" must be false if: B shows a different shoe model than A (different straps, toe, heel, ' +
+  `platform or closure); the main color of the shoe in B is clearly not ${color}; ` +
+  (par ? 'B shows any person, foot, leg or hand, or does not show two shoes, or the background is not white; ' : '') +
+  (conLogo ? 'the MF logo appears anywhere other than the inner insole, appears more than once, or is deformed; ' : 'B contains any logo, text or watermark; ') +
+  'or B looks broken, blurry or unrealistic. Otherwise "ok" is true.';
+async function revisar(ai, img, mime, g, prompt) {
+  for (const model of ['gemini-2.5-flash', 'gemini-2.5-flash-lite']) {
+    try {
+      const r = await ai.models.generateContent({
+        model,
+        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { inlineData: { mimeType: g.mime, data: g.buf.toString('base64') } }, { text: prompt }] }],
+        config: { responseMimeType: 'application/json' },
+      });
+      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
+      const txt = parts.map((x) => x.text || '').join('');
+      const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+      return { ok: j.ok !== false, motivo: String(j.motivo || '').slice(0, 200) };
+    } catch (e) { console.error(`[fotos-ia] revisión final ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
+  }
+  return { ok: true, motivo: 'sin revisión' };
+}
+
 const RE_TRABAJO = /^IA-[a-z0-9]{6,24}$/;
 const MAX_FOTOS_DIA = 40; // fotos por día entre todas las tandas, para no gastar créditos de más
 
@@ -145,18 +189,31 @@ export default async (req) => {
   // Con pies de la modelo o sin plantilla vacía a la vista: sin logo en las vistas que copian la foto original.
   // El par junto no lleva personas, así que ahí siempre puede ir el logo en la plantilla.
   const logoPose = logo && vistas.some((v) => v < 2) && (await admiteLogo(ai, img, mime)) ? logo : null;
+  const ficha = await describir(ai, img, mime);
+  const FICHA = ficha ? 'SHOE TECHNICAL DESCRIPTION (expert analysis of the reference; follow it exactly): ' + ficha + ' ' : '';
+  const t0 = Date.now();
   const fotos = [], errores = [];
   for (const k of colores) {
     for (const v of vistas) {
       const lg = v === 2 ? logo : logoPose;
       try {
-        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v] + ' ' + (lg ? MARCA : SIN_MARCA), lg);
+        const prompt = BASE + FICHA + COLOR(k.n, k.h) + VISTAS[v] + ' ' + (lg ? MARCA : SIN_MARCA);
+        let g = await generar(ai, img, mime, prompt, lg);
+        let rev = await revisar(ai, img, mime, g, CONTROL(k.n, v === 2, !!lg));
+        // Si el revisor la rechaza, se rehace una vez (mientras quede tiempo de sobra en la función de fondo)
+        if (!rev.ok && Date.now() - t0 < 9 * 60 * 1000) {
+          try {
+            const g2 = await generar(ai, img, mime, prompt + ' IMPORTANT, fix this problem from a previous attempt: ' + rev.motivo, lg);
+            const rev2 = await revisar(ai, img, mime, g2, CONTROL(k.n, v === 2, !!lg));
+            g = g2; rev = rev2;
+          } catch (e) { console.error('[fotos-ia] el segundo intento falló; se queda el primero'); }
+        }
         const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
         const slug = k.n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').slice(0, 20);
         const url = await db.subirFoto(c, `ia-${Date.now()}-${slug}-${v + 1}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
-        fotos.push({ color: k.n, vista: v + 1, url });
+        fotos.push({ color: k.n, vista: v + 1, url, revisada: rev.ok, nota: rev.ok ? '' : rev.motivo });
       } catch (e) { errores.push({ color: k.n, vista: v + 1, error: String(e.message || e).slice(0, 300) }); }
     }
   }
-  await fin({ src, fotos, errores, marca: !!(logo || logoPose) });
+  await fin({ src, fotos, errores, marca: !!(logo || logoPose), ficha });
 };
