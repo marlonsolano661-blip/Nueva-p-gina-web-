@@ -3,7 +3,8 @@
 // La llama el botón "Crear fotos con IA" del panel, con la clave del panel (ADMIN_TOKEN):
 //   POST /api/fotos-ia-background  { src: <foto principal>, trabajo: "IA-xxxx", colores: [{n,h}], porColor: 1|2 }
 // Por cada color crea 1 foto (misma pose) o 2 (misma pose + vista lateral) con un prompt fijo que sirve para cualquier zapato.
-// Cada foto lleva el logo MF estampado en la plantilla (la IA recibe el logo de la tienda como segunda imagen).
+// Logo MF en la plantilla: solo si la foto original muestra el zapato SIN pies/piernas y con la plantilla vacía a la vista
+// (una revisión previa con IA lo decide). Si no, el logo ni se envía, así que no puede aparecer en la piel ni en el fondo.
 // Las fotos quedan en el bucket "productos" y el resultado en eventos (tipo "fotos_ia", referencia = trabajo).
 import crypto from 'crypto';
 import process from 'process';
@@ -22,10 +23,11 @@ const BASE = 'You are editing a professional e-commerce product photo of a shoe 
   'Photorealistic, sharp focus, high detail, full shoe visible. ';
 // Marca: el logo MF estampado en la plantilla, como en los zapatos de lujo. Si no llega el logo, no se pide.
 const MARCA = 'BRAND STAMP: the second attached image is the MF brand logo (the letters M and F joined, thin lines). Print this exact ' +
-  'logo small and centered on the visible insole (footbed) of the shoe, near the heel area, like a luxury brand stamp printed in black ' +
+  'logo small and centered ONLY on the empty inner insole (footbed) of the shoe, near the heel area, like a luxury brand stamp printed in black ' +
   '(use gold or white only if the insole is black or very dark). It must follow the perspective and curve of the insole and look ' +
-  'printed on the material. Copy the logo shape exactly; do not redraw, rename or add letters. If no insole is visible, do not add the ' +
-  'logo anywhere. No other text, logos or watermarks anywhere in the image. ';
+  'printed on the material. Copy the logo shape exactly; do not redraw, rename or add letters. Never put it on skin, feet, legs, straps, ' +
+  'the outer sole, the heel, the box or the background. If no empty insole is visible, do not add the logo anywhere. ' +
+  'No other text, logos or watermarks anywhere in the image. ';
 const SIN_MARCA = 'No text, logos or watermarks. ';
 const LOGO_URL = `${process.env.URL || 'https://tienda.mfcol.com'}/assets/brand/avatar-blanco-512.png`;
 const COLOR = (n, h) => `Make the shoe in the color ${n} (approximately ${h}): recolor ONLY the main material of the shoe (upper, straps, ` +
@@ -55,6 +57,27 @@ async function generar(ai, img, mime, prompt, logo) {
     } catch (e) { fallos.push(`${model}: ${String(e && e.message || e).slice(0, 160)}`); }
   }
   throw new Error(fallos.join(' | '));
+}
+
+// Revisión previa: ¿el zapato está puesto (pies/piernas) y se ve la plantilla vacía? Ante cualquier duda o error: sin logo.
+const REVISION = 'Look at this shoe product photo and answer ONLY with JSON like {"pies": true, "plantilla": false}. ' +
+  '"pies": true if any human foot, toe or leg is inside, wearing or touching the shoe. ' +
+  '"plantilla": true if the inner insole (footbed) of at least one shoe is clearly visible and empty (nothing on it).';
+async function admiteLogo(ai, img, mime) {
+  for (const model of ['gemini-2.5-flash', 'gemini-2.5-flash-lite']) {
+    try {
+      const r = await ai.models.generateContent({
+        model,
+        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: REVISION }] }],
+        config: { responseMimeType: 'application/json' },
+      });
+      const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
+      const txt = parts.map((x) => x.text || '').join('');
+      const j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+      return j.pies === false && j.plantilla === true;
+    } catch (e) { console.error(`[fotos-ia] revisión ${model}: ${String(e && e.message || e).slice(0, 160)}`); }
+  }
+  return false;
 }
 
 const RE_TRABAJO = /^IA-[a-z0-9]{6,24}$/;
@@ -107,6 +130,8 @@ export default async (req) => {
   try { const l = await fetch(LOGO_URL, { signal: AbortSignal.timeout(10000) }); if (l.ok) logo = Buffer.from(await l.arrayBuffer()).toString('base64'); } catch (e) { logo = null; }
   if (!logo) console.error('[fotos-ia] no se pudo leer el logo; las fotos salen sin marca');
   const ai = new GoogleGenAI({}); // GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL los pone el AI Gateway
+  // Con pies de la modelo o sin plantilla vacía a la vista: fotos sin logo.
+  if (logo && !(await admiteLogo(ai, img, mime))) logo = null;
   const fotos = [], errores = [];
   for (const k of colores) {
     for (let v = 0; v < porColor; v++) {
