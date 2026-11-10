@@ -139,6 +139,9 @@
     'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn{background:#f7cfdd!important;color:#0a0a0a!important;border:2px solid #f7cfdd!important}',
     'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#f0b9cc!important;border-color:#f0b9cc!important}',
     'html body #app .stk.eg-stk .btn{border:0!important}',
+    // Botones − y + de la cantidad en la bolsa, en el mismo rosado
+    'html body .qs button[data-n="q"]{background:#f7cfdd!important;color:#0a0a0a!important;border-color:#f7cfdd!important}',
+    'html body .qs button[data-n="q"]:active{background:#f0b9cc!important}',
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
