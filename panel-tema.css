@@ -15,3 +15,5 @@ html body nav.tabs button:hover:not(:disabled), html body nav.tabs button:active
 html body nav.tabs button .ic { background:var(--g1); }
 html body button.claro, html body .btn.o, html body .boton.claro, html body .pal, html body input, html body select, html body textarea { background:var(--marfil); }
 html body button.claro:hover:not(:disabled) { background:var(--g1); }
+/* Resumen "Así va tu tienda", finanzas y compras: también en marfil */
+html body .rc:not(.aviso), html body .rs-hacer, html body .fin-card, html body .compra { background:var(--marfil); box-shadow:0 1px 0 var(--borde), 0 8px 24px -18px #6b553a55; }
