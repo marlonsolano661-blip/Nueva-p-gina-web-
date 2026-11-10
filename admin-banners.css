@@ -34,3 +34,60 @@
 .ib-guardar{position:sticky;bottom:calc(.8rem + env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:.6rem;align-items:center;justify-content:space-between;background:#0a0a0a;color:#fff;border-radius:1.2rem;padding:.7rem .9rem;margin-top:1.2rem}
 .ib-guardar button{background:#fff;color:#0a0a0a;border-color:#fff}
 .ib-guardar span{font-size:.88rem}
+
+/* Pantalla de entrada del Centro de control (solo mientras no hay sesión).
+   Se activa cuando el campo de la clave está visible; al entrar, el panel vuelve a su diseño normal. */
+body:has(#token:not([hidden])) { background:#0b0b0c; overflow:hidden; }
+body:has(#token:not([hidden])) main { display:none; }
+body:has(#token:not([hidden])) #msg:not(:empty) { display:block; position:fixed; }
+
+body:has(#token:not([hidden])) header {
+  position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; flex-wrap:nowrap; align-items:center; justify-content:center; gap:0;
+  padding:1.5rem 1.2rem; padding-top:calc(1.5rem + env(safe-area-inset-top,0px)); padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));
+  border:0; backdrop-filter:none;
+  background:
+    radial-gradient(120% 70% at 50% -10%, #1d5c4555 0%, transparent 60%),
+    radial-gradient(90% 60% at 100% 110%, #ffffff12 0%, transparent 55%),
+    #0b0b0c;
+}
+
+/* Tarjeta: parte de arriba (marca) */
+body:has(#token:not([hidden])) header > .barra:first-child {
+  width:100%; max-width:24rem; flex-direction:column; align-items:center; gap:.9rem; text-align:center;
+  background:#fff; border-radius:1.6rem 1.6rem 0 0; padding:2.6rem 1.8rem 1.4rem;
+  box-shadow:0 30px 60px -30px #000c;
+}
+body:has(#token:not([hidden])) header .logo,
+body:has(#token:not([hidden])) header .logo svg { height:3.4rem; }
+body:has(#token:not([hidden])) header h1 { font-size:2.1rem; line-height:1; }
+body:has(#token:not([hidden])) header > .barra:first-child::after {
+  content:'Panel de administración'; display:block; margin-top:-.2rem;
+  font-size:.72rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:#8a8a84;
+}
+
+/* Tarjeta: parte de abajo (clave y botón) */
+body:has(#token:not([hidden])) header > .barra:last-child {
+  width:100%; max-width:24rem; flex-direction:column; align-items:stretch; gap:.75rem;
+  background:#fff; border-radius:0 0 1.6rem 1.6rem; padding:.6rem 1.8rem 2.2rem;
+  border-top:1px solid #efefec; box-shadow:0 30px 60px -30px #000c;
+}
+body:has(#token:not([hidden])) header > .barra:last-child::before {
+  content:'Clave de acceso'; margin-top:1rem; font-size:.85rem; font-weight:600; color:#3d3d3a;
+}
+body:has(#token:not([hidden])) #token {
+  width:100%; min-height:3.3rem; padding:.8rem 1.1rem; border:1.5px solid #e4e4e0; border-radius:.9rem;
+  background:#f8f8f6; font:inherit; font-size:1rem; transition:border-color .2s, background .2s, box-shadow .2s;
+}
+body:has(#token:not([hidden])) #token:focus { outline:none; border-color:#111; background:#fff; box-shadow:0 0 0 4px #1d5c4522; }
+body:has(#token:not([hidden])) #entrar {
+  width:100%; min-height:3.3rem; margin-top:.3rem; border-radius:999px; border:0;
+  background:#111; color:#fff; font:inherit; font-weight:600; font-size:1rem; letter-spacing:.02em; cursor:pointer;
+  transition:transform .15s, background .2s;
+}
+body:has(#token:not([hidden])) #entrar:hover { background:#1d5c45; color:#fff; }
+body:has(#token:not([hidden])) #entrar:active { transform:scale(.98); }
+
+/* Pie bajo la tarjeta */
+body:has(#token:not([hidden])) header::after {
+  content:'🔒  Acceso exclusivo del equipo MF'; margin-top:1.4rem; font-size:.8rem; letter-spacing:.04em; color:#ffffff8c;
+}
