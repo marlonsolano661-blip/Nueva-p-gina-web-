@@ -244,3 +244,19 @@
   function iniciar() { new MutationObserver(prog).observe(document.body, { childList: true, subtree: true }); prog(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
+
+/* Sin zoom en el celular: el iPhone amplía la página al tocar un campo con letra menor a 16 px (ej. "Código de descuento")
+   y con doble toque. Se fija la escala, los campos van a 16 px y el doble toque ya no amplía. Pellizcar con dos dedos sigue igual. */
+(function () {
+  'use strict';
+  try {
+    var v = document.querySelector('meta[name="viewport"]');
+    if (!v) { v = document.createElement('meta'); v.name = 'viewport'; document.head.appendChild(v); }
+    var c = v.getAttribute('content') || 'width=device-width,initial-scale=1';
+    if (!/maximum-scale/.test(c)) v.setAttribute('content', c + ',maximum-scale=1');
+  } catch (e) { /* nada */ }
+  var st = document.createElement('style'); st.setAttribute('data-sin-zoom', '1');
+  st.textContent = 'html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}' +
+    '@media(max-width:799px){html body input,html body select,html body textarea,html body .dr .drf .dcb input,html body .ck-sum .dcb input{font-size:16px!important}}';
+  document.head.appendChild(st);
+})();
