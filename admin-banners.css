@@ -38,13 +38,13 @@
 /* Pantalla de entrada del Centro de control (solo mientras no hay sesión).
    Se activa cuando el campo de la clave está visible; al entrar, el panel vuelve a su diseño normal. */
 body:has(#token:not([hidden])) { background:#0b0b0c; overflow:hidden; }
-body:has(#token:not([hidden])) main { display:none; }
-body:has(#token:not([hidden])) #msg:not(:empty) { display:block; position:fixed; }
+/* El aviso (#msg) vive dentro de main: main no se oculta, queda tapado por la tarjeta y el aviso sale por encima */
+body:has(#token:not([hidden])) #msg { z-index:70; }
 
 body:has(#token:not([hidden])) header {
   position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; flex-wrap:nowrap; align-items:center; justify-content:center; gap:0;
   padding:1.5rem 1.2rem; padding-top:calc(1.5rem + env(safe-area-inset-top,0px)); padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));
-  border:0; backdrop-filter:none;
+  border:0; backdrop-filter:none; -webkit-backdrop-filter:none;
   background:
     radial-gradient(120% 70% at 50% -10%, #1d5c4555 0%, transparent 60%),
     radial-gradient(90% 60% at 100% 110%, #ffffff12 0%, transparent 55%),
