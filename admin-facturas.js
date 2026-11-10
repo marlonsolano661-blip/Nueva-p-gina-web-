@@ -40,7 +40,7 @@
   /* ---------- PDF sin librerías (A4, Helvetica) ---------- */
   var LATIN = { '–': '-', '—': '-', '‘': "'", '’': "'", '“': '"', '”': '"', '…': '...', '•': '-', '×': 'x' };
   function lat(s) {
-    return String(s == null ? '' : s).replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E -ÿ]/g, function (c) { return LATIN[c] || '?'; });
+    return String(s == null ? '' : s).replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E -ÿ]/g, function (c) { return LATIN[c] || '?'; });
   }
   function esc(s) { return lat(s).replace(/([\\()])/g, '\\$1'); }
   var cv = null;
@@ -202,9 +202,26 @@
     });
   }
 
+  // Crea el comprobante con F: numera, genera el PDF y lo guarda en el historial. Devuelve la factura o el motivo si falta algo.
+  function emitir() {
+    if (!String(F.cliente.nombre || '').trim()) return 'Escribe el nombre de la clienta';
+    if (!F.items.length) return 'Agrega al menos un producto';
+    if (F.items.some(function (i) { return !String(i.nombre || '').trim() || !(+i.cant > 0) || !(+i.precio >= 0); })) return 'Revisa descripción, cantidad y precio de cada producto';
+    var n = parseInt(leer(KN, 1), 10) || 1, ahora = new Date();
+    var f = {
+      numero: 'MF-' + String(n).padStart(4, '0'), creado: ahora.toISOString(), fecha: ahora.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+      cliente: Object.assign({}, F.cliente), items: F.items.map(function (i) { return { nombre: String(i.nombre).trim(), talla: String(i.talla || '').trim(), cant: +i.cant, precio: +i.precio }; }),
+      desc: +F.descPesos > 0 ? 0 : Math.min(90, Math.max(0, +F.desc || 0)), descPesos: +F.descPesos > 0 ? Math.round(+F.descPesos) : 0, waId: F.waId || null, subtotal: subtotal(), descuento: descuento(), envio: +F.envio || 0, total: total(), pago: F.pago, estado: F.estado, nota: (F.nota || '').trim(),
+    };
+    try { crearPDF(f, emisor()); } catch (e) { return 'No se pudo crear el PDF: ' + e.message; }
+    guardar(KN, n + 1); var h = leer(KH, []); h.unshift(f); guardar(KH, h.slice(0, 100));
+    ULTIMA = f; pintar(); window.scrollTo(0, 0); A.msg('Factura ' + f.numero + ' creada ✓');
+    return f;
+  }
+
   function pintar() {
     var c = root(); c.textContent = ''; refTot = null;
-    if (F.waId && !ULTIMA) c.appendChild(el('p', { class: 'alerta', text: 'Datos traídos del pedido de WhatsApp de ' + (F.cliente.nombre || 'la clienta') + '. Revísalos, completa la cédula si la tienes y pulsa «Crear factura».' }));
+    if (F.waId && !ULTIMA) c.appendChild(el('p', { class: 'alerta', text: 'Datos traídos del pedido de WhatsApp de ' + (F.cliente.nombre || 'la clienta') + '. Revísalos y pulsa «Crear factura».' }));
     c.appendChild(el('p', { class: 'nota', text: 'Crea el comprobante con los datos de la clienta y envíaselo por WhatsApp. Cada comprobante incluye la garantía de 3 meses por defectos de fabricación, con su fecha de vencimiento. Es un comprobante de venta, no una factura electrónica de la DIAN.' }));
     if (ULTIMA) {
       c.appendChild(el('p', { class: 'nota', text: 'Comprobante listo ✓' }));
@@ -264,20 +281,7 @@
       c.appendChild(refTot); actTotales();
 
       var crear = el('button', { type: 'button', text: 'Crear factura' });
-      crear.addEventListener('click', function () {
-        if (!F.cliente.nombre.trim()) return A.msg('Escribe el nombre de la clienta', true);
-        if (!F.items.length) return A.msg('Agrega al menos un producto', true);
-        if (F.items.some(function (i) { return !i.nombre.trim() || !(+i.cant > 0) || !(+i.precio >= 0); })) return A.msg('Revisa descripción, cantidad y precio de cada producto', true);
-        var n = parseInt(leer(KN, 1), 10) || 1, ahora = new Date();
-        var f = {
-          numero: 'MF-' + String(n).padStart(4, '0'), creado: ahora.toISOString(), fecha: ahora.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
-          cliente: Object.assign({}, F.cliente), items: F.items.map(function (i) { return { nombre: i.nombre.trim(), talla: String(i.talla || '').trim(), cant: +i.cant, precio: +i.precio }; }),
-          desc: +F.descPesos > 0 ? 0 : Math.min(90, Math.max(0, +F.desc || 0)), descPesos: +F.descPesos > 0 ? Math.round(+F.descPesos) : 0, waId: F.waId || null, subtotal: subtotal(), descuento: descuento(), envio: +F.envio || 0, total: total(), pago: F.pago, estado: F.estado, nota: (F.nota || '').trim(),
-        };
-        try { crearPDF(f, emisor()); } catch (e) { return A.msg('No se pudo crear el PDF: ' + e.message, true); }
-        guardar(KN, n + 1); var h = leer(KH, []); h.unshift(f); guardar(KH, h.slice(0, 100));
-        ULTIMA = f; pintar(); window.scrollTo(0, 0); A.msg('Factura ' + f.numero + ' creada ✓');
-      });
+      crear.addEventListener('click', function () { var r = emitir(); if (typeof r === 'string') A.msg(r, true); });
       c.appendChild(crear);
     }
 
@@ -326,13 +330,20 @@
     f.nota = v.nota || ''; f.waId = v.id;
     return f;
   }
-  // Abre Facturas con los datos del pedido; si ese pedido ya tiene comprobante, lo muestra para reenviarlo
+  // Abre Facturas con el comprobante del pedido: si ya existe lo muestra para reenviarlo; si no, lo crea de una vez
+  // con los datos del pedido (sin volver a llenar nada). Si al pedido le falta algo (nombre o productos), deja el formulario lleno para completarlo.
   function desdeWhatsapp(v) {
     mostrar();
     var hecha = deWhatsapp(v.id);
-    if (hecha) { ULTIMA = hecha; F = nueva(); } else { ULTIMA = null; F = desdeVenta(v); }
-    pintar();
-    return cargarDatos().then(function () { if (!ULTIMA && !F.items.length) F.envio = TARIFA; pintar(); });
+    if (hecha) { ULTIMA = hecha; F = nueva(); pintar(); return Promise.resolve(hecha); }
+    ULTIMA = null; F = desdeVenta(v); pintar();
+    var r = emitir();
+    if (typeof r === 'string') {
+      A.msg('Falta un dato para la factura: ' + r, true);
+      return cargarDatos().then(function () { if (!F.items.length) F.envio = TARIFA; pintar(); });
+    }
+    cargarDatos().catch(function () {});
+    return Promise.resolve(r);
   }
   window.mfAdminFacturas = { abrir: abrir, desdeWhatsapp: desdeWhatsapp, deWhatsapp: deWhatsapp, _crearPDF: crearPDF };
 
