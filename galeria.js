@@ -83,21 +83,34 @@
     var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
     if (id == null) return;
     var tl = pi.querySelector(':scope > .tl');
-    if (tl && !pi.querySelector(':scope > .eg-sel')) {
+    if (tl && !pi.querySelector(':scope > .eg-dd')) {
       var lb = tl.previousElementSibling, gl = pi.querySelector(':scope > .gl');
-      var fila = document.createElement('div'); fila.className = 'eg-sh';
-      if (lb && lb.classList.contains('lb')) fila.appendChild(lb);
-      if (gl) fila.appendChild(gl);
-      pi.insertBefore(fila, tl);
+      if (!pi.querySelector(':scope > .eg-sh')) {
+        var fila = document.createElement('div'); fila.className = 'eg-sh';
+        if (lb && lb.classList.contains('lb')) fila.appendChild(lb);
+        if (gl) fila.appendChild(gl);
+        pi.insertBefore(fila, tl);
+      }
       var bs = tl.querySelectorAll('.sz');
       if (bs.length) {
-        var sel = document.createElement('select'); sel.className = 'eg-sel'; sel.setAttribute('aria-label', 'Elige tu talla');
-        var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Elige tu talla'; sel.appendChild(o0);
-        Array.prototype.forEach.call(bs, function (x) { var o = document.createElement('option'); o.value = x.getAttribute('data-t'); o.textContent = 'Talla ' + x.getAttribute('data-t'); if (x.classList.contains('on')) o.selected = true; sel.appendChild(o); });
-        sel.addEventListener('change', function () { var t = sel.value; Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (x) { if (x.getAttribute('data-t') === t && !x.classList.contains('on')) x.click(); }); });
-        tl.insertAdjacentElement('afterend', sel); tl.classList.add('eg-oculto');
+        // Lista de tallas estilo EGO: un recuadro "Elige tu talla" que al tocarlo despliega una talla por renglón
+        var dd = document.createElement('div'); dd.className = 'eg-dd';
+        var on = tl.querySelector('.sz.on');
+        var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'eg-sel'; hb.setAttribute('aria-expanded', 'false');
+        hb.textContent = on ? 'Talla ' + on.getAttribute('data-t') : 'Elige tu talla';
+        var ls = document.createElement('div'); ls.className = 'eg-dd-l'; ls.hidden = true; ls.setAttribute('role', 'listbox');
+        Array.prototype.forEach.call(bs, function (x) {
+          var t = x.getAttribute('data-t'), o = document.createElement('button'); o.type = 'button'; o.className = 'eg-dd-o' + (x.classList.contains('on') ? ' on' : ''); o.setAttribute('role', 'option'); o.textContent = 'Talla ' + t;
+          o.addEventListener('click', function () { document.body.classList.remove('eg-dd-ab'); Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (z) { if (z.getAttribute('data-t') === t && !z.classList.contains('on')) z.click(); }); });
+          ls.appendChild(o);
+        });
+        dd.abrir = function (si) { var ab = si == null ? ls.hidden : si; ls.hidden = !ab; dd.classList.toggle('ab', ab); hb.setAttribute('aria-expanded', ab ? 'true' : 'false'); document.body.classList.toggle('eg-dd-ab', ab); };
+        hb.addEventListener('click', function () { dd.abrir(); });
+        dd.appendChild(hb); dd.appendChild(ls);
+        tl.insertAdjacentElement('afterend', dd); tl.classList.add('eg-oculto');
       }
     }
+    if (!pi.querySelector('.eg-dd.ab')) document.body.classList.remove('eg-dd-ab');
     var add = pi.querySelector(':scope > .row [data-n="add"]');
     if (add) { var ya = !!pi.querySelector('.tl .sz.on'), txt = ya ? 'Agregar a la bolsa' : 'Elige tu talla'; if (add.textContent !== txt) add.textContent = txt; add.classList.toggle('eg-falta', !ya); }
     // Barra de abajo (móvil) estilo EGO: nombre, precio, color (y talla elegida) y un botón grande a todo lo ancho.
@@ -126,27 +139,88 @@
     }
   }
   /* Barra de abajo del producto (móvil) estilo EGO: blanca, nombre + precio + color, botón a todo lo ancho.
-     Botones de compra en el rosado del icono de la bolsa (#f7cfdd) con letra negra. */
+     Botones de compra en el verde de EGO (#02836f) con letra blanca. */
   var egCss = [
     'html body #app .stk.eg-stk{display:block;padding:1.05rem 1.25rem calc(1rem + env(safe-area-inset-bottom,0px));background:#fff;color:#111;border-top:1px solid #e6e6e6;box-shadow:0 -8px 28px rgba(0,0,0,.08);-webkit-backdrop-filter:none;backdrop-filter:none}',
     'html body #app .stk.eg-stk>div{margin:0 0 .85rem}',
     'html body #app .stk.eg-stk .eg-nm{display:block;margin:0 0 .35rem;font:700 1.08rem/1.25 Figtree,system-ui,sans-serif;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     'html body #app .stk.eg-stk b{display:block;font:700 1.2rem/1.2 Figtree,system-ui,sans-serif;letter-spacing:0;color:#111}',
     'html body #app .stk.eg-stk small{display:block;margin-top:.55rem;font:400 .98rem/1.3 Figtree,system-ui,sans-serif;letter-spacing:0;color:#555}',
-    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#f7cfdd;color:#0a0a0a;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
-    'html body #app .stk.eg-stk .btn:active{background:#f0b9cc}',
-    // Mismo rosado en los botones de "Elige tu talla / Agregar a la bolsa" (ficha y barra de abajo) y en PAGAR del carrito
-    'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn{background:#f7cfdd!important;color:#0a0a0a!important;border:2px solid #f7cfdd!important}',
-    'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#f0b9cc!important;border-color:#f0b9cc!important}',
+    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#02836f;color:#fff;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
+    'html body #app .stk.eg-stk .btn:active{background:#016a5a}',
+    // Verde EGO en "Elige tu talla / Agregar a la bolsa" (ficha y barra de abajo), PAGAR y APLICAR de la bolsa
+    'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn,html body .dr .dcb .btn{background:#02836f!important;color:#fff!important;border:2px solid #02836f!important}',
+    'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .dr .dcb .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#016a5a!important;border-color:#016a5a!important}',
     'html body #app .stk.eg-stk .btn{border:0!important}',
-    // Botones − y + de la cantidad en la bolsa, en el mismo rosado
-    'html body .qs button[data-n="q"]{background:#f7cfdd!important;color:#0a0a0a!important;border-color:#f7cfdd!important}',
-    'html body .qs button[data-n="q"]:active{background:#f0b9cc!important}',
+    'html body .eg-sel.eg-aviso{animation:egAviso 1.6s ease-out}',
+    'html body .eg-dd .eg-sel{text-align:left;cursor:pointer}',
+    "html body .eg-dd.ab .eg-sel{border-color:#111;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='1.8'%3E%3Cpath d='M6 15l6-6 6 6'/%3E%3C/svg%3E\")}",
+    'html body .eg-dd-l{border:1px solid #cfcfcf;border-top:0;background:#fff}',
+    'html body .eg-dd-o{display:flex;align-items:center;width:100%;height:3.4rem;padding:0 1.2rem;margin:0;border:0;border-bottom:1px solid #e3e3e3;border-radius:0;background:#fff;font:400 1.05rem Figtree,system-ui,sans-serif;color:#222;text-align:left;cursor:pointer}',
+    'html body .eg-dd-o:last-child{border-bottom:0}',
+    'html body .eg-dd-o.on{font-weight:600;color:#111}',
+    'html body .eg-dd-o:active,html body .eg-dd-o:hover{background:#eef7f5}',
+    'html body.eg-dd-ab #app .stk{transform:translateY(105%)!important}',
+    '@keyframes egAviso{0%,40%{border-color:#02836f;box-shadow:0 0 0 4px rgba(2,131,111,.22)}100%{box-shadow:0 0 0 0 rgba(2,131,111,0)}}',
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
+  // Botón "Elige tu talla" sin talla elegida: en vez del aviso, se desliza hasta las tallas y abre la lista (como EGO).
+  window.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.btn[data-n="add"]') : null; if (!b) return;
+    var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.tl .sz.on')) return;
+    var dd = pi.querySelector('.eg-dd'), sel = dd ? dd.querySelector('.eg-sel') : pi.querySelector('.tl'); if (!sel) return;
+    e.preventDefault(); e.stopPropagation();
+    if (dd && dd.abrir) dd.abrir(true);
+    var hd = document.querySelector('header'), alto = hd ? hd.getBoundingClientRect().height : 0;
+    var lbl = pi.querySelector('.eg-sh') || sel;
+    window.scrollTo({ top: Math.max(0, lbl.getBoundingClientRect().top + window.pageYOffset - alto - 16), behavior: 'smooth' });
+    sel.classList.remove('eg-aviso'); void sel.offsetWidth; sel.classList.add('eg-aviso');
+  }, true);
   var pend = false;
   function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ego(); } catch (e) { /* queda la ficha original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();
+
+/* Bolsa estilo EGO: la cantidad en una lista "Cant. 1", el corazón (favoritos) y la caneca para quitar el producto.
+   Reemplaza los botones − / + y el texto "Quitar"; usa la misma bolsa de la tienda (CART, saveCart y draw). */
+(function () {
+  'use strict';
+  var IC_C = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3s-7.6-4.5-7.6-10.2A4.3 4.3 0 0 1 12 7.5a4.3 4.3 0 0 1 7.6 2.6c0 5.7-7.6 10.2-7.6 10.2z"/></svg>';
+  var IC_T = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9.5 7V4.6h5V7M6.4 7l1 13h9.2l1-13M10 11v5.5M14 11v5.5"/></svg>';
+  var css = [
+    'html body .bl .qs{display:none!important}',
+    'html body .bl .bi>.rm{display:none!important}',
+    'html body .eg-bq{margin-top:.15rem}',
+    "html body .eg-cant{height:2.6rem;min-width:6.4rem;padding:0 2.3rem 0 .85rem;border:1px solid #cfcfcf;border-radius:0;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='1.8'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\") no-repeat right .65rem center/1.05rem;font:400 .95rem Figtree,system-ui,sans-serif;color:#222;-webkit-appearance:none;appearance:none;cursor:pointer}",
+    'html body .eg-cant:focus{outline:0;border-color:#111}',
+    'html body .eg-acc{display:flex;gap:1rem;margin-top:.8rem}',
+    'html body .eg-ic{display:inline-flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;border:0;border-radius:0;background:none;color:#111;cursor:pointer}',
+    'html body .eg-ic:hover{color:#02836f}',
+    'html body .eg-ic[aria-pressed="true"] svg{fill:#111}'
+  ].join('\n');
+  var st = document.createElement('style'); st.setAttribute('data-eg-bolsa', '1'); st.textContent = css; document.head.appendChild(st);
+  function mejorar() {
+    var cart; try { cart = CART; } catch (e) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('.bl'), function (bl) {
+      if (bl.querySelector('.eg-bq')) return;
+      var rm = bl.querySelector('.bi>[data-n="rm"]'); if (!rm) return;
+      var i = +rm.getAttribute('data-i'), l = cart[i]; if (!l) return;
+      var box = document.createElement('div'); box.className = 'eg-bq';
+      var sel = document.createElement('select'); sel.className = 'eg-cant'; sel.setAttribute('aria-label', 'Cantidad');
+      for (var n = 1, max = Math.max(10, l.q); n <= max; n++) { var o = document.createElement('option'); o.value = String(n); o.textContent = 'Cant. ' + n; if (n === l.q) o.selected = true; sel.appendChild(o); }
+      sel.addEventListener('change', function () { var x = CART[i]; if (!x) return; x.q = Math.max(1, parseInt(sel.value, 10) || 1); saveCart(); draw(); });
+      var acc = document.createElement('div'); acc.className = 'eg-acc';
+      var fav = document.createElement('button'); fav.type = 'button'; fav.className = 'eg-ic'; fav.setAttribute('data-fav', String(l.id)); fav.setAttribute('aria-label', 'Guardar en favoritos');
+      fav.setAttribute('aria-pressed', String(!!(window.mfFavs && window.mfFavs.tiene(l.id)))); fav.innerHTML = IC_C;
+      var tr = document.createElement('button'); tr.type = 'button'; tr.className = 'eg-ic'; tr.setAttribute('data-n', 'rm'); tr.setAttribute('data-i', String(i)); tr.setAttribute('aria-label', 'Quitar de la bolsa'); tr.innerHTML = IC_T;
+      acc.appendChild(fav); acc.appendChild(tr); box.appendChild(sel); box.appendChild(acc);
+      rm.insertAdjacentElement('beforebegin', box);
+    });
+  }
+  var pend = false;
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { mejorar(); } catch (e) { /* queda la bolsa original */ } }); }
+  function iniciar() { new MutationObserver(prog).observe(document.body, { childList: true, subtree: true }); prog(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
