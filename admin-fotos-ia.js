@@ -93,9 +93,10 @@
           var hecho = {};
           fotos.forEach(function (x, i) { if (!hecho[x.color] && urls[i]) { hecho[x.color] = 1; ponerColor(x.color, urls[i]); } });
           soltar(); quitarMarcas();
-          var faltan = (d.errores || []).length;
+          var faltan = (d.errores || []).length, dudosas = fotos.filter(function (x) { return x.revisada === false; }).length;
           m.msg('Listas ' + fotos.length + ' foto(s) con IA ✓' + (faltan ? ' (' + faltan + ' no salieron)' : '') +
-            ' Ya quedaron en las fotos y en los colores. Revísalas, quita las que no se parezcan al zapato real y toca "Guardar" abajo.', faltan > 0);
+            (dudosas ? ' Ojo: ' + dudosas + ' no pasaron la revisión de la IA, míralas con cuidado.' : '') +
+            ' Ya quedaron en las fotos y en los colores. Revísalas, quita las que no se parezcan al zapato real y toca "Guardar" abajo.', faltan > 0 || dudosas > 0);
         });
       })
       .catch(function (e) { soltar(); m.falla(e); });
