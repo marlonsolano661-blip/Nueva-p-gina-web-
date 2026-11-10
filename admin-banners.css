@@ -1,3 +1,4 @@
+@import url("panel-tema.css");
 /* Diseñador de inicio (panel). La vista previa usa banners.css: lo que ves aquí es lo que sale en la tienda. */
 .ib-lista{display:flex;flex-wrap:wrap;gap:.5rem;margin:.4rem 0 1rem;align-items:center}
 .ib-lista button.ib-t{background:#fff;color:#0a0a0a;position:relative;padding:.5rem 1rem}
