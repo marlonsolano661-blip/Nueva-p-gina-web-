@@ -30,7 +30,15 @@
     '.ofA-pieza .ofA-mini{width:3.4rem;height:3.4rem;object-fit:cover;border-radius:.4rem;background:#f2f2f2;border:1px dashed #bbb;display:grid;place-items:center;font-size:.7rem;color:#777;cursor:pointer;padding:0}',
     '.ofA-bar{display:flex;gap:.6rem;flex-wrap:wrap;padding:.9rem 0 1.2rem}',
     '#p-outfits{padding-bottom:6rem}', /* el aviso fijo de abajo no tapa los botones */
-    '.ofA-ed{display:grid;gap:.8rem}'
+    '.ofA-ed{display:grid;gap:.8rem}',
+    '.ofA-ay{display:block;font-size:.82rem;line-height:1.35;color:#6b6b6b;font-weight:400;margin:.15rem 0 .35rem}',
+    '.ofA-pasos{margin:.3rem 0 .8rem;padding:.8rem .9rem .8rem 2rem;border:1px solid #e3e3e3;border-radius:.7rem;background:#fff;line-height:1.45;font-size:.9rem}',
+    '.ofA-pasos li{margin:.25rem 0}',
+    '.ofA-bot{display:grid;gap:.25rem}.ofA-bot .ofA-ay{margin:0;max-width:15rem}',
+    '.ofA-bar{align-items:flex-start}',
+    '.ofA-aviso{padding:.6rem .8rem;border-radius:.6rem;background:#fff4e0;border:1px solid #f0d9a8;font-size:.88rem;line-height:1.4}',
+    '.ofA-campo{display:grid;gap:.2rem;font-weight:600}',
+    '.ofA-foto button{font-size:.8rem}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -81,11 +89,22 @@
   // ---------- Lista de looks ----------
   function lista() {
     var y = window.scrollY; sec.textContent = '';
-    sec.appendChild(el('p', { class: 'nota', text: 'Aquí armas los looks de la página "Ideas de outfits". Para que se vean como pasarela, usa fotos de estudio: modelo de cuerpo completo, de frente, con fondo blanco o gris claro y el mismo encuadre en todas.' }));
+    sec.appendChild(el('p', { class: 'nota', text: 'Aquí armas los looks de la página "Ideas de outfits". Cada look es UN outfit: una modelo con una ropa y un tacón. En la tienda se pasa de un look a otro con las flechas.' }));
+    sec.appendChild(el('ol', { class: 'ofA-pasos' }, [
+      el('li', { text: 'Toca "+ Nuevo look" por cada outfit. Si tienes 3 outfits (jean, vestido, falda), son 3 looks.' }),
+      el('li', { text: 'Dentro del look sube solo las fotos de ESE outfit: primero la de frente y, si la tienes, la de lado o espalda.' }),
+      el('li', { text: 'Elige el tacón que lleva puesto la modelo y escribe la ropa que lleva (blusa, jean, bolso…).' }),
+      el('li', { text: 'Toca "Listo" y al final "Guardar outfits" para que salga en la tienda.' })
+    ]));
+    sec.appendChild(el('p', { class: 'nota', text: 'Fotos: modelo de cuerpo completo, vertical, fondo blanco o gris claro y el mismo encuadre en todas. Sirven JPG, PNG o fotos del celular.' }));
     if (!S.lista.length) sec.appendChild(el('p', { class: 'nota', text: 'Todavía no has guardado looks. Mientras tanto la página muestra los 3 looks de ejemplo.' }));
+    if (S.lista.length) {
+      sec.appendChild(el('h3', { text: 'Tus looks (' + S.lista.length + ' de ' + MAX_LOOKS + ')' }));
+      sec.appendChild(el('p', { class: 'ofA-ay', text: 'Editar: cambiar fotos, tacón o ropa del look · ↑ ↓: el orden en que salen en la pasarela · Ocultar: no sale en la tienda pero no se borra · Eliminar: lo borra.' }));
+    }
     S.lista.forEach(function (o, i) {
       var p = porId(o.producto), f = o.fotos[0];
-      var b = function (t, fn, dis) { var x = el('button', { type: 'button', class: 'claro', text: t }); x.disabled = !!dis; x.addEventListener('click', fn); return x; };
+      var b = function (t, fn, dis, lbl) { var x = el('button', { type: 'button', class: 'claro', text: t, title: lbl || t, 'aria-label': lbl || t }); x.disabled = !!dis; x.addEventListener('click', fn); return x; };
       sec.appendChild(el('div', { class: 'ofA-look' + (o.visible === false ? ' ofA-oculto' : '') }, [
         f ? el('img', { src: f.url, alt: '' }) : el('div', { class: 'ofA-vacia', text: 'Sin foto' }),
         el('div', {}, [
@@ -93,8 +112,8 @@
           el('small', { text: (o.ocasion ? o.ocasion + ' · ' : '') + (p ? p.nombre : 'Sin tacón') + (o.color ? ' · ' + o.color : '') + ' · ' + o.fotos.length + ' foto(s) · ' + o.piezas.length + ' prenda(s)' + (o.visible === false ? ' · Oculto' : '') }),
           el('div', { class: 'ofA-acc' }, [
             b('Editar', function () { S.editando = i; pintar(); window.scrollTo(0, 0); }),
-            b('↑', function () { S.lista.splice(i - 1, 0, S.lista.splice(i, 1)[0]); marcar(); pintar(); }, i === 0),
-            b('↓', function () { S.lista.splice(i + 1, 0, S.lista.splice(i, 1)[0]); marcar(); pintar(); }, i === S.lista.length - 1),
+            b('↑', function () { S.lista.splice(i - 1, 0, S.lista.splice(i, 1)[0]); marcar(); pintar(); }, i === 0, 'Mover antes en la pasarela'),
+            b('↓', function () { S.lista.splice(i + 1, 0, S.lista.splice(i, 1)[0]); marcar(); pintar(); }, i === S.lista.length - 1, 'Mover después en la pasarela'),
             b(o.visible === false ? 'Mostrar' : 'Ocultar', function () { o.visible = o.visible === false; marcar(); pintar(); }),
             b('Eliminar', function () { if (window.confirm('¿Eliminar el look "' + (o.nombre || 'Sin nombre') + '"?')) { S.lista.splice(i, 1); marcar(); pintar(); } }),
           ]),
@@ -113,7 +132,12 @@
     });
     var deshacer = el('button', { type: 'button', class: 'claro', text: 'Deshacer cambios' });
     deshacer.addEventListener('click', function () { cargar().then(function () { A.msg('Cambios descartados'); }).catch(A.falla); });
-    sec.appendChild(el('div', { class: 'ofA-bar' }, [add, guardar, deshacer]));
+    var conAyuda = function (boton, texto) { return el('div', { class: 'ofA-bot' }, [boton, el('small', { class: 'ofA-ay', text: texto })]); };
+    sec.appendChild(el('div', { class: 'ofA-bar' }, [
+      conAyuda(add, add.disabled ? 'Llegaste al máximo de ' + MAX_LOOKS + ' looks.' : 'Crea un outfit nuevo (uno por cada ropa distinta).'),
+      conAyuda(guardar, 'Publica tus looks en la tienda. Sin esto no se ve nada.'),
+      conAyuda(deshacer, 'Borra lo que cambiaste y no has guardado.')
+    ]));
     sec.appendChild(el('p', { class: 'nota' }, ['Ver la página: ', el('a', { href: 'outfits.html', target: '_blank', rel: 'noopener', text: 'Ideas de outfits' })]));
     window.scrollTo(0, y);
   }
@@ -150,21 +174,26 @@
 
     // Fotos de la modelo
     var fotosBox = el('div', { class: 'ofA-fotos' });
+    var avisoFotos = el('p', { class: 'ofA-aviso', role: 'status' }); avisoFotos.hidden = true;
     function fotos() {
       fotosBox.textContent = '';
       o.fotos.forEach(function (f, i) {
-        var sel = el('select', { 'aria-label': 'Ángulo' }, ANGULOS.map(function (a) { return el('option', { value: a, text: a }); }));
+        var sel = el('select', { 'aria-label': '¿Desde dónde se ve la modelo?' }, ANGULOS.map(function (a) { return el('option', { value: a, text: a }); }));
         sel.value = ANGULOS.indexOf(f.e) > -1 ? f.e : 'Frente';
-        sel.addEventListener('change', function () { f.e = sel.value; marcar(); });
-        var cambiar = el('button', { type: 'button', class: 'claro', text: 'Cambiar' });
+        sel.addEventListener('change', function () { f.e = sel.value; marcar(); fotos(); });
+        var cambiar = el('button', { type: 'button', class: 'claro', text: 'Cambiar esta foto' });
         cambiar.addEventListener('click', function () { elegirFoto(function (url) { f.url = url; fotos(); }); });
-        var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar' });
+        var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar foto' });
         quitar.addEventListener('click', function () { o.fotos.splice(i, 1); marcar(); fotos(); });
-        var prin = i === 0 ? el('small', { text: 'Sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Usar en pasarela', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); marcar(); fotos(); } });
-        fotosBox.appendChild(el('div', { class: 'ofA-foto' }, [el('img', { src: f.url, alt: f.e }), sel, prin, cambiar, quitar]));
+        var prin = i === 0 ? el('small', { class: 'ofA-ay', text: '★ Foto principal: es la que sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer foto principal', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); marcar(); fotos(); } });
+        fotosBox.appendChild(el('div', { class: 'ofA-foto' }, [el('img', { src: f.url, alt: f.e }), el('small', { class: 'ofA-ay', text: '¿Desde dónde se ve?' }), sel, prin, cambiar, quitar]));
       });
+      var cuenta = {}; o.fotos.forEach(function (f) { cuenta[f.e] = (cuenta[f.e] || 0) + 1; });
+      var rep = Object.keys(cuenta).filter(function (k) { return cuenta[k] > 1; });
+      avisoFotos.hidden = !rep.length;
+      avisoFotos.textContent = rep.length ? 'Tienes ' + cuenta[rep[0]] + ' fotos marcadas como "' + rep[0] + '". Si son outfits distintos (otra ropa), cada uno va en su propio look: quítalas de aquí y crea un "+ Nuevo look" para cada uno. Si es la misma ropa, cambia el ángulo (Lado, Espalda, Detalle).' : '';
       if (o.fotos.length < MAX_FOTOS) {
-        var add = el('button', { type: 'button', class: 'claro ofA-vacia', text: '+ Subir foto de la modelo' });
+        var add = el('button', { type: 'button', class: 'claro ofA-vacia', text: o.fotos.length ? '+ Otra foto de este mismo outfit (lado, espalda…)' : '+ Subir la foto de frente' });
         add.addEventListener('click', function () {
           elegirFoto(function (url) { var usados = o.fotos.map(function (x) { return x.e; }); o.fotos.push({ e: ANGULOS.filter(function (a) { return usados.indexOf(a) < 0; })[0] || 'Detalle', url: url }); fotos(); });
         });
@@ -178,17 +207,17 @@
     function piezas() {
       piezasBox.textContent = '';
       o.piezas.forEach(function (p, i) {
-        var n = el('input', { type: 'text', maxlength: '60', value: p.n, placeholder: 'Ej: Vestido midi camel', 'aria-label': 'Prenda ' + (i + 1) });
+        var n = el('input', { type: 'text', maxlength: '60', value: p.n, placeholder: 'Ej: Blusa blanca, Jean recto, Bolso…', 'aria-label': 'Prenda ' + (i + 1) });
         n.addEventListener('input', function () { p.n = n.value; marcar(); });
         var mini = el('button', { type: 'button', class: 'ofA-mini', 'aria-label': p.foto ? 'Cambiar foto de la prenda' : 'Subir foto de la prenda' });
         if (p.foto) mini.appendChild(el('img', { src: p.foto, alt: '', style: 'width:100%;height:100%;object-fit:cover;border-radius:.4rem' })); else mini.textContent = '+ Foto';
         mini.addEventListener('click', function () { elegirFoto(function (url) { p.foto = url; piezas(); }); });
-        var q = el('button', { type: 'button', class: 'claro', text: 'Quitar' });
+        var q = el('button', { type: 'button', class: 'claro', text: 'Quitar', 'aria-label': 'Quitar esta prenda' });
         q.addEventListener('click', function () { o.piezas.splice(i, 1); marcar(); piezas(); });
         piezasBox.appendChild(el('div', { class: 'ofA-pieza' }, [mini, n, q]));
       });
       if (o.piezas.length < MAX_PIEZAS) {
-        var add = el('button', { type: 'button', class: 'claro', text: '+ Agregar prenda' });
+        var add = el('button', { type: 'button', class: 'claro', text: o.piezas.length ? '+ Otra prenda que lleva puesta' : '+ Agregar una prenda que lleva puesta' });
         add.addEventListener('click', function () { o.piezas.push({ n: '' }); marcar(); piezas(); });
         piezasBox.appendChild(add);
       }
@@ -198,19 +227,25 @@
     var listo = el('button', { type: 'button', text: 'Listo, volver a la lista' });
     listo.addEventListener('click', function () { S.editando = -1; pintar(); A.msg('Recuerda tocar "Guardar outfits" para publicar los cambios.'); window.scrollTo(0, 0); });
 
+    var campo = function (titulo, ayuda, control) { return el('label', { class: 'ofA-campo' }, [titulo, el('small', { class: 'ofA-ay', text: ayuda }), control]); };
     sec.appendChild(el('div', { class: 'ofA-ed' }, [
-      el('label', {}, ['Nombre del look', nombre]),
-      el('label', {}, ['Ocasión', selO]),
-      el('label', {}, ['Tacón', selP]),
-      el('label', {}, ['Color del tacón', selC]),
-      el('h3', { text: 'Fotos de la modelo' }),
-      el('p', { class: 'nota', text: 'La primera foto es la que sale en la pasarela. Las demás (lado, espalda…) se ven al tocar el look. Máximo ' + MAX_FOTOS + '.' }),
+      el('p', { class: 'nota', text: 'Estás editando UN look. Todo lo de esta pantalla es de un solo outfit: la misma modelo, con la misma ropa y el mismo tacón.' }),
+      el('h3', { text: '1. Datos del look' }),
+      campo('Nombre del look', 'Así se llama el outfit en la pasarela. Ej: "Jean y blusa blanca", "Vestido camel".', nombre),
+      campo('Ocasión', 'Para qué plan sirve este outfit. Sale como etiqueta pequeña encima del nombre.', selO),
+      campo('Tacón', 'El zapato de tu tienda que lleva puesto la modelo en estas fotos. La clienta lo puede comprar desde el look.', selP),
+      campo('Color del tacón', 'El color de ese zapato que se ve en las fotos.', selC),
+      el('h3', { text: '2. Fotos de la modelo con este outfit' }),
+      el('p', { class: 'ofA-ay', text: 'Solo fotos de ESTE outfit. Empieza por la de frente (será la foto principal de la pasarela) y, si tienes, agrega la de lado, espalda o un detalle. Máximo ' + MAX_FOTOS + '. Si tienes otra ropa, es otro look: vuelve a la lista y toca "+ Nuevo look".' }),
+      avisoFotos,
       fotosBox,
-      el('h3', { text: 'Prendas que complementan el look' }),
-      el('p', { class: 'nota', text: 'Escribe cada prenda (vestido, bolso, blazer…) y, si quieres, súbele una foto.' }),
+      el('h3', { text: '3. Ropa que lleva puesta' }),
+      el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
       piezasBox,
+      el('h3', { text: '4. Mostrar en la tienda' }),
       el('div', { style: 'display:flex;align-items:center;gap:.5rem' }, [vis, el('span', { text: 'Mostrar este look en la tienda' })]),
-      el('div', { class: 'ofA-bar' }, [listo]),
+      el('p', { class: 'ofA-ay', text: 'Si lo desmarcas, el look queda guardado aquí pero las clientas no lo ven.' }),
+      el('div', { class: 'ofA-bar' }, [el('div', { class: 'ofA-bot' }, [listo, el('small', { class: 'ofA-ay', text: 'Vuelve a la lista. Después toca "Guardar outfits" para publicarlo.' })])]),
     ]));
   }
 })();
