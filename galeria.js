@@ -100,6 +100,24 @@
     }
     var add = pi.querySelector(':scope > .row [data-n="add"]');
     if (add) { var ya = !!pi.querySelector('.tl .sz.on'), txt = ya ? 'Agregar a la bolsa' : 'Elige tu talla'; if (add.textContent !== txt) add.textContent = txt; add.classList.toggle('eg-falta', !ya); }
+    // Barra de abajo (móvil) estilo EGO: nombre, precio, color (y talla elegida) y un botón grande a todo lo ancho.
+    var stk = document.querySelector('#app .stk'), caja = stk && stk.firstElementChild;
+    if (caja && caja.tagName === 'DIV') {
+      stk.classList.add('eg-stk');
+      var nm = ((pi.querySelector('h1') || {}).textContent || '').trim();
+      var col = pi.querySelector(':scope > .lb .cn'); col = col && /^Color/.test(col.parentNode.textContent) ? col.textContent.trim() : '';
+      var tSel = pi.querySelector('.tl .sz.on'); tSel = tSel ? tSel.getAttribute('data-t') : '';
+      var tn = caja.querySelector('.eg-nm'); if (!tn) { tn = document.createElement('strong'); tn.className = 'eg-nm'; caja.insertBefore(tn, caja.firstChild); }
+      if (tn.textContent !== nm) tn.textContent = nm;
+      var sm = caja.querySelector('small');
+      if (sm) {
+        var linea = (col ? 'Color: ' + col : '') + (tSel ? (col ? '  ·  ' : '') + 'Talla ' + tSel : '');
+        if (!linea) linea = 'Elige tu talla';
+        if (sm.textContent !== linea) sm.textContent = linea;
+      }
+      var bb = stk.querySelector('[data-n="add"]');
+      if (bb) { var tb = tSel ? 'Agregar a la bolsa' : 'Elige tu talla'; if (bb.textContent !== tb) bb.textContent = tb; }
+    }
     var row = pi.querySelector(':scope > .row');
     if (row && !pi.querySelector(':scope > .eg-pay')) {
       var pay = document.createElement('div'); pay.className = 'eg-pay';
@@ -107,6 +125,18 @@
       row.insertAdjacentElement('afterend', pay);
     }
   }
+  /* Barra de abajo del producto (móvil) estilo EGO: blanca, nombre + precio + color, botón verde del carrito a todo lo ancho */
+  var egCss = [
+    'html body #app .stk.eg-stk{display:block;padding:1.05rem 1.25rem calc(1rem + env(safe-area-inset-bottom,0px));background:#fff;color:#111;border-top:1px solid #e6e6e6;box-shadow:0 -8px 28px rgba(0,0,0,.08);-webkit-backdrop-filter:none;backdrop-filter:none}',
+    'html body #app .stk.eg-stk>div{margin:0 0 .85rem}',
+    'html body #app .stk.eg-stk .eg-nm{display:block;margin:0 0 .35rem;font:700 1.08rem/1.25 Figtree,system-ui,sans-serif;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    'html body #app .stk.eg-stk b{display:block;font:700 1.2rem/1.2 Figtree,system-ui,sans-serif;letter-spacing:0;color:#111}',
+    'html body #app .stk.eg-stk small{display:block;margin-top:.55rem;font:400 .98rem/1.3 Figtree,system-ui,sans-serif;letter-spacing:0;color:#555}',
+    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#3a8273;color:#fff;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
+    'html body #app .stk.eg-stk .btn:active{background:#2f6b5e}',
+    '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
+  ].join('\n');
+  var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
   var pend = false;
   function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { renglon(); } catch (e) { /* se deja la descripción original */ } try { ego(); } catch (e) { /* queda la ficha original */ } }); }
   function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
