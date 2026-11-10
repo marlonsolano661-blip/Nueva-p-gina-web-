@@ -33,6 +33,7 @@
       '<li><button type="button" data-hd="col" class="hd-sub">Colección</button></li>' +
       '<li><button type="button" data-mn="home">Inicio</button></li>' +
       '<li><button type="button" data-mn="com">Comunidad Marlon</button></li>' +
+      '<li><button type="button" data-hd-ir="outfits.html">Ideas de outfits</button></li>' +
       '</ul><ul class="hd-l2">' +
       '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +
@@ -167,4 +168,11 @@
     if (bag) bag.addEventListener('animationend', function (e) { if (e.animationName === 'mfBolsa') bag.classList.remove('bump'); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armar); else armar();
+  /* Enlaces del menú a otras páginas de la tienda (por ejemplo, Ideas de outfits) */
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('[data-hd-ir]') : null;
+    if (b) location.href = b.getAttribute('data-hd-ir');
+  });
+  /* Botón "Ideas para combinar este tacón" en la ficha de producto (outfits-boton.js) */
+  if (document.getElementById('app')) { var s = document.createElement('script'); s.src = 'outfits-boton.js'; s.async = true; document.body.appendChild(s); }
 })();
