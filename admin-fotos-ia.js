@@ -2,7 +2,8 @@
    Flujo en un solo recuadro: 1) subir la foto principal, 2) tocar los colores deseados, 3) "Crear fotos".
    La IA (función fotos-ia-background, con un prompt fijo de la tienda) crea 1, 2 o 3 fotos por color: como la foto original,
    de lado y el par junto sin piernas en fondo blanco; o solo el par junto. Las fotos entran a la galería por el mismo camino que "+ Agregar fotos",
-   y cada color se agrega solo a los colores del producto con su foto. Nada se publica hasta que la persona revisa y toca "Guardar". Lo carga sugerir-color.js. */
+   y cada color se agrega solo a los colores del producto con su foto. Nada se publica hasta que la persona revisa y toca "Guardar". Lo carga sugerir-color.js.
+   También: botón "Nombre y descripción con IA" (función textos-ia) que llena esos dos campos a partir de la foto principal. */
 (function () {
   'use strict';
   if (typeof document === 'undefined') return;
@@ -102,6 +103,27 @@
       .catch(function (e) { soltar(); m.falla(e); });
   }
 
+  // Nombre y descripción con IA: mira la foto principal y llena los campos; la persona revisa antes de guardar.
+  function textos(entrada, btn) {
+    var m = M();
+    if (!m) return;
+    var principal = entrada.parentNode.querySelector('.fotos .foto img');
+    if (!principal) return m.msg('Primero sube la foto del zapato con "+ Agregar fotos"', true);
+    var nom = document.getElementById('f-nombre'), des = document.getElementById('f-desc');
+    if (!nom || !des) return;
+    if ((nom.value.trim() || des.value.trim()) && !confirm('Ya hay nombre o descripción. ¿Reemplazarlos por los que escriba la IA?')) return;
+    btn.disabled = true; m.msg('La IA está escribiendo el nombre y la descripción…');
+    m.api('textos-ia', { method: 'POST', body: { src: principal.getAttribute('src') } })
+      .then(function (d) {
+        nom.value = d.nombre || nom.value; des.value = d.descripcion || des.value;
+        nom.dispatchEvent(new Event('input', { bubbles: true })); des.dispatchEvent(new Event('input', { bubbles: true }));
+        btn.disabled = false;
+        nom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        m.msg('Listo ✓ Revisa el nombre, la descripción y sobre todo la ALTURA (la IA la calcula a ojo). Luego toca "Guardar".');
+      })
+      .catch(function (e) { btn.disabled = false; m.falla(e); });
+  }
+
   function poner() {
     var entrada = document.getElementById('f-file');
     if (!entrada || entrada.dataset.ia) return;
@@ -111,6 +133,10 @@
     caja.style.cssText = 'border:1.5px solid var(--g2,#ddd);border-radius:1rem;padding:.9rem;margin:.8rem 0;';
     caja.appendChild(nuevo('b', '', '✨ Crear fotos con IA'));
     caja.appendChild(nuevo('p', 'nota', '1. Sube arriba la foto del zapato con "+ Agregar fotos".'));
+    var bt = nuevo('button', 'claro', '✨ Nombre y descripción con IA');
+    bt.type = 'button'; bt.style.margin = '.2rem 0 .6rem';
+    bt.addEventListener('click', function () { textos(entrada, bt); });
+    caja.appendChild(bt);
     caja.appendChild(nuevo('p', 'nota', '2. Toca los colores en que lo quieres:'));
     var chips = nuevo('div', 'paleta ia-paleta');
     COLORES.forEach(function (k) {
