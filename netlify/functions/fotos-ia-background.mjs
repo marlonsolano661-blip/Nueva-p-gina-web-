@@ -3,6 +3,7 @@
 // La llama el botón "Crear fotos con IA" del panel, con la clave del panel (ADMIN_TOKEN):
 //   POST /api/fotos-ia-background  { src: <foto principal>, trabajo: "IA-xxxx", colores: [{n,h}], porColor: 1|2 }
 // Por cada color crea 1 foto (misma pose) o 2 (misma pose + vista lateral) con un prompt fijo que sirve para cualquier zapato.
+// Cada foto lleva el logo MF estampado en la plantilla (la IA recibe el logo de la tienda como segunda imagen).
 // Las fotos quedan en el bucket "productos" y el resultado en eventos (tipo "fotos_ia", referencia = trabajo).
 import crypto from 'crypto';
 import process from 'process';
@@ -18,7 +19,15 @@ const BASE = 'You are editing a professional e-commerce product photo of a shoe 
   'reference of the product. Keep the EXACT same shoe model: same shape, toe, straps, buckles, embellishments, stitching, materials, ' +
   'heel shape and heel height, sole and proportions. Do not add, remove or redesign any detail. Keep the same soft neutral studio ' +
   'background and the same soft professional lighting as the reference. If legs or feet appear, keep them natural and realistic. ' +
-  'Photorealistic, sharp focus, high detail, full shoe visible. No text, logos or watermarks. ';
+  'Photorealistic, sharp focus, high detail, full shoe visible. ';
+// Marca: el logo MF estampado en la plantilla, como en los zapatos de lujo. Si no llega el logo, no se pide.
+const MARCA = 'BRAND STAMP: the second attached image is the MF brand logo (the letters M and F joined, thin lines). Print this exact ' +
+  'logo small and centered on the visible insole (footbed) of the shoe, near the heel area, like a luxury brand stamp printed in black ' +
+  '(use gold or white only if the insole is black or very dark). It must follow the perspective and curve of the insole and look ' +
+  'printed on the material. Copy the logo shape exactly; do not redraw, rename or add letters. If no insole is visible, do not add the ' +
+  'logo anywhere. No other text, logos or watermarks anywhere in the image. ';
+const SIN_MARCA = 'No text, logos or watermarks. ';
+const LOGO_URL = `${process.env.URL || 'https://tienda.mfcol.com'}/assets/brand/avatar-blanco-512.png`;
 const COLOR = (n, h) => `Make the shoe in the color ${n} (approximately ${h}): recolor ONLY the main material of the shoe (upper, straps, ` +
   'insole and sole edge). Parts that are transparent or clear stay transparent; metal hardware, rhinestones and other embellishments ' +
   'keep their finish unless they are obviously the same material as the main color. ';
@@ -29,13 +38,14 @@ const VISTAS = [
 const RE_HEX = /^#[0-9a-fA-F]{6}$/;
 const MAX_COLORES = 6;
 
-async function generar(ai, img, mime, prompt) {
+async function generar(ai, img, mime, prompt, logo) {
   const fallos = [];
   for (const model of MODELOS) {
     try {
       const r = await ai.models.generateContent({
         model,
-        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }, { text: prompt }] }],
+        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: mime, data: img } }]
+          .concat(logo ? [{ inlineData: { mimeType: 'image/png', data: logo } }] : [], [{ text: prompt }]) }],
         config: { responseModalities: ['IMAGE', 'TEXT'] },
       });
       const parts = (r.candidates && r.candidates[0] && r.candidates[0].content && r.candidates[0].content.parts) || [];
@@ -92,12 +102,16 @@ export default async (req) => {
   if (!/^image\/(jpeg|png|webp)$/.test(mime)) { await fin({ error: 'La foto principal debe ser JPG, PNG o WEBP' }); return; }
   const img = Buffer.from(await r.arrayBuffer()).toString('base64');
 
+  // Logo de la tienda para estamparlo en la plantilla; si no se puede leer, las fotos se crean sin logo.
+  let logo = null;
+  try { const l = await fetch(LOGO_URL, { signal: AbortSignal.timeout(10000) }); if (l.ok) logo = Buffer.from(await l.arrayBuffer()).toString('base64'); } catch (e) { logo = null; }
+  if (!logo) console.error('[fotos-ia] no se pudo leer el logo; las fotos salen sin marca');
   const ai = new GoogleGenAI({}); // GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL los pone el AI Gateway
   const fotos = [], errores = [];
   for (const k of colores) {
     for (let v = 0; v < porColor; v++) {
       try {
-        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v]);
+        const g = await generar(ai, img, mime, BASE + COLOR(k.n, k.h) + VISTAS[v] + ' ' + (logo ? MARCA : SIN_MARCA), logo);
         const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
         const slug = k.n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').slice(0, 20);
         const url = await db.subirFoto(c, `ia-${Date.now()}-${slug}-${v + 1}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
@@ -105,5 +119,5 @@ export default async (req) => {
       } catch (e) { errores.push({ color: k.n, vista: v + 1, error: String(e.message || e).slice(0, 300) }); }
     }
   }
-  await fin({ src, fotos, errores });
+  await fin({ src, fotos, errores, marca: !!logo });
 };
