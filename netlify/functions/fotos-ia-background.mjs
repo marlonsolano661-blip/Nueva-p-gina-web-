@@ -23,10 +23,12 @@ const BASE = 'You are editing a professional e-commerce product photo of a shoe 
   'Photorealistic, sharp focus, high detail, full shoe visible. ';
 // Marca: el logo MF estampado en la plantilla, como en los zapatos de lujo. Si no llega el logo, no se pide.
 const MARCA = 'BRAND STAMP: the second attached image is the MF brand logo (the letters M and F joined, thin lines). Print this exact ' +
-  'logo small and centered ONLY on the empty inner insole (footbed) of the shoe, near the heel area, like a luxury brand stamp printed in black ' +
-  '(use gold or white only if the insole is black or very dark). It must follow the perspective and curve of the insole and look ' +
-  'printed on the material. Copy the logo shape exactly; do not redraw, rename or add letters. Never put it on skin, feet, legs, straps, ' +
-  'the outer sole, the heel, the box or the background. If no empty insole is visible, do not add the logo anywhere. ' +
+  'logo ONCE on the empty inner insole (footbed), in the heel area (the back part of the insole where the heel rests), never near the toe. ' +
+  'Style: a small, discreet, thin black print like a fine screen-printed luxury brand mark, about one fifth of the insole width, ' +
+  'upright and readable (not mirrored, not rotated sideways), sitting naturally on the insole surface with the insole perspective. ' +
+  'Use black print (gold only if the insole is black or very dark). Only one logo per image: if two shoes appear, put it only on the ' +
+  'shoe whose insole is most visible. Copy the logo shape exactly; do not redraw, rename or add letters. Never put it on skin, feet, ' +
+  'legs, straps, the outer sole, the heel, the box or the background. If no empty insole is visible, do not add the logo anywhere. ' +
   'No other text, logos or watermarks anywhere in the image. ';
 const SIN_MARCA = 'No text, logos or watermarks. ';
 const LOGO_URL = `${process.env.URL || 'https://tienda.mfcol.com'}/assets/brand/avatar-blanco-512.png`;
