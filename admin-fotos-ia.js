@@ -1,7 +1,7 @@
 /* Botón "✨ Crear fotos con IA" en el formulario de producto del panel.
    Flujo en un solo recuadro: 1) subir la foto principal, 2) tocar los colores deseados, 3) "Crear fotos".
-   La IA (función fotos-ia-background, con un prompt fijo de la tienda) crea 1 o 2 fotos por color: de frente como la
-   foto original y, si se piden 2, también de lado. Las fotos entran a la galería por el mismo camino que "+ Agregar fotos",
+   La IA (función fotos-ia-background, con un prompt fijo de la tienda) crea 1, 2 o 3 fotos por color: como la foto original,
+   de lado y el par junto sin piernas en fondo blanco; o solo el par junto. Las fotos entran a la galería por el mismo camino que "+ Agregar fotos",
    y cada color se agrega solo a los colores del producto con su foto. Nada se publica hasta que la persona revisa y toca "Guardar". Lo carga sugerir-color.js. */
 (function () {
   'use strict';
@@ -52,7 +52,7 @@
     var colores = Array.prototype.map.call(chips.querySelectorAll('button.pal.on'), function (b) { return { n: b.getAttribute('data-n'), h: b.getAttribute('data-h') }; });
     if (!colores.length) return m.msg('Toca uno o más colores (paso 2) y luego "Crear fotos"', true);
     if (colores.length > 6) return m.msg('Máximo 6 colores por vez', true);
-    var porColor = Number(cuantas.value) === 2 ? 2 : 1, total = colores.length * porColor;
+    var soloPar = cuantas.value === 'par', porColor = soloPar ? 1 : (Number(cuantas.value) === 3 ? 3 : Number(cuantas.value) === 2 ? 2 : 1), total = colores.length * porColor;
     var antes = rejilla.querySelectorAll('.foto').length;
     if (antes + total > 30) return m.msg('Máximo 30 fotos por producto: quita algunas antes', true);
     if (!window.DataTransfer) return m.msg('Este navegador no permite agregar las fotos automáticamente. Actualízalo e intenta de nuevo.', true);
@@ -63,7 +63,7 @@
     var soltar = function () { boton.disabled = false; cuantas.disabled = false; };
     var quitarMarcas = function () { chips.querySelectorAll('button.pal.on').forEach(function (b) { b.classList.remove('on'); }); };
     m.msg('La IA está creando ' + total + ' foto(s)… no cierres esta página.');
-    m.api('fotos-ia-background', { method: 'POST', body: { src: principal.getAttribute('src'), trabajo: trabajo, colores: colores, porColor: porColor } })
+    m.api('fotos-ia-background', { method: 'POST', body: { src: principal.getAttribute('src'), trabajo: trabajo, colores: colores, porColor: porColor, soloPar: soloPar } })
       .then(function () {
         var n = 0;
         return (function revisar() {
@@ -89,7 +89,9 @@
           return hastaQue(function () { return rejilla.querySelectorAll('.foto').length >= antes + archivos.length; }, 300000);
         }).then(function () {
           var urls = Array.prototype.map.call(rejilla.querySelectorAll('.foto img'), function (i) { return i.getAttribute('src'); }).slice(antes);
-          fotos.forEach(function (x, i) { if (x.vista === 1 && urls[i]) ponerColor(x.color, urls[i]); });
+          // A cada color se le asigna su primera foto creada (la de la misma pose, o el par si solo se pidió el par)
+          var hecho = {};
+          fotos.forEach(function (x, i) { if (!hecho[x.color] && urls[i]) { hecho[x.color] = 1; ponerColor(x.color, urls[i]); } });
           soltar(); quitarMarcas();
           var faltan = (d.errores || []).length;
           m.msg('Listas ' + fotos.length + ' foto(s) con IA ✓' + (faltan ? ' (' + faltan + ' no salieron)' : '') +
@@ -122,7 +124,7 @@
     caja.appendChild(nuevo('p', 'nota', '3. ¿Cuántas fotos por color?'));
     var cuantas = nuevo('select');
     cuantas.setAttribute('aria-label', 'Fotos por color');
-    [['1', '1 foto por color'], ['2', '2 fotos por color (una de lado)']].forEach(function (o) {
+    [['1', '1 foto por color'], ['2', '2 fotos por color (una de lado)'], ['3', '3 fotos por color (de lado y el par junto)'], ['par', 'Solo el par junto, sin piernas (fondo blanco)']].forEach(function (o) {
       var op = nuevo('option', '', o[1]); op.value = o[0]; cuantas.appendChild(op);
     });
     caja.appendChild(cuantas);
