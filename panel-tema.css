@@ -17,3 +17,17 @@ html body button.claro, html body .btn.o, html body .boton.claro, html body .pal
 html body button.claro:hover:not(:disabled) { background:var(--g1); }
 /* Resumen "Así va tu tienda", finanzas y compras: también en marfil */
 html body .rc:not(.aviso), html body .rs-hacer, html body .fin-card, html body .compra { background:var(--marfil); box-shadow:0 1px 0 var(--borde), 0 8px 24px -18px #6b553a55; }
+/* Resumen en tiras: una fila por dato, título y detalle a la izquierda, número grande a la derecha */
+html body .rs-grid { grid-template-columns:1fr; gap:.55rem; }
+html body .rc { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"t n" "p n"; align-items:center; column-gap:1rem; row-gap:.1rem; min-height:0; padding:.85rem 1.1rem; border-radius:1.1rem; }
+html body .rc-t { grid-area:t; }
+html body .rc-p { grid-area:p; }
+html body .rc-n { grid-area:n; margin:0; font-size:2.1rem; text-align:right; white-space:nowrap; }
+/* Pantalla de entrada (sin sesión): logo, título, clave y botón centrados en la pantalla */
+html body header:has(#token:not([hidden])) { position:static; min-height:100vh; min-height:100svh; box-sizing:border-box; flex-direction:column; flex-wrap:nowrap; justify-content:center; align-items:center; gap:1.4rem; background:transparent !important; backdrop-filter:none; border:0; padding:1.5rem 1rem; }
+html body header:has(#token:not([hidden])) .barra { flex-direction:column; justify-content:center; text-align:center; width:min(22rem,100%); }
+html body header:has(#token:not([hidden])) .barra:first-child { gap:.8rem; }
+html body header:has(#token:not([hidden])) .logo, html body header:has(#token:not([hidden])) .logo svg { height:3.2rem; }
+html body header:has(#token:not([hidden])) h1 { margin:0; font-size:2.2rem; }
+html body header:has(#token:not([hidden])) .barra:last-child { background:var(--marfil); border-radius:1.4rem; padding:1.2rem; box-shadow:0 1px 0 var(--borde), 0 14px 34px -22px #6b553a77; gap:.7rem; box-sizing:border-box; }
+html body header:has(#token:not([hidden])) #token, html body header:has(#token:not([hidden])) #entrar { width:100%; box-sizing:border-box; text-align:center; }
