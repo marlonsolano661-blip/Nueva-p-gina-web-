@@ -91,3 +91,23 @@ body:has(#token:not([hidden])) #entrar:active { transform:scale(.98); }
 body:has(#token:not([hidden])) header::after {
   content:'🔒  Acceso exclusivo del equipo MF'; margin-top:1.4rem; font-size:.8rem; letter-spacing:.04em; color:#ffffff8c;
 }
+
+/* Inicio del panel: el resumen en una sola tarjeta compacta (una fila por dato) en vez de 4 cuadros grandes.
+   Usa #resumen para pesar más que admin-ventas.css, que se carga después. */
+#resumen .rs-saludo{margin-bottom:0}
+#resumen .rs-tit{font-size:1.8rem;margin:0 0 .7rem}
+#resumen .rs-grid{grid-template-columns:1fr;gap:0;background:#fff;border-radius:1.2rem;padding:.1rem 1rem;box-shadow:0 1px 0 var(--g2)}
+#resumen .rc{flex-direction:row;align-items:center;gap:.6rem;min-height:0;padding:.8rem 0;background:transparent;color:inherit;border-radius:0;box-shadow:none;border-top:1px solid var(--g2)}
+#resumen .rc:first-child{border-top:0}
+#resumen .rc:active{transform:none;opacity:.6}
+#resumen .rc-t{flex:1;min-width:0;font-size:.95rem;font-weight:600;letter-spacing:0;text-transform:none;color:var(--k)}
+#resumen .rc-t::first-letter{text-transform:uppercase}
+#resumen .rc-n{order:2;margin:0;font:700 1.35rem/1 'Cormorant Garamond',Georgia,serif;white-space:nowrap}
+#resumen .rc-p{display:none}
+#resumen .rc::after{content:'›';order:3;font-size:1.5rem;line-height:1;color:#c3c3c8}
+#resumen .rc.aviso{background:transparent;color:inherit}
+#resumen .rc.aviso .rc-t{color:var(--k)}
+#resumen .rc.aviso .rc-n{color:var(--bad)}
+#resumen .rs-hacer{margin-top:.8rem;padding:.8rem 1rem .5rem}
+#resumen .rs-hacer h3{font-size:1.25rem;margin-bottom:.3rem}
+#resumen .rs-ok{font-size:.92rem;font-weight:500;padding:0 0 .4rem}
