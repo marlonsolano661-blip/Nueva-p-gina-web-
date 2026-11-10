@@ -89,8 +89,18 @@
       el('td', { text: prods }),
       el('td', { class: 'num', text: peso(v.total) }),
       el('td', {}, [pago]), el('td', {}, [env]),
-      el('td', { class: 'acc-wa' }, [el('button', { type: 'button', class: 'claro', text: 'Editar', onclick: function () { formulario(v); } }), quitar]),
+      el('td', { class: 'acc-wa' }, [botonFactura(v), el('button', { type: 'button', class: 'claro', text: 'Editar', onclick: function () { formulario(v); } }), quitar]),
     ]);
+  }
+
+  // Lleva el pedido directo al facturador (Facturas) con la clienta, productos, envío, descuento y pago ya puestos
+  function irAFactura(v) {
+    if (!window.mfAdminFacturas || !window.mfAdminFacturas.desdeWhatsapp) return A.msg('Facturas no cargó: revisa que admin-facturas.js esté subido', true);
+    window.mfAdminFacturas.desdeWhatsapp(v).catch(A.falla);
+  }
+  function botonFactura(v) {
+    var hecha = window.mfAdminFacturas && window.mfAdminFacturas.deWhatsapp ? window.mfAdminFacturas.deWhatsapp(v.id) : null;
+    return el('button', { type: 'button', class: hecha ? 'claro wa-fact' : 'wa-fact', text: hecha ? 'Factura ' + hecha.numero : 'Hacer factura', title: hecha ? 'Ver o reenviar el comprobante de este pedido' : 'Crear el comprobante con los datos de este pedido', onclick: function () { irAFactura(v); } });
   }
 
   function formulario(v) {
@@ -147,16 +157,24 @@
     [envio, desc].forEach(function (x) { x.addEventListener('input', recalcular); });
 
     var guardar = el('button', { type: 'button', text: nuevo ? 'Guardar pedido' : 'Guardar cambios' });
+    var guardarFact = el('button', { type: 'button', class: 'claro', text: nuevo ? 'Guardar y hacer factura' : 'Guardar e ir a la factura' });
+    var conFactura = false;
+    guardarFact.addEventListener('click', function () { conFactura = true; guardar.click(); });
     guardar.addEventListener('click', function () {
+      var irFact = conFactura; conFactura = false;
       var venta = {
         fecha: fecha.value, cliente: cliente.value, telefono: tel.value, ciudad: ciudad.value,
         items: filas.map(function (f) { return { nombre: f.nombre.value, talla: f.talla.value, color: f.color.value, cant: parseInt(f.cant.value, 10), precio: parseInt(f.precio.value, 10) }; }),
         envio: parseInt(envio.value, 10) || 0, descuento: parseInt(desc.value, 10) || 0, metodo_pago: metodo.value, estado_pago: pago.value, estado_envio: estEnv.value, guia: guia.value, nota: nota.value,
       };
-      guardar.disabled = true; A.msg('Guardando…');
+      guardar.disabled = guardarFact.disabled = true; A.msg('Guardando…');
       A.api('admin-tienda', { method: 'POST', body: { recurso: 'venta_wa', accion: nuevo ? 'crear' : 'actualizar', id: nuevo ? undefined : v.id, venta: venta } })
-        .then(function () { A.msg('Pedido guardado ✓'); cont.textContent = ''; return recargarW(); })
-        .catch(function (e) { guardar.disabled = false; A.falla(e); });
+        .then(function (r) {
+          A.msg('Pedido guardado ✓'); cont.textContent = '';
+          if (irFact) { irAFactura(Object.assign({}, venta, { id: r && r.venta && r.venta.id != null ? r.venta.id : v.id })); return recargarW().catch(function () {}); }
+          return recargarW();
+        })
+        .catch(function (e) { guardar.disabled = guardarFact.disabled = false; A.falla(e); });
     });
     var form = el('div', { class: 'form wa-form wa-hoja' }, [
       el('h3', { text: nuevo ? 'Nuevo pedido por WhatsApp' : 'Editar pedido' }),
@@ -169,7 +187,7 @@
       total,
       el('div', { class: 'wa-grid' }, [el('label', {}, ['Cómo pagó', metodo]), el('label', {}, ['Pago', pago]), el('label', {}, ['Envío', estEnv]), el('label', {}, ['Guía', guia])]),
       el('label', {}, ['Nota', nota]),
-      el('div', { class: 'acc2' }, [guardar, el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { cont.textContent = ''; } })]),
+      el('div', { class: 'acc2' }, [guardar, guardarFact, el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { cont.textContent = ''; } })]),
     ]);
     cont.appendChild(form); recalcular();
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
