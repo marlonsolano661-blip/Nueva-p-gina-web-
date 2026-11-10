@@ -65,6 +65,14 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 .hint{font-size:.8rem;color:var(--err);margin:.4rem 0 0;min-height:1.2em}
 .pieces{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.35rem}
 .pieces li{font-size:.82rem;padding:.3rem .65rem;background:var(--bg);border:1px solid var(--l)}
+.pieces li.f{display:flex;align-items:center;gap:.55rem;padding:.25rem .7rem .25rem .25rem}
+.pieces li img{width:46px;height:46px;object-fit:cover;background:var(--w);display:block}
+.filtro{margin:.9rem 0 0;font-size:.9rem;color:var(--g)}
+.filtro a{color:var(--k);text-underline-offset:3px;text-decoration-color:var(--o)}
+.ocas{display:flex;gap:.4rem;margin:1rem 0 0;overflow-x:auto;padding-bottom:.2rem}
+.oc{flex:none;border:1px solid var(--k);background:transparent;padding:.5rem .9rem;font:500 .68rem Jost,Helvetica,sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.oc[aria-pressed="true"]{background:var(--k);color:var(--w)}
+.look-oc{font:500 .66rem Jost,Helvetica,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--o);margin:0 0 -.6rem}
 .actions{display:grid;gap:.5rem}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .75rem Jost,Helvetica,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;text-decoration:none}
 .btn.o{background:transparent;color:var(--k);min-height:44px}
@@ -80,6 +88,8 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
     <div><p class="k">Ideas de outfits</p><h1>Cómo combinar tus tacones</h1></div>
     <p class="lead">Looks completos de pies a cabeza. Cambia de look con las flechas o deslizando, y mira cada outfit de frente y de lado.</p>
   </div>
+  <p class="filtro" id="filtro" hidden></p>
+  <div class="ocas" id="ocas" hidden></div>
   <div class="layout">
     <section class="runway" aria-label="Pasarela de outfits">
       <div class="stage" id="stage"></div>
@@ -91,6 +101,7 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
     </section>
     <aside class="panel" aria-live="polite">
       <div class="p-top"><h2>En este look</h2><span id="count"></span></div>
+      <p class="look-oc" id="lookOc" hidden></p>
       <p class="look-name" id="lookName"></p>
       <div id="anglesWrap"><p class="lbl">Ángulos</p><div class="angles" id="angles"></div></div>
       <a class="prod" id="prod" href="index.html"><img id="prodImg" src="" alt=""><div><strong id="prodName"></strong><span class="meta" id="prodMeta"></span><span class="price" id="prodPrice"></span></div></a>
@@ -111,19 +122,17 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 <script src="outfits-img/camel-falda-frente.js"></script>
 <script>
 /* ================================================================
-   OUTFITS — para agregar o cambiar un look edita solo esta lista.
-   producto: id del tacón en el catálogo (panel de la tienda)
-   color:    nombre del color tal como está en el catálogo
-   angulos:  fotos de la modelo; la primera es la de la pasarela
+   Los looks se arman en el panel de la tienda (sección "Outfits").
+   Mientras no haya looks guardados allí, se muestran estos de ejemplo.
    ================================================================ */
-var OUTFITS = [
-  { nombre: "Jean clásico", producto: "sandalia-miel-elite-mf", color: "Negro",
+var EJEMPLOS = [
+  { nombre: "Jean clásico", ocasion: "Casual", producto: "sandalia-miel-elite-mf", color: "Negro",
     angulos: [["Frente", "negro-jean-frente"], ["Lado", "negro-jean-lado"]],
     piezas: ["Camisa blanca", "Jean recto tiro alto", "Cinturón blanco", "Accesorios dorados"] },
-  { nombre: "Vestido camel", producto: "sandalia-miel-elite-mf", color: "Camel",
+  { nombre: "Vestido camel", ocasion: "Cita", producto: "sandalia-miel-elite-mf", color: "Camel",
     angulos: [["Frente", "camel-vestido-frente"]],
     piezas: ["Vestido midi de punto acanalado", "Pulseras doradas", "Aretes de argolla"] },
-  { nombre: "Falda de jean", producto: "sandalia-miel-elite-mf", color: "Camel",
+  { nombre: "Falda de jean", ocasion: "Fin de semana", producto: "sandalia-miel-elite-mf", color: "Camel",
     angulos: [["Frente", "camel-falda-frente"]],
     piezas: ["Top crema de tiras", "Minifalda de jean", "Cinturón camel"] }
 ];
@@ -132,29 +141,58 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
 
 (function () {
   var $ = function (id) { return document.getElementById(id); };
+  var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (m) { return "&#" + m.charCodeAt(0) + ";"; }); };
   var fmt = function (n) { return "$" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
-  var foto = function (k) { return (window.OUTFIT_IMG && OUTFIT_IMG[k]) || ""; };
-  /* Foto en alta calidad (outfits-img/<nombre>.jpg); si todavía no está subida, usa la versión liviana. */
-  var ponerFoto = function (img, k) { img.onerror = function () { img.onerror = null; img.src = foto(k); }; img.src = "outfits-img/" + k + ".jpg"; };
+  /* Una foto es una dirección (subida desde el panel) o el nombre de una foto de ejemplo. */
+  var esUrl = function (k) { return String(k).indexOf("/") > -1; };
+  var foto = function (k) { return esUrl(k) ? k : ((window.OUTFIT_IMG && OUTFIT_IMG[k]) || ""); };
+  /* Ejemplos: usa la foto en alta calidad (outfits-img/<nombre>.jpg) si está subida; si no, la versión liviana. */
+  var ponerFoto = function (img, k) {
+    if (esUrl(k)) { img.onerror = null; img.src = k; return; }
+    img.onerror = function () { img.onerror = null; img.src = foto(k); }; img.src = "outfits-img/" + k + ".jpg";
+  };
   var CAT = {};
   var prod = function (id) { return CAT[id] || RESPALDO[id] || { id: id, name: "Tacón MF", price: null, colors: [], tallas: [] }; };
   var colorDe = function (p, n) { return (p.colors || []).filter(function (c) { return String(c.n).toLowerCase() === String(n).toLowerCase(); })[0] || {}; };
-  var n = OUTFITS.length, active = 0, angle = 0, size = null;
+  var PID = (/[?&]producto=([^&#]+)/.exec(location.search) || [])[1]; PID = PID ? decodeURIComponent(PID) : "";
+  var OC = "", TODOS = EJEMPLOS, OUTFITS = [], figs = [], steps = [], n = 0, active = 0, angle = 0, size = null;
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var figs = OUTFITS.map(function (L, i) {
-    var b = document.createElement("div"); b.className = "fig";
-    b.innerHTML = '<img alt="Modelo con el look ' + L.nombre + '">';
-    ponerFoto(b.querySelector("img"), L.angulos[0][1]);
-    b.addEventListener("click", function () { if (i !== active) go(i); });
-    $("stage").appendChild(b); return b;
-  });
-  var steps = OUTFITS.map(function (L, i) {
-    var s = document.createElement("button"); s.type = "button"; s.className = "step";
-    s.textContent = String(i + 1).padStart(2, "0") + " · " + L.nombre;
-    s.addEventListener("click", function () { go(i); });
-    $("steps").appendChild(s); return s;
-  });
+  function construir() {
+    var f = PID ? TODOS.filter(function (L) { return L.producto === PID; }) : [];
+    var base = f.length ? f : TODOS;
+    ocasiones(base);
+    OUTFITS = OC ? base.filter(function (L) { return L.ocasion === OC; }) : base;
+    if (!OUTFITS.length) { OC = ""; OUTFITS = base; ocasiones(base); }
+    n = OUTFITS.length; active = 0; angle = 0;
+    $("stage").textContent = ""; $("steps").textContent = "";
+    figs = OUTFITS.map(function (L, i) {
+      var b = document.createElement("div"); b.className = "fig";
+      b.innerHTML = '<img alt="Modelo con el look ' + esc(L.nombre) + '">';
+      ponerFoto(b.querySelector("img"), L.angulos[0][1]);
+      b.addEventListener("click", function () { if (i !== active) go(i); });
+      $("stage").appendChild(b); return b;
+    });
+    steps = OUTFITS.map(function (L, i) {
+      var s = document.createElement("button"); s.type = "button"; s.className = "step";
+      s.textContent = String(i + 1).padStart(2, "0") + " · " + L.nombre;
+      s.addEventListener("click", function () { go(i); });
+      $("steps").appendChild(s); return s;
+    });
+    $("prev").hidden = $("next").hidden = n < 2;
+    layout(); panel(); filtro(f.length > 0);
+  }
+  /* Botones de ocasión (Casual, Noche…): solo si los looks tienen ocasión */
+  function ocasiones(base) {
+    var L = []; base.forEach(function (x) { if (x.ocasion && L.indexOf(x.ocasion) < 0) L.push(x.ocasion); });
+    var box = $("ocas"); box.hidden = L.length < 2; if (box.hidden) { OC = ""; return; }
+    box.innerHTML = [""].concat(L).map(function (o) { return '<button class="oc" type="button" data-oc="' + esc(o) + '" aria-pressed="' + (o === OC) + '">' + esc(o || "Todas las ocasiones") + "</button>"; }).join("");
+  }
+  $("ocas").addEventListener("click", function (e) { var b = e.target.closest("[data-oc]"); if (!b) return; OC = b.getAttribute("data-oc"); construir(); });
+  function filtro(on) {
+    var e = $("filtro"); e.hidden = !on; if (!on) return;
+    e.innerHTML = "Ideas para combinar: <b>" + esc(prod(PID).name) + '</b> · <a href="outfits.html">Ver todos los looks</a>';
+  }
 
   function layout() {
     var w = $("stage").clientWidth, figW = $("stage").clientHeight * 0.75, gap = Math.min(figW * 0.5, w * 0.3);
@@ -173,17 +211,22 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var L = OUTFITS[active], p = prod(L.producto), c = colorDe(p, L.color);
     $("count").textContent = (active + 1) + " / " + n;
     $("lookName").textContent = L.nombre;
-    $("prodImg").src = c.img || p.img || foto(L.angulos[0][1]); $("prodImg").alt = p.name + " color " + L.color;
+    $("lookOc").hidden = !L.ocasion; $("lookOc").textContent = L.ocasion || "";
+    $("prodImg").src = c.img || p.img || foto(L.angulos[0][1]); $("prodImg").alt = p.name + (L.color ? " color " + L.color : "");
     $("prodName").textContent = p.name;
-    $("prodMeta").textContent = "Color " + L.color;
+    $("prodMeta").textContent = L.color ? "Color " + L.color : "";
     $("prodPrice").textContent = p.price != null ? fmt(p.price) : "";
     var href = "index.html?producto=" + encodeURIComponent(L.producto);
     $("prod").href = href; $("seeProd").href = href;
     $("add").textContent = "Agregar a la bolsa" + (p.price != null ? " · " + fmt(p.price) : "");
-    $("pieces").innerHTML = L.piezas.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    $("pieces").parentNode.hidden = !L.piezas.length;
+    $("pieces").innerHTML = L.piezas.map(function (x) {
+      var nom = typeof x === "string" ? x : x.n, f = typeof x === "string" ? "" : x.foto;
+      return f ? '<li class="f"><img src="' + esc(f) + '" alt="" loading="lazy">' + esc(nom) + "</li>" : "<li>" + esc(nom) + "</li>";
+    }).join("");
     $("anglesWrap").hidden = L.angulos.length < 2;
     $("angles").innerHTML = L.angulos.map(function (a, i) {
-      return '<button class="angle" type="button" data-a="' + i + '" aria-pressed="' + (i === angle) + '"><img src="' + foto(a[1]) + '" alt=""><small>' + a[0] + "</small></button>";
+      return '<button class="angle" type="button" data-a="' + i + '" aria-pressed="' + (i === angle) + '"><img src="' + esc(foto(a[1])) + '" alt=""><small>' + esc(a[0]) + "</small></button>";
     }).join("");
     var todas = ["34", "35", "36", "37", "38", "39", "40"], hay = p.tallas && p.tallas.length ? p.tallas.map(String) : todas;
     if (size && hay.indexOf(size) < 0) size = null;
@@ -215,7 +258,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   });
   var x0 = null;
   $("stage").addEventListener("pointerdown", function (e) { x0 = e.clientX; });
-  $("stage").addEventListener("pointerup", function (e) { if (x0 === null) return; var dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1)); });
+  $("stage").addEventListener("pointerup", function (e) { if (x0 === null || n < 2) return; var dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1)); });
 
   /* Agrega a la misma bolsa de la tienda (mf_cart). El servidor recalcula el precio al pagar. */
   $("add").addEventListener("click", function () {
@@ -229,12 +272,24 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   });
 
   addEventListener("resize", layout);
-  layout(); panel();
+  construir();
+  var API = window.MF_API_BASE || "";
+  var pedir = function (r) { return fetch(API + r).then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }); };
   /* Nombre, precio, fotos y tallas disponibles desde el catálogo de la tienda */
-  fetch((window.MF_API_BASE || "") + "/api/catalogo").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+  pedir("/api/catalogo").then(function (d) {
     if (!d || !Array.isArray(d.productos)) return;
-    d.productos.forEach(function (p) { CAT[p.id] = p; }); panel();
-  }).catch(function () {});
+    d.productos.forEach(function (p) { CAT[p.id] = p; }); panel(); filtro(!$("filtro").hidden);
+  });
+  /* Looks armados en el panel: reemplazan a los de ejemplo */
+  pedir("/api/outfits").then(function (d) {
+    var L = d && Array.isArray(d.outfits) ? d.outfits : [];
+    if (!L.length) return;
+    TODOS = L.map(function (o) {
+      return { nombre: o.nombre, ocasion: o.ocasion || "", producto: o.producto, color: o.color || "", piezas: o.piezas || [],
+        angulos: o.fotos.map(function (f) { return [f.e, f.url]; }) };
+    });
+    construir();
+  });
 })();
 </script>
 </body></html>

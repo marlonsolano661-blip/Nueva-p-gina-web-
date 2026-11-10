@@ -173,4 +173,6 @@
     var b = e.target && e.target.closest ? e.target.closest('[data-hd-ir]') : null;
     if (b) location.href = b.getAttribute('data-hd-ir');
   });
+  /* Botón "Ideas para combinar este tacón" en la ficha de producto (outfits-boton.js) */
+  if (document.getElementById('app')) { var s = document.createElement('script'); s.src = 'outfits-boton.js'; s.async = true; document.body.appendChild(s); }
 })();
