@@ -125,15 +125,20 @@
       row.insertAdjacentElement('afterend', pay);
     }
   }
-  /* Barra de abajo del producto (móvil) estilo EGO: blanca, nombre + precio + color, botón verde del carrito a todo lo ancho */
+  /* Barra de abajo del producto (móvil) estilo EGO: blanca, nombre + precio + color, botón a todo lo ancho.
+     Botones de compra en el rosado del icono de la bolsa (#f7cfdd) con letra negra. */
   var egCss = [
     'html body #app .stk.eg-stk{display:block;padding:1.05rem 1.25rem calc(1rem + env(safe-area-inset-bottom,0px));background:#fff;color:#111;border-top:1px solid #e6e6e6;box-shadow:0 -8px 28px rgba(0,0,0,.08);-webkit-backdrop-filter:none;backdrop-filter:none}',
     'html body #app .stk.eg-stk>div{margin:0 0 .85rem}',
     'html body #app .stk.eg-stk .eg-nm{display:block;margin:0 0 .35rem;font:700 1.08rem/1.25 Figtree,system-ui,sans-serif;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     'html body #app .stk.eg-stk b{display:block;font:700 1.2rem/1.2 Figtree,system-ui,sans-serif;letter-spacing:0;color:#111}',
     'html body #app .stk.eg-stk small{display:block;margin-top:.55rem;font:400 .98rem/1.3 Figtree,system-ui,sans-serif;letter-spacing:0;color:#555}',
-    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#3a8273;color:#fff;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
-    'html body #app .stk.eg-stk .btn:active{background:#2f6b5e}',
+    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#f7cfdd;color:#0a0a0a;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
+    'html body #app .stk.eg-stk .btn:active{background:#f0b9cc}',
+    // Mismo rosado en los botones de "Elige tu talla / Agregar a la bolsa" (ficha y barra de abajo) y en PAGAR del carrito
+    'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn{background:#f7cfdd!important;color:#0a0a0a!important;border:2px solid #f7cfdd!important}',
+    'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#f0b9cc!important;border-color:#f0b9cc!important}',
+    'html body #app .stk.eg-stk .btn{border:0!important}',
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
