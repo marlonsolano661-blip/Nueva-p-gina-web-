@@ -130,6 +130,13 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
   .bar span b{color:var(--k)}
   .bar button{min-height:46px;padding:0 .85rem;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .64rem Jost,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 }
+/* Pasarela en video (creada con IA en el panel): botón en el panel del look y video a pantalla completa */
+.ver-video{display:inline-flex;align-items:center;gap:.5rem;margin:.2rem 0 .9rem;min-height:40px;padding:0 1rem;border:1px solid var(--k);background:var(--w);color:var(--k);font:500 .64rem Jost,Helvetica,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.ver-video[hidden]{display:none}
+.vid{position:fixed;inset:0;z-index:40;background:rgba(10,10,10,.92);display:grid;place-items:center;padding:1rem}
+.vid[hidden]{display:none}
+.vid video{max-width:100%;max-height:calc(100svh - 5rem);background:#000;display:block}
+.vid .x{position:absolute;top:.6rem;right:.6rem;width:44px;height:44px;border:0;background:none;color:#fff;font-size:1.6rem;cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <header class="top"><a href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="v" href="index.html">← Volver a la tienda</a></header>
@@ -155,6 +162,7 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
       <div class="p-top"><h2>En este look</h2><span id="count"></span></div>
       <p class="look-oc" id="lookOc" hidden></p>
       <p class="look-name" id="lookName"></p>
+      <button class="ver-video" id="verVideo" type="button" hidden>▶ Ver la pasarela en video</button>
       <div id="anglesWrap"><p class="lbl">Ángulos</p><div class="angles" id="angles"></div></div>
       <a class="prod" id="prod" href="index.html"><img id="prodImg" src="" alt=""><div><strong id="prodName"></strong><span class="meta" id="prodMeta"></span><span class="price" id="prodPrice"></span></div></a>
       <div id="sizeBox"><p class="lbl">Elige tu talla</p><div class="sizes" id="sizes"></div><p class="hint" id="hint"></p></div>
@@ -171,6 +179,7 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
   <a class="t" id="barLink" href="index.html"><strong id="barName"></strong><span id="barPrice"></span></a>
   <button type="button" id="barBtn">Elegir talla</button>
 </div>
+<div class="vid" id="vid" hidden role="dialog" aria-modal="true" aria-label="Pasarela en video"><button class="x" id="vidX" type="button" aria-label="Cerrar video">✕</button><video id="vidV" playsinline controls loop preload="none"></video></div>
 <div class="toast" id="toast" role="status"><span>Añadido a la bolsa</span><a href="index.html">Ver bolsa</a></div>
 
 <script src="outfits-img/negro-jean-frente.js"></script>
@@ -338,6 +347,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     $("count").textContent = (active + 1) + " / " + n;
     $("lookName").textContent = L.nombre;
     $("lookOc").hidden = !L.ocasion; $("lookOc").textContent = L.ocasion || "";
+    $("verVideo").hidden = !L.video;
     $("prodImg").src = c.img || p.img || foto(L.angulos[0][1]); $("prodImg").alt = p.name + (L.color ? " color " + L.color : "");
     $("prodName").textContent = p.name;
     $("prodMeta").textContent = L.color ? "Color " + L.color : "";
@@ -437,6 +447,16 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
 
   addEventListener("resize", function () { medir(); layout(); });
   construir();
+  /* Pasarela en video: se abre a pantalla completa y se detiene al cerrar */
+  function cerrarVideo() { var v = $("vidV"); v.pause(); v.removeAttribute("src"); v.load(); $("vid").hidden = true; }
+  $("verVideo").addEventListener("click", function () {
+    var L = OUTFITS[active]; if (!L || !L.video) return;
+    var v = $("vidV"); v.src = L.video; $("vid").hidden = false; v.muted = false;
+    var p = v.play(); if (p && p.catch) p.catch(function () { v.muted = true; v.play().catch(function () {}); });
+  });
+  $("vidX").addEventListener("click", cerrarVideo);
+  $("vid").addEventListener("click", function (e) { if (e.target === $("vid")) cerrarVideo(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("vid").hidden) cerrarVideo(); });
   var API = window.MF_API_BASE || "";
   var pedir = function (r) { return fetch(API + r).then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }); };
   /* Nombre, precio, fotos y tallas disponibles desde el catálogo de la tienda */
@@ -450,7 +470,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     if (!L.length) return;
     TODOS = L.map(function (o) {
       return { nombre: o.nombre, ocasion: o.ocasion || "", producto: o.producto, color: o.color || "", piezas: o.piezas || [],
-        angulos: o.fotos.map(function (f) { return [f.e, f.url]; }) };
+        video: o.video || "", angulos: o.fotos.map(function (f) { return [f.e, f.url]; }) };
     });
     construir();
   });
