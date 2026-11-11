@@ -33,3 +33,22 @@ test('ids repetidos se renuevan y la tienda solo ve los visibles', () => {
   assert.equal(paraTienda(v).length, 1);
   assert.deepEqual(paraTienda(null), []);
 });
+
+test('prendas con punto de compra: link https, producto, precio y posición', () => {
+  const v = validar([look({ piezas: [
+    { n: 'Blusa negra', link: 'https://wa.me/573001234567?text=Blusa', precio: '89900', x: 48.26, y: '31' },
+    { n: 'Falda', producto: 'falda-volantes', x: 150, y: 20 },
+    { n: 'Bolso', precio: 'gratis', x: '', y: 5 },
+  ] })]);
+  assert.equal(v.error, undefined);
+  assert.deepEqual(v.valor[0].piezas, [
+    { n: 'Blusa negra', link: 'https://wa.me/573001234567?text=Blusa', precio: 89900, x: 48.3, y: 31 },
+    { n: 'Falda', producto: 'falda-volantes' },
+    { n: 'Bolso' },
+  ]);
+});
+
+test('rechaza links que no son https', () => {
+  assert.match(validar([look({ piezas: [{ n: 'Blusa', link: 'javascript:alert(1)' }] })]).error, /https/);
+  assert.match(validar([look({ piezas: [{ n: 'Blusa', link: 'http://x.co' }] })]).error, /https/);
+});
