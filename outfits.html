@@ -283,7 +283,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       b.setAttribute("aria-label", "Ver " + p.n); b.setAttribute("aria-expanded", "false");
       var d = destino(p), pr = d && d.prod, precio = pr && pr.price != null ? pr.price : p.precio;
       if (p.x > 55) b.className += " izq";
-      b.innerHTML = '<span class="tag"><b>' + esc(p.n) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
+      b.innerHTML = '<span class="tag"><b>🏷️ ' + esc(p.n) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
       b.addEventListener("click", function (e) { e.stopPropagation(); if (abierto === b) cerrarTarjeta(); else abrirTarjeta(p, b); });
       capa.appendChild(b);
     });
@@ -296,8 +296,8 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var precio = pr && pr.price != null ? pr.price : p.precio;
     var t = document.createElement("div"); t.className = "pz-card" + (foto ? "" : " sin-foto"); t.setAttribute("role", "dialog"); t.setAttribute("aria-label", p.n);
     t.innerHTML = (foto ? '<img src="' + esc(foto) + '" alt="">' : "") +
-      "<div><strong>" + esc(p.n) + "</strong>" + (precio ? '<span class="pr">' + fmt(precio) + "</span>" : "") +
-      (d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">Ver prenda →</a>" : "") + "</div>" +
+      "<div><strong>🏷️ " + esc(p.n) + "</strong>" + (precio ? '<span class="pr">' + fmt(precio) + "</span>" : "") +
+      (d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">Comprar →</a>" : "") + "</div>" +
       '<button class="x" type="button" aria-label="Cerrar">×</button>';
     t.querySelector(".x").addEventListener("click", function (e) { e.stopPropagation(); cerrarTarjeta(); });
     t.addEventListener("click", function (e) { e.stopPropagation(); });
