@@ -30,6 +30,9 @@ const MAX_PRENDAS = 3;
 const VISTAS = ['frente', 'lado', 'espalda', 'editorial'];
 const LIMITE_MS = 13 * 60 * 1000; // la función de fondo vive 15 min: después de 13 no se rehacen fotos
 const NOTA_OK = 8;                 // calificación mínima del revisor (1 a 10)
+// Intentos por paso (modo equilibrado, para cuidar los créditos): cada intento es una imagen cobrada.
+// La foto de frente es la que más importa (de ella salen las demás vistas y el video): se permite un reintento.
+const INTENTOS = { vestir: 1, frente: 2, vista: 1 };
 
 // Respaldo si la lista en vivo no responde (en orden de preferencia)
 const IMAGEN_RESPALDO = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview', 'gemini-2.5-flash-image'];
@@ -193,6 +196,50 @@ async function leer(src) {
   return { mimeType, data: Buffer.from(await r.arrayBuffer()).toString('base64') };
 }
 
+// ---------- Súper modelo MF: una modelo virtual exclusiva de la marca ----------
+// POST { modo: "supermodelo", trabajo, estilo: { piel, cabello, edad, cuerpo, rasgos } }
+// Crea 3 opciones de una mujer que NO existe (ficticia, no se parece a nadie real), de cuerpo completo, de frente,
+// con ropa básica neutra (se reemplaza al vestirla) y fondo de estudio. La que elijas en el panel queda como la modelo de la marca.
+const OPCIONES_MODELO = 3;
+const txtCorto = (v, n) => String(v || '').replace(/[<>"`{}]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+async function superModelo(c, b, fin, t0) {
+  const e = b && typeof b.estilo === 'object' && b.estilo ? b.estilo : {};
+  const estilo = {
+    piel: txtCorto(e.piel, 60) || 'warm light-medium Latin American skin tone',
+    cabello: txtCorto(e.cabello, 80) || 'long dark brown hair, natural waves',
+    edad: txtCorto(e.edad, 30) || '25 to 30 years old',
+    cuerpo: txtCorto(e.cuerpo, 80) || 'tall, slim and toned fashion-model build',
+    rasgos: txtCorto(e.rasgos, 200),
+  };
+  const hoy = Date.now() - 24 * 3600 * 1000;
+  const usadas = ((await db.eventosPorTipo(c, ['fotos_ia'], 100)) || []).filter((x) => new Date(x.creado_en).getTime() > hoy)
+    .reduce((n, x) => n + ((x.detalle && Array.isArray(x.detalle.fotos)) ? x.detalle.fotos.length : 0), 0);
+  if (usadas + OPCIONES_MODELO > MAX_FOTOS_DIA) {
+    await fin({ error: `Límite diario de ${MAX_FOTOS_DIA} fotos con IA: hoy quedan ${Math.max(0, MAX_FOTOS_DIA - usadas)}. Intenta mañana.` });
+    return;
+  }
+  if (!process.env.GEMINI_API_KEY) { await fin({ error: 'La IA no está disponible en este momento (AI Gateway sin credenciales)' }); return; }
+  const IA = crearIA(await modelosDisponibles());
+  const prompt = 'Create a brand-new, original, FICTIONAL woman who does not exist and does not resemble any real person, celebrity or ' +
+    'existing model. She is the exclusive house model of the shoe brand MARLON FOOTWEAR. ' +
+    `Appearance: ${estilo.piel}; ${estilo.cabello}; ${estilo.edad}; ${estilo.cuerpo}. ${estilo.rasgos ? 'Extra details: ' + estilo.rasgos + '. ' : ''}` +
+    'Beautiful but natural and believable, like a real professional fashion model at a casting: real skin texture with pores and tiny ' +
+    'imperfections, no plastic or airbrushed look, natural makeup, relaxed confident expression, looking at the camera. ' +
+    'Wardrobe: a plain fitted black tank top, plain fitted black ankle-length trousers and simple nude pointed-toe pumps (basic casting outfit, ' +
+    'no logos, no jewelry). ' + ESTUDIO + POSE.frente + ' Shot like a real model agency polaroid/digital: honest light, true-to-life colors.';
+  const fotos = [], errores = [];
+  for (let i = 0; i < OPCIONES_MODELO; i++) {
+    if (Date.now() - t0 > LIMITE_MS) break;
+    try {
+      const g = await IA.imagen([{ text: prompt + (i ? ` Variation ${i + 1}: a different face from the other options, same brief.` : '') }]);
+      const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
+      const url = await db.subirFoto(c, `supermodelo-${Date.now()}-${i}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
+      fotos.push({ vista: 'modelo', url });
+    } catch (x) { errores.push({ vista: 'modelo', error: String(x && x.message || x).slice(0, 400) }); }
+  }
+  await fin({ fotos, errores, supermodelo: true, segundos: Math.round((Date.now() - t0) / 1000) });
+}
+
 export default async (req) => {
   const c = cfg('admin');
   const auth = String(req.headers.get('authorization') || '');
@@ -205,6 +252,7 @@ export default async (req) => {
   const fin = (detalle) => db.registrarEvento(c, 'fotos_ia', trabajo, detalle);
   const t0 = Date.now();
   try {
+    if (b.modo === 'supermodelo') { await superModelo(c, b, fin, t0); return; }
     const modelo = String(b.modelo || '').trim(), tacon = String(b.tacon || '').trim();
     const prendas = (Array.isArray(b.prendas) ? b.prendas : []).map((x) => String(x || '').trim()).filter(Boolean).slice(0, MAX_PRENDAS);
     const vistas = VISTAS.filter((v) => v === 'frente' || (Array.isArray(b.vistas) && b.vistas.includes(v)));
@@ -254,7 +302,7 @@ export default async (req) => {
         'trace of the old clothes may remain, not even under sheer fabrics (under a sheer garment only skin or the lining shown in the garment reference). ' +
         'Do not add any other clothes, bags or jewelry. Keep her face, hair, skin tone, body, pose, framing and her current shoes exactly the same. ' +
         PERSONA + FICHA_P;
-      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo].concat(refsPrendas), intentos: 2, t0,
+      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo].concat(refsPrendas), intentos: INTENTOS.vestir, t0,
         que: 'the same woman as the MODEL reference wearing exactly the GARMENT references, nothing else from her original clothes' });
       if (r) { base = deGen(r.g); notaBase = r.nota; }
     }
@@ -274,7 +322,7 @@ export default async (req) => {
       const partes = [{ text: 'BASE photo of the woman (keep her and her clothes exactly):' }, im(base), { text: 'SHOE photo (the exact product to put on her feet):' }, im(imTacon)];
       const prompt = 'Using the BASE photo, replace ONLY the shoes she wears with the exact product from the SHOE photo. Keep the woman, her face, hair, ' +
         'body and her clothes exactly as in the BASE photo. Place her on the studio background described below. ' + ESTUDIO + PERSONA + ZAPATO + FICHA_Z + POSE.frente;
-      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: 3, t0,
+      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: INTENTOS.frente, t0,
         que: 'front view, full body, same woman wearing the same clothes as the references and exactly the SHOE reference on both feet' });
       if (r) { frente = r; await subir('frente', r); }
     } catch (e) { errores.push({ vista: 'frente', error: String(e.message || e).slice(0, 600) }); }
@@ -288,7 +336,7 @@ export default async (req) => {
           { text: 'SHOE photo (the exact product):' }, im(imTacon)].concat(limpias.flatMap((x, i) => [{ text: `GARMENT ${i + 1}:` }, im(x)]));
         const prompt = `Create a new photo of the SAME woman from the FRONT photo, wearing exactly the same clothes and the same shoes, only changing the view and pose. ` +
           ESTUDIO + PERSONA + ZAPATO + FICHA_Z + FICHA_P + POSE[v];
-        const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: 2, t0,
+        const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: INTENTOS.vista, t0,
           que: `${VISTA_EN[v]} view, full body, same woman, same clothes and exactly the SHOE reference` });
         if (r) await subir(v, r);
       } catch (e) { errores.push({ vista: v, error: String(e.message || e).slice(0, 600) }); }
