@@ -38,7 +38,21 @@
     '.ofA-bar{align-items:flex-start}',
     '.ofA-aviso{padding:.6rem .8rem;border-radius:.6rem;background:#fff4e0;border:1px solid #f0d9a8;font-size:.88rem;line-height:1.4}',
     '.ofA-campo{display:grid;gap:.2rem;font-weight:600}',
-    '.ofA-foto button{font-size:.8rem}'
+    '.ofA-foto button{font-size:.8rem}',
+    /* Puntos de compra: cada prenda puede llevar a un producto de la tienda o a un link */
+    '.ofA-pz{padding:.6rem;border:1px solid #e3e3e3;border-radius:.7rem;background:#fff;margin:.5rem 0}',
+    '.ofA-pz .ofA-pieza{margin:0}',
+    '.ofA-dest{display:grid;gap:.45rem;margin-top:.55rem}',
+    '.ofA-dest label{display:grid;gap:.15rem;font-size:.85rem;font-weight:600}',
+    '.ofA-pz [hidden]{display:none!important}',
+    '.ofA-pin{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}',
+    '.ofA-pin .ok{font-size:.82rem;color:#2e7d32}',
+    '.ofA-num{display:inline-grid;place-items:center;width:1.4rem;height:1.4rem;border-radius:50%;background:#0a0a0a;color:#fff;font-size:.72rem;font-weight:700;flex:none}',
+    '.ofA-mapa{position:relative;width:min(100%,22rem);aspect-ratio:3/4;border-radius:.6rem;overflow:hidden;background:#f2f2f2;cursor:crosshair;touch-action:manipulation}',
+    '.ofA-mapa img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
+    '.ofA-mapa .ofA-num{position:absolute;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.35);pointer-events:none}',
+    '.ofA-mapa .ofA-num.act{background:#b08d57}',
+    '.ofA-pide{padding:.6rem .8rem;border-radius:.6rem;background:#0a0a0a;color:#fff;font-size:.9rem;margin:.4rem 0}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -202,8 +216,10 @@
     }
     fotos();
 
-    // Prendas que complementan el look
+    // Prendas que complementan el look, cada una con su punto de compra sobre la foto principal
     var piezasBox = el('div', {});
+    var mapaBox = el('div', {});
+    var activa = -1; /* prenda que se está marcando en la foto */
     function piezas() {
       piezasBox.textContent = '';
       o.piezas.forEach(function (p, i) {
@@ -213,14 +229,70 @@
         if (p.foto) mini.appendChild(el('img', { src: p.foto, alt: '', style: 'width:100%;height:100%;object-fit:cover;border-radius:.4rem' })); else mini.textContent = '+ Foto';
         mini.addEventListener('click', function () { elegirFoto(function (url) { p.foto = url; piezas(); }); });
         var q = el('button', { type: 'button', class: 'claro', text: 'Quitar', 'aria-label': 'Quitar esta prenda' });
-        q.addEventListener('click', function () { o.piezas.splice(i, 1); marcar(); piezas(); });
-        piezasBox.appendChild(el('div', { class: 'ofA-pieza' }, [mini, n, q]));
+        q.addEventListener('click', function () { o.piezas.splice(i, 1); if (activa === i) activa = -1; marcar(); piezas(); });
+
+        // A dónde lleva el punto: un producto de la tienda o un link
+        var selD = el('select', {}, [el('option', { value: '', text: 'No está en la tienda (uso un link)' })].concat(S.productos.map(function (x) {
+          return el('option', { value: x.id, text: x.nombre + (x.visible === false ? ' (oculto)' : '') });
+        })));
+        selD.value = p.producto && porId(p.producto) ? p.producto : '';
+        var link = el('input', { type: 'url', inputmode: 'url', maxlength: '300', value: p.link || '', placeholder: 'https://wa.me/57…  o  https://instagram.com/…' });
+        var precio = el('input', { type: 'number', inputmode: 'numeric', min: '0', step: '100', value: p.precio || '', placeholder: 'Ej: 89900' });
+        var lLink = el('label', {}, ['Link de la prenda', el('small', { class: 'ofA-ay', text: 'A dónde va la clienta al tocar "Ver prenda": tu WhatsApp, Instagram u otra página. Debe empezar por https://' }), link]);
+        var lPrecio = el('label', {}, ['Precio (opcional)', precio]);
+        function dest() { var t = !!selD.value; lLink.hidden = t; lPrecio.hidden = t; }
+        selD.addEventListener('change', function () { if (selD.value) p.producto = selD.value; else delete p.producto; dest(); marcar(); });
+        link.addEventListener('input', function () { var v = link.value.trim(); if (v) p.link = v; else delete p.link; marcar(); });
+        precio.addEventListener('input', function () { var v = parseInt(precio.value, 10); if (v > 0) p.precio = v; else delete p.precio; marcar(); });
+        dest();
+
+        var tiene = p.x != null && p.y != null;
+        var pin = el('button', { type: 'button', class: 'claro', text: activa === i ? 'Toca la foto de abajo…' : (tiene ? '📍 Mover el punto' : '📍 Marcar en la foto') });
+        pin.addEventListener('click', function () {
+          if (!o.fotos.length) { A.msg('Primero sube la foto de frente de la modelo'); return; }
+          activa = i; piezas(); mapaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        var quitarPin = el('button', { type: 'button', class: 'claro', text: 'Quitar punto' });
+        quitarPin.hidden = !tiene;
+        quitarPin.addEventListener('click', function () { delete p.x; delete p.y; marcar(); piezas(); });
+
+        piezasBox.appendChild(el('div', { class: 'ofA-pz' }, [
+          el('div', { class: 'ofA-pieza' }, [mini, n, q]),
+          el('div', { class: 'ofA-dest' }, [
+            el('label', {}, ['¿A dónde lleva?', el('small', { class: 'ofA-ay', text: 'Si la prenda ya está creada como producto, elígela. Si no, deja "No está en la tienda" y pega un link.' }), selD]),
+            lLink, lPrecio,
+            el('div', { class: 'ofA-pin' }, [el('span', { class: 'ofA-num', text: String(i + 1) }), pin, quitarPin, tiene ? el('span', { class: 'ok', text: '✓ Punto puesto' }) : el('span', { class: 'ofA-ay', text: 'Sin punto: no sale el círculo en la foto' })])
+          ])
+        ]));
       });
       if (o.piezas.length < MAX_PIEZAS) {
         var add = el('button', { type: 'button', class: 'claro', text: o.piezas.length ? '+ Otra prenda que lleva puesta' : '+ Agregar una prenda que lleva puesta' });
         add.addEventListener('click', function () { o.piezas.push({ n: '' }); marcar(); piezas(); });
         piezasBox.appendChild(add);
       }
+      mapa();
+    }
+    // La foto principal con los puntos numerados; al tocarla se pone el punto de la prenda activa
+    function mapa() {
+      mapaBox.textContent = '';
+      var f = o.fotos[0];
+      if (!f) { mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Sube la foto de frente (paso 2) para poder marcar las prendas.' })); return; }
+      if (activa >= 0 && o.piezas[activa]) mapaBox.appendChild(el('p', { class: 'ofA-pide', text: 'Toca en la foto justo encima de: ' + (o.piezas[activa].n || 'prenda ' + (activa + 1)) }));
+      var m = el('div', { class: 'ofA-mapa', role: 'button', 'aria-label': 'Foto principal: toca para poner el punto de la prenda' }, [el('img', { src: f.url, alt: '' })]);
+      o.piezas.forEach(function (p, i) {
+        if (p.x == null || p.y == null) return;
+        m.appendChild(el('span', { class: 'ofA-num' + (i === activa ? ' act' : ''), text: String(i + 1), style: 'left:' + p.x + '%;top:' + p.y + '%' }));
+      });
+      m.addEventListener('click', function (e) {
+        if (activa < 0 || !o.piezas[activa]) { A.msg('Toca primero "📍 Marcar en la foto" en la prenda que quieres marcar'); return; }
+        var r = m.getBoundingClientRect();
+        var p = o.piezas[activa];
+        p.x = Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)) * 10) / 10;
+        p.y = Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100)) * 10) / 10;
+        activa = -1; marcar(); piezas(); A.msg('Punto puesto ✓ Recuerda guardar.');
+      });
+      mapaBox.appendChild(m);
+      mapaBox.appendChild(el('small', { class: 'ofA-ay', text: 'Los puntos van sobre la foto principal (★). Si cambias la foto principal, revisa que sigan en su sitio.' }));
     }
     piezas();
 
@@ -241,7 +313,9 @@
       fotosBox,
       el('h3', { text: '3. Ropa que lleva puesta' }),
       el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
+      el('p', { class: 'ofA-ay', text: 'Puntos de compra: toca "📍 Marcar en la foto" y después toca la prenda sobre la foto. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
       piezasBox,
+      mapaBox,
       el('h3', { text: '4. Mostrar en la tienda' }),
       el('div', { style: 'display:flex;align-items:center;gap:.5rem' }, [vis, el('span', { text: 'Mostrar este look en la tienda' })]),
       el('p', { class: 'ofA-ay', text: 'Si lo desmarcas, el look queda guardado aquí pero las clientas no lo ven.' }),
