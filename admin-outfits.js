@@ -52,7 +52,12 @@
     '.ofA-mapa img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
     '.ofA-mapa .ofA-num{position:absolute;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.35);pointer-events:none}',
     '.ofA-mapa .ofA-num.act{background:#b08d57}',
-    '.ofA-pide{padding:.6rem .8rem;border-radius:.6rem;background:#0a0a0a;color:#fff;font-size:.9rem;margin:.4rem 0}'
+    '.ofA-pide{padding:.6rem .8rem;border-radius:.6rem;background:#0a0a0a;color:#fff;font-size:.9rem;margin:.4rem 0}',
+    /* Botón de marcar: negro y grande para que no se pierda; dorado mientras espera el toque en la foto */
+    '.ofA-pin .ofA-marca{background:#0a0a0a;color:#fff;border-color:#0a0a0a;font-weight:700;padding:.7rem 1.1rem;flex:1 1 12rem}',
+    '.ofA-pin .ofA-marca.esperando{background:#b08d57;border-color:#b08d57;animation:ofaLatido 1.2s ease-in-out infinite}',
+    '@keyframes ofaLatido{50%{box-shadow:0 0 0 6px rgba(176,141,87,.25)}}',
+    '.ofA-mapa.esperando{outline:3px solid #b08d57;outline-offset:3px}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -247,7 +252,7 @@
         dest();
 
         var tiene = p.x != null && p.y != null;
-        var pin = el('button', { type: 'button', class: 'claro', text: activa === i ? 'Toca la foto de abajo…' : (tiene ? '📍 Mover el punto' : '📍 Marcar en la foto') });
+        var pin = el('button', { type: 'button', class: 'ofA-marca' + (activa === i ? ' esperando' : ''), text: activa === i ? '👇 Ahora toca la prenda en la foto' : (tiene ? '📍 Cambiar el punto de lugar' : '📍 Poner el punto en la foto') });
         pin.addEventListener('click', function () {
           if (!o.fotos.length) { A.msg('Primero sube la foto de frente de la modelo'); return; }
           activa = i; piezas(); mapaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -278,13 +283,19 @@
       var f = o.fotos[0];
       if (!f) { mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Sube la foto de frente (paso 2) para poder marcar las prendas.' })); return; }
       if (activa >= 0 && o.piezas[activa]) mapaBox.appendChild(el('p', { class: 'ofA-pide', text: 'Toca en la foto justo encima de: ' + (o.piezas[activa].n || 'prenda ' + (activa + 1)) }));
-      var m = el('div', { class: 'ofA-mapa', role: 'button', 'aria-label': 'Foto principal: toca para poner el punto de la prenda' }, [el('img', { src: f.url, alt: '' })]);
+      var m = el('div', { class: 'ofA-mapa' + (activa >= 0 ? ' esperando' : ''), role: 'button', 'aria-label': 'Foto principal: toca para poner el punto de la prenda' }, [el('img', { src: f.url, alt: '' })]);
       o.piezas.forEach(function (p, i) {
         if (p.x == null || p.y == null) return;
         m.appendChild(el('span', { class: 'ofA-num' + (i === activa ? ' act' : ''), text: String(i + 1), style: 'left:' + p.x + '%;top:' + p.y + '%' }));
       });
       m.addEventListener('click', function (e) {
-        if (activa < 0 || !o.piezas[activa]) { A.msg('Toca primero "📍 Marcar en la foto" en la prenda que quieres marcar'); return; }
+        if (activa < 0 || !o.piezas[activa]) {
+          // Sin prenda elegida: si hay una sola, se mueve su punto; si hay varias, va a la primera que no tenga punto
+          var sin = o.piezas.map(function (x, k) { return x.x == null ? k : -1; }).filter(function (k) { return k > -1; });
+          if (o.piezas.length === 1) activa = 0;
+          else if (sin.length) activa = sin[0];
+          else { A.msg('Toca "📍 Cambiar el punto de lugar" en la prenda que quieres mover y luego toca la foto'); return; }
+        }
         var r = m.getBoundingClientRect();
         var p = o.piezas[activa];
         p.x = Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)) * 10) / 10;
@@ -313,7 +324,7 @@
       fotosBox,
       el('h3', { text: '3. Ropa que lleva puesta' }),
       el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
-      el('p', { class: 'ofA-ay', text: 'Puntos de compra: toca "📍 Marcar en la foto" y después toca la prenda sobre la foto. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
+      el('p', { class: 'ofA-ay', text: 'Puntos de compra: toca "📍 Poner el punto en la foto" y después toca la prenda sobre la foto. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
       piezasBox,
       mapaBox,
       el('h3', { text: '4. Mostrar en la tienda' }),
