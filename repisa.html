@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Repisa · Marlon Footwear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="repisa.css">
+</head>
+<body class="rp">
+<header class="rp-top">
+  <a class="rp-back" href="./">← Tienda</a>
+  <a class="rp-logo" href="./" aria-label="Marlon Footwear, inicio">MARLON<small>FOOTWEAR</small><i></i></a>
+  <span></span>
+</header>
+<main class="rp-main">
+  <div class="rp-head"><h1>Colección</h1><span class="rp-n" id="n" role="status"></span></div>
+  <p class="rp-hint">Toca un zapato para verlo de cerca</p>
+  <div class="rp-shelf" id="shelf"></div>
+</main>
+
+<div class="rp-focus" id="focus" role="dialog" aria-modal="true" aria-label="Detalle del producto" hidden>
+  <div class="rp-sheet">
+    <button class="rp-close" id="close" type="button">← Volver</button>
+    <div class="rp-big" id="big"><img id="bigimg" alt=""></div>
+    <div class="rp-thumbs" id="fthumbs"></div>
+    <div class="rp-info">
+      <h2 id="fname"></h2>
+      <p class="rp-price" id="fprice"></p>
+      <p class="rp-desc" id="fdesc"></p>
+      <p class="rp-lbl" id="flc">Color</p>
+      <div class="rp-row" id="fcolors"></div>
+      <p class="rp-lbl">Talla</p>
+      <div class="rp-row" id="fsizes"></div>
+      <a class="rp-buy" id="fbuy" href="./">Comprar en la tienda</a>
+      <a class="rp-wa" id="fwa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- Catálogo estático de respaldo (el mismo que usa la tienda) -->
+<script src="DATA/catalogo_tienda.js"></script>
+<script src="repisa.js"></script>
+</body>
+</html>
