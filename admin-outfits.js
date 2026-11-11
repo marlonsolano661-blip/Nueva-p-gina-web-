@@ -72,7 +72,22 @@
     '.ofA-ia .res{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:.6rem}',
     '.ofA-ia .res figure{margin:0;display:grid;gap:.25rem;font-size:.78rem}',
     '.ofA-ia .res img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.5rem;background:#f2f2f2}',
-    '.ofA-ia .ojo{color:#8a5a00}'
+    '.ofA-ia .ojo{color:#8a5a00}',
+    /* Selector con foto: tacón, color y producto de cada prenda */
+    /* En el celular nada se sale de la pantalla */
+    '.ofA-pieza{grid-template-columns:3.4rem minmax(0,1fr) auto!important}.ofA-pieza input,.ofA-dest input{min-width:0;width:100%;box-sizing:border-box}.ofA-pz,.ofA-dest>*,.ofA-campo{min-width:0}.ofA-pin .ofA-marca{flex:1 1 10rem;min-width:0;white-space:normal}',
+    '.ofA-pick{min-width:0;box-sizing:border-box;display:flex;align-items:center;gap:.6rem;width:100%;padding:.4rem .9rem .4rem .45rem;border:1px solid #d9d2c4;border-radius:.9rem;background:#fffdf8;color:#0a0a0a;text-align:left;font:inherit;font-weight:600;cursor:pointer}',
+    '.ofA-pick .ft,.ofA-menu .ft{width:2.8rem;height:2.8rem;object-fit:cover;border-radius:.55rem;background:#f2f2f2;flex:none;display:grid;place-items:center;font-size:1.1rem;color:#999}',
+    '.ofA-pick .tx{flex:1;line-height:1.25}.ofA-pick .fl{font-style:normal;color:#777;font-size:.8rem}',
+    '.ofA-menu{margin-top:.5rem;padding:.6rem;border:1px solid #e3e3e3;border-radius:.8rem;background:#fff;display:grid;gap:.55rem;font-weight:400}',
+    '.ofA-menu input{width:100%}',
+    '.ofA-menu .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.5rem;max-height:62vh;overflow:auto;padding:.1rem}',
+    '.ofA-menu .op{display:grid;gap:.3rem;align-content:start;padding:.3rem;border:2px solid #eee;border-radius:.65rem;background:#fff;color:#0a0a0a;font:inherit;font-size:.78rem;line-height:1.2;text-align:center;cursor:pointer}',
+    '.ofA-menu .op .ft{width:100%;height:auto;aspect-ratio:1}',
+    '.ofA-menu .op[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
+    '.ofA-menu .op small{color:#999}',
+    '.ofA-menu .nada{grid-column:1/-1;color:#777;font-size:.85rem;margin:0}',
+    '.ofA-pick .pt,.ofA-menu .pt{display:inline-block;width:1rem;height:1rem;border-radius:50%;border:1px solid rgba(0,0,0,.15);vertical-align:-.15rem;margin-right:.3rem}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -110,6 +125,60 @@
   var esRopa = function (p) { return Object.keys((p && p.stock) || {}).some(function (t) { return TALLAS_ROPA.indexOf(t) > -1; }); };
   var fotoDe = function (p) { return p ? ((p.imagenes && p.imagenes[0]) || p.imagen || '') : ''; };
   var VISTA_NOM = { frente: 'Frente', lado: 'Lado', espalda: 'Espalda', editorial: 'Editorial' };
+  // Selector con foto (reemplaza las listas de solo texto): un botón con la foto y el nombre elegido;
+  // al tocarlo se abre una cuadrícula con la foto de cada opción y, si son muchas, un buscador.
+  // op = { lista(), valor(), elegir(id), foto(x), nombre(x), punto(x), extra(x), vacio, ninguno, ningunoIc }
+  function selector(op) {
+    var caja = el('div', {}), abierto = false, q = '';
+    var minFoto = function (u, ic) { return u ? el('img', { class: 'ft', src: u, alt: '', loading: 'lazy' }) : el('span', { class: 'ft', text: ic || '👠' }); };
+    var sinTilde = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+    function pintarS() {
+      caja.textContent = '';
+      var lista = op.lista(), v = op.valor();
+      var sel = v ? lista.filter(function (x) { return String(x.id) === String(v); })[0] : null;
+      var etiqueta = sel ? op.nombre(sel) : (op.ninguno && v === '' && op.ningunoElegido ? op.ninguno : op.vacio);
+      var b = el('button', { type: 'button', class: 'ofA-pick', 'aria-expanded': abierto ? 'true' : 'false' }, [
+        sel ? minFoto(op.foto(sel)) : minFoto('', op.ningunoElegido ? op.ningunoIc : '＋'),
+        el('span', { class: 'tx' }, [sel && op.punto && op.punto(sel) ? el('i', { class: 'pt', style: 'background:' + op.punto(sel) }) : null, etiqueta]),
+        el('i', { class: 'fl', text: abierto ? 'Cerrar ▲' : 'Cambiar ▼' })
+      ]);
+      b.addEventListener('click', function () { abierto = !abierto; q = ''; pintarS(); });
+      caja.appendChild(b);
+      if (!abierto) return;
+      var menu = el('div', { class: 'ofA-menu' }), grid = el('div', { class: 'grid' });
+      if (lista.length > 8) {
+        var bus = el('input', { type: 'search', placeholder: 'Buscar por nombre…', 'aria-label': 'Buscar' });
+        bus.addEventListener('input', function () { q = sinTilde(bus.value.trim()); llenar(); });
+        menu.appendChild(bus);
+      }
+      function elegir(id) { abierto = false; op.elegir(id); pintarS(); }
+      function llenar() {
+        grid.textContent = '';
+        if (op.ninguno && !q) {
+          var n = el('button', { type: 'button', class: 'op', 'aria-pressed': !v && op.ningunoElegido ? 'true' : 'false' }, [minFoto('', op.ningunoIc), op.ninguno]);
+          n.addEventListener('click', function () { elegir(''); });
+          grid.appendChild(n);
+        }
+        var vis = lista.filter(function (x) { return !q || sinTilde(op.nombre(x)).indexOf(q) > -1; });
+        vis.forEach(function (x) {
+          var o2 = el('button', { type: 'button', class: 'op', 'aria-pressed': String(x.id) === String(v) ? 'true' : 'false' }, [
+            minFoto(op.foto(x)),
+            el('span', {}, [op.punto && op.punto(x) ? el('i', { class: 'pt', style: 'background:' + op.punto(x) }) : null, op.nombre(x)]),
+            op.extra && op.extra(x) ? el('small', { text: op.extra(x) }) : null
+          ]);
+          o2.addEventListener('click', function () { elegir(x.id); });
+          grid.appendChild(o2);
+        });
+        if (!vis.length && !(op.ninguno && !q)) grid.appendChild(el('p', { class: 'nada', text: q ? 'No hay nada con ese nombre.' : 'No hay opciones.' }));
+      }
+      llenar();
+      menu.appendChild(grid);
+      caja.appendChild(menu);
+    }
+    pintarS();
+    return { nodo: caja, pintar: pintarS };
+  }
+
   function nuevo() { return { id: 'o' + Date.now().toString(36), nombre: '', ocasion: '', visible: true, producto: '', color: '', fotos: [], piezas: [] }; }
 
   // Elegir una foto del teléfono y subirla (misma calidad que las fotos de productos)
@@ -192,21 +261,25 @@
     selO.value = o.ocasion || '';
     selO.addEventListener('change', function () { o.ocasion = selO.value; marcar(); });
 
-    var selP = el('select', {}, [el('option', { value: '', text: 'Elige el tacón…' })].concat(S.productos.map(function (p) {
-      return el('option', { value: p.id, text: p.nombre + (p.visible === false ? ' (oculto)' : '') });
-    })));
-    selP.value = o.producto || '';
-    var selC = el('select', {});
-    function colores() {
-      var p = porId(selP.value), cs = (p && p.colores) || [];
-      selC.textContent = '';
-      selC.appendChild(el('option', { value: '', text: cs.length ? 'Elige el color…' : 'Sin colores' }));
-      cs.forEach(function (c) { selC.appendChild(el('option', { value: c.n, text: c.n })); });
-      selC.value = cs.some(function (c) { return c.n === o.color; }) ? o.color : '';
-    }
-    selP.addEventListener('change', function () { o.producto = selP.value; o.color = ''; colores(); marcar(); if (iaBox) pintarIA(); });
-    selC.addEventListener('change', function () { o.color = selC.value; marcar(); if (iaBox) pintarIA(); });
-    colores();
+    // Tacón y color: con foto para reconocerlos rápido
+    var nomP = function (p) { return p.nombre + (p.visible === false ? ' (oculto)' : ''); };
+    var selP = selector({
+      lista: function () { return S.productos.filter(function (p) { return !esRopa(p) || String(p.id) === String(o.producto); }); },
+      valor: function () { return o.producto || ''; },
+      elegir: function (id) { if (String(id) !== String(o.producto)) { o.producto = id; o.color = ''; } selC.pintar(); marcar(); if (iaBox) pintarIA(); },
+      foto: fotoDe, nombre: nomP,
+      extra: function (p) { var n = (p.colores || []).length; return n > 1 ? n + ' colores' : ''; },
+      vacio: 'Elige el tacón…'
+    });
+    var selC = selector({
+      lista: function () { var p = porId(o.producto); return ((p && p.colores) || []).map(function (c) { return { id: c.n, c: c }; }); },
+      valor: function () { return o.color || ''; },
+      elegir: function (id) { o.color = id; marcar(); if (iaBox) pintarIA(); },
+      foto: function (x) { return x.c.img || fotoDe(porId(o.producto)); },
+      nombre: function (x) { return x.c.n; },
+      punto: function (x) { return /^#[0-9a-f]{6}$/i.test(x.c.h || '') ? x.c.h : ''; },
+      vacio: 'Elige el color…'
+    });
 
     var vis = el('input', { type: 'checkbox' }); vis.checked = o.visible !== false;
     vis.addEventListener('change', function () { o.visible = vis.checked; marcar(); });
@@ -374,16 +447,18 @@
         q.addEventListener('click', function () { o.piezas.splice(i, 1); if (activa === i) activa = -1; marcar(); piezas(); });
 
         // A dónde lleva el punto: un producto de la tienda o un link
-        var selD = el('select', {}, [el('option', { value: '', text: 'No está en la tienda (uso un link)' })].concat(S.productos.map(function (x) {
-          return el('option', { value: x.id, text: x.nombre + (x.visible === false ? ' (oculto)' : '') });
-        })));
-        selD.value = p.producto && porId(p.producto) ? p.producto : '';
+        var selD = selector({
+          lista: function () { return S.productos.filter(esRopa).concat(S.productos.filter(function (x) { return !esRopa(x); })); },
+          valor: function () { return p.producto && porId(p.producto) ? p.producto : ''; },
+          elegir: function (id) { if (id) { p.producto = id; if (!n.value.trim()) { p.n = porId(id).nombre; n.value = p.n; } } else delete p.producto; dest(); marcar(); },
+          foto: fotoDe, nombre: nomP, extra: function (x) { return esRopa(x) ? 'Ropa' : ''; },
+          ninguno: 'No está en la tienda (uso un link)', ningunoIc: '🔗', ningunoElegido: true, vacio: ''
+        });
         var link = el('input', { type: 'url', inputmode: 'url', maxlength: '300', value: p.link || '', placeholder: 'https://wa.me/57…  o  https://instagram.com/…' });
         var precio = el('input', { type: 'number', inputmode: 'numeric', min: '0', step: '100', value: p.precio || '', placeholder: 'Ej: 89900' });
         var lLink = el('label', {}, ['Link de la prenda', el('small', { class: 'ofA-ay', text: 'A dónde va la clienta al tocar "Ver prenda": tu WhatsApp, Instagram u otra página. Debe empezar por https://' }), link]);
         var lPrecio = el('label', {}, ['Precio (opcional)', precio]);
-        function dest() { var t = !!selD.value; lLink.hidden = t; lPrecio.hidden = t; }
-        selD.addEventListener('change', function () { if (selD.value) p.producto = selD.value; else delete p.producto; dest(); marcar(); });
+        function dest() { var t = !!(p.producto && porId(p.producto)); lLink.hidden = t; lPrecio.hidden = t; }
         link.addEventListener('input', function () { var v = link.value.trim(); if (v) p.link = v; else delete p.link; marcar(); });
         precio.addEventListener('input', function () { var v = parseInt(precio.value, 10); if (v > 0) p.precio = v; else delete p.precio; marcar(); });
         dest();
@@ -401,7 +476,7 @@
         piezasBox.appendChild(el('div', { class: 'ofA-pz' }, [
           el('div', { class: 'ofA-pieza' }, [mini, n, q]),
           el('div', { class: 'ofA-dest' }, [
-            el('label', {}, ['¿A dónde lleva?', el('small', { class: 'ofA-ay', text: 'Si la prenda ya está creada como producto, elígela. Si no, deja "No está en la tienda" y pega un link.' }), selD]),
+            el('div', { class: 'ofA-campo' }, ['¿A dónde lleva?', el('small', { class: 'ofA-ay', text: 'Si la prenda ya está creada como producto, elígela por su foto. Si no, deja "No está en la tienda" y pega un link.' }), selD.nodo]),
             lLink, lPrecio,
             el('div', { class: 'ofA-pin' }, [el('span', { class: 'ofA-num', text: String(i + 1) }), pin, quitarPin, tiene ? el('span', { class: 'ok', text: '✓ Punto puesto' }) : el('span', { class: 'ofA-ay', text: 'Sin punto: no sale el círculo en la foto' })])
           ])
@@ -448,13 +523,15 @@
     listo.addEventListener('click', function () { S.editando = -1; pintar(); A.msg('Recuerda tocar "Guardar outfits" para publicar los cambios.'); window.scrollTo(0, 0); });
 
     var campo = function (titulo, ayuda, control) { return el('label', { class: 'ofA-campo' }, [titulo, el('small', { class: 'ofA-ay', text: ayuda }), control]); };
+    // Igual que campo, pero en un div: dentro de un <label> cada toque en la cuadrícula activaría el botón
+    var caja = function (titulo, ayuda, control) { return el('div', { class: 'ofA-campo' }, [titulo, el('small', { class: 'ofA-ay', text: ayuda }), control]); };
     sec.appendChild(el('div', { class: 'ofA-ed' }, [
       el('p', { class: 'nota', text: 'Estás editando UN look. Todo lo de esta pantalla es de un solo outfit: la misma modelo, con la misma ropa y el mismo tacón.' }),
       el('h3', { text: '1. Datos del look' }),
       campo('Nombre del look', 'Así se llama el outfit en la pasarela. Ej: "Jean y blusa blanca", "Vestido camel".', nombre),
       campo('Ocasión', 'Para qué plan sirve este outfit. Sale como etiqueta pequeña encima del nombre.', selO),
-      campo('Tacón', 'El zapato de tu tienda que lleva puesto la modelo en estas fotos. La clienta lo puede comprar desde el look.', selP),
-      campo('Color del tacón', 'El color de ese zapato que se ve en las fotos.', selC),
+      caja('Tacón', 'El zapato de tu tienda que lleva puesto la modelo en estas fotos. Toca para ver todos con su foto.', selP.nodo),
+      caja('Color del tacón', 'El color de ese zapato que se ve en las fotos.', selC.nodo),
       el('h3', { text: '2. Fotos de la modelo con este outfit' }),
       el('p', { class: 'ofA-ay', text: 'Solo fotos de ESTE outfit. Empieza por la de frente (será la foto principal de la pasarela) y, si tienes, agrega la de lado, espalda o un detalle. Máximo ' + MAX_FOTOS + '. Si tienes otra ropa, es otro look: vuelve a la lista y toca "+ Nuevo look".' }),
       avisoFotos,
