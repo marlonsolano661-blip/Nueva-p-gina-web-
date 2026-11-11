@@ -58,11 +58,14 @@ async function modelosDisponibles() {
 }
 
 // ---------- Instrucciones (reglas de la marca) ----------
-const ESTUDIO = 'Photorealistic professional fashion catalog photo for the shoe brand MARLON FOOTWEAR (MF), as shot by a professional ' +
-  'footwear photographer on a full-frame camera with a 50mm lens: high resolution, natural skin texture, correct anatomy, realistic fabric ' +
-  'folds and drape, realistic perspective and natural soft shadows. White seamless studio background in a soft off-white (#F6F6F4, almost pure ' +
-  'white) with a soft natural floor shadow, even professional lighting, no props, no text, no logos, no watermarks. Vertical 3:4 framing with ' +
-  'the WHOLE body visible from the top of the head to the soles of the shoes, centered, small margin above the head and below the feet. ';
+// Set de la marca ("Loft MF"): estudio tipo loft cálido, como las campañas de moda en línea.
+const ESTUDIO = 'Photorealistic professional e-commerce fashion campaign photo for the shoe brand MARLON FOOTWEAR (MF), as shot by a professional ' +
+  'fashion photographer on a full-frame camera with a 50mm lens: high resolution, natural skin texture, correct anatomy, realistic fabric ' +
+  'folds and drape, realistic perspective and natural soft shadows. SET ("MF loft"): a bright minimalist loft studio with warm beige ' +
+  'limewash plaster walls, exposed white-painted ceiling beams and pipes, a low curved beige velvet sofa behind her, polished light-grey ' +
+  'concrete floor, soft natural window daylight from the side, warm neutral color grading, background slightly out of focus. No text, no logos, ' +
+  'no watermarks. Vertical 3:4 framing with the WHOLE body visible from the top of the head to the soles of the shoes, centered, small margin ' +
+  'above the head and below the feet. ';
 const PERSONA = 'IDENTITY: it must be exactly the same woman as in the MODEL photo: same face and facial features, same skin tone, same hair ' +
   '(color, length, style), same body shape and proportions. Do not beautify, slim, age or change her. ';
 const ZAPATO = 'SHOES, THE MOST IMPORTANT RULE: the SHOE photo is the definitive reference of a product sold in the store. Reproduce it ' +
@@ -72,10 +75,14 @@ const ZAPATO = 'SHOES, THE MOST IMPORTANT RULE: the SHOE photo is the definitive
   'or moving straps, buckles or embellishments; changing colors, materials or finishes; simplifying or reinterpreting the product; using a ' +
   'similar shoe instead of this one. Fit the shoe naturally to the foot without deforming it. Both shoes sharp, in focus and clearly visible. ';
 const POSE = {
-  frente: 'POSE: full front view facing the camera, elegant and confident, standing straight with feet slightly apart so both shoes are fully visible.',
-  lado: 'POSE: full side profile, turned 90 degrees (her left side to the camera), clearly showing the height, shape and structure of the heel; shoes fully visible.',
-  espalda: 'POSE: full back view, her back to the camera, showing the back of both shoes with the original heel and strap structure.',
-  editorial: 'POSE: professional, sophisticated high-end fashion campaign pose, one leg slightly forward to highlight the shoes, shoes clearly visible, full body.',
+  frente: 'POSE: full-body front view facing the camera, confident fashion-catalog stance: one hand resting on her hip, weight on one leg, ' +
+    'chin slightly down, direct gaze to the camera, feet slightly apart so both shoes are fully visible.',
+  lado: 'POSE: full side profile, turned 90 degrees (her left side to the camera), one knee slightly bent, clearly showing the height, shape and ' +
+    'structure of the heel; shoes fully visible.',
+  espalda: 'POSE: full-body back view, her back to the camera, looking back over her shoulder at the camera with a soft confident expression, ' +
+    'showing the back of both shoes with the original heel and strap structure.',
+  editorial: 'POSE: relaxed high-end catalog pose, both hands casually in the pockets (or one hand in a pocket), one leg slightly forward to ' +
+    'highlight the shoes, shoes clearly visible, full body.',
 };
 const VISTA_EN = { frente: 'front', lado: 'side profile', espalda: 'back', editorial: 'editorial full-body' };
 
@@ -205,8 +212,8 @@ const txtCorto = (v, n) => String(v || '').replace(/[<>"`{}]/g, '').replace(/\s+
 async function superModelo(c, b, fin, t0) {
   const e = b && typeof b.estilo === 'object' && b.estilo ? b.estilo : {};
   const estilo = {
-    piel: txtCorto(e.piel, 60) || 'warm light-medium Latin American skin tone',
-    cabello: txtCorto(e.cabello, 80) || 'long dark brown hair, natural waves',
+    piel: txtCorto(e.piel, 60) || 'warm golden sun-kissed Latina skin tone',
+    cabello: txtCorto(e.cabello, 80) || 'long voluminous brunette hair with soft caramel balayage, glossy loose waves, middle part',
     edad: txtCorto(e.edad, 30) || '25 to 30 years old',
     cuerpo: txtCorto(e.cuerpo, 80) || 'tall, slim and toned fashion-model build',
     rasgos: txtCorto(e.rasgos, 200),
@@ -223,10 +230,11 @@ async function superModelo(c, b, fin, t0) {
   const prompt = 'Create a brand-new, original, FICTIONAL woman who does not exist and does not resemble any real person, celebrity or ' +
     'existing model. She is the exclusive house model of the shoe brand MARLON FOOTWEAR. ' +
     `Appearance: ${estilo.piel}; ${estilo.cabello}; ${estilo.edad}; ${estilo.cuerpo}. ${estilo.rasgos ? 'Extra details: ' + estilo.rasgos + '. ' : ''}` +
-    'Beautiful but natural and believable, like a real professional fashion model at a casting: real skin texture with pores and tiny ' +
-    'imperfections, no plastic or airbrushed look, natural makeup, relaxed confident expression, looking at the camera. ' +
-    'Wardrobe: a plain fitted black tank top, plain fitted black ankle-length trousers and simple nude pointed-toe pumps (basic casting outfit, ' +
-    'no logos, no jewelry). ' + ESTUDIO + POSE.frente + ' Shot like a real model agency polaroid/digital: honest light, true-to-life colors.';
+    'Glamorous but natural and believable, like a real professional e-commerce fashion model: real skin texture with pores and tiny ' +
+    'imperfections, no plastic or airbrushed look, soft glam makeup (warm bronzed skin, defined brows, nude-brown lips), small gold dome earrings, ' +
+    'confident relaxed expression, looking at the camera. Her face must be unique and original: do NOT copy or resemble any real model, influencer ' +
+    'or celebrity. Wardrobe: a plain fitted black long-sleeve top, a plain fitted black mini skirt and simple nude pointed-toe pumps (basic outfit, ' +
+    'no logos). ' + ESTUDIO + POSE.frente + ' True-to-life colors, like a real campaign photo.';
   const fotos = [], errores = [];
   for (let i = 0; i < OPCIONES_MODELO; i++) {
     if (Date.now() - t0 > LIMITE_MS) break;
