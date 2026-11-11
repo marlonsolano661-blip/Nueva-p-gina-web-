@@ -86,11 +86,16 @@
     '.ofA-pick .tx{flex:1;line-height:1.25}.ofA-pick .fl{font-style:normal;color:#777;font-size:.8rem}',
     '.ofA-menu{margin-top:.5rem;padding:.6rem;border:1px solid #e3e3e3;border-radius:.8rem;background:#fff;display:grid;gap:.55rem;font-weight:400}',
     '.ofA-menu input{width:100%}',
-    '.ofA-menu .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.5rem;max-height:62vh;overflow:auto;padding:.1rem}',
-    '.ofA-menu .op{display:grid;gap:.3rem;align-content:start;padding:.3rem;border:2px solid #eee;border-radius:.65rem;background:#fff;color:#0a0a0a;font:inherit;font-size:.78rem;line-height:1.2;text-align:center;cursor:pointer}',
-    '.ofA-menu .op .ft{width:100%;height:auto;aspect-ratio:1}',
-    '.ofA-menu .op[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
-    '.ofA-menu .op small{color:#999}',
+    /* Lista como la de Productos: foto a la izquierda, nombre y precio a la derecha */
+    '.ofA-menu .grid{display:flex;flex-direction:column;gap:.45rem;max-height:62vh;overflow:auto;padding:.1rem}',
+    '#p-outfits .ofA-menu .op{flex:none;display:grid!important;grid-template-columns:4.2rem minmax(0,1fr) auto;gap:.8rem;align-items:center;width:100%;min-height:0!important;height:auto!important;padding:.45rem .8rem .45rem .45rem!important;border:2px solid #ece6da!important;border-radius:1rem!important;background:#fffdf8!important;color:#0a0a0a!important;font:inherit;text-align:left;white-space:normal;box-shadow:none;cursor:pointer}',
+    '#p-outfits .ofA-menu .op .ft{width:4.2rem;height:4.2rem;border-radius:.7rem}',
+    '#p-outfits .ofA-menu .op .nm{display:grid;gap:.15rem;min-width:0}',
+    '#p-outfits .ofA-menu .op .nm b{font-size:1rem;line-height:1.2;font-weight:700}',
+    '#p-outfits .ofA-menu .op .nm small{font-size:.85rem;color:#6b6b6b;font-weight:400}',
+    '#p-outfits .ofA-menu .op .ck{width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid #d9d2c4;display:grid;place-items:center;font-size:.9rem;color:#fff}',
+    '#p-outfits .ofA-menu .op[aria-pressed="true"]{border-color:#0a0a0a!important;background:#fff!important}',
+    '#p-outfits .ofA-menu .op[aria-pressed="true"] .ck{background:#0a0a0a;border-color:#0a0a0a}',
     '.ofA-menu .nada{grid-column:1/-1;color:#777;font-size:.85rem;margin:0}',
     '.ofA-pick .pt,.ofA-menu .pt{display:inline-block;width:1rem;height:1rem;border-radius:50%;border:1px solid rgba(0,0,0,.15);vertical-align:-.15rem;margin-right:.3rem}'
   ].join('\n');
@@ -131,6 +136,7 @@
   var TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
   var esRopa = function (p) { return Object.keys((p && p.stock) || {}).some(function (t) { return TALLAS_ROPA.indexOf(t) > -1; }); };
   var fotoDe = function (p) { return p ? ((p.imagenes && p.imagenes[0]) || p.imagen || '') : ''; };
+  var precioDe = function (p) { var n = Number(p && p.precio); return n > 0 ? '$' + n.toLocaleString('es-CO') : ''; };
   var VISTA_NOM = { frente: 'Frente', lado: 'Lado', espalda: 'Espalda', editorial: 'Editorial' };
   // Puntos de compra por foto: pts[i] = [x, y] sobre la foto i. x / y repiten el de la foto principal (pts[0]).
   var ptsDe = function (p) { if (!Array.isArray(p.pts)) p.pts = p.x != null && p.y != null ? [[p.x, p.y]] : []; return p.pts; };
@@ -165,7 +171,7 @@
       function llenar() {
         grid.textContent = '';
         if (op.ninguno && !q) {
-          var n = el('button', { type: 'button', class: 'op', 'aria-pressed': !v && op.ningunoElegido ? 'true' : 'false' }, [minFoto('', op.ningunoIc), op.ninguno]);
+          var n = el('button', { type: 'button', class: 'op', 'aria-pressed': !v && op.ningunoElegido ? 'true' : 'false' }, [minFoto('', op.ningunoIc), el('span', { class: 'nm' }, [el('b', { text: op.ninguno }), el('small', { text: 'Pegas un link de WhatsApp, Instagram u otra página' })]), el('span', { class: 'ck', text: '✓' })]);
           n.addEventListener('click', function () { elegir(''); });
           grid.appendChild(n);
         }
@@ -173,8 +179,9 @@
         vis.forEach(function (x) {
           var o2 = el('button', { type: 'button', class: 'op', 'aria-pressed': String(x.id) === String(v) ? 'true' : 'false' }, [
             minFoto(op.foto(x)),
-            el('span', {}, [op.punto && op.punto(x) ? el('i', { class: 'pt', style: 'background:' + op.punto(x) }) : null, op.nombre(x)]),
-            op.extra && op.extra(x) ? el('small', { text: op.extra(x) }) : null
+            el('span', { class: 'nm' }, [el('b', {}, [op.punto && op.punto(x) ? el('i', { class: 'pt', style: 'background:' + op.punto(x) }) : null, op.nombre(x)]),
+              op.extra && op.extra(x) ? el('small', { text: op.extra(x) }) : null]),
+            el('span', { class: 'ck', text: '✓' })
           ]);
           o2.addEventListener('click', function () { elegir(x.id); });
           grid.appendChild(o2);
@@ -278,7 +285,7 @@
       valor: function () { return o.producto || ''; },
       elegir: function (id) { if (String(id) !== String(o.producto)) { o.producto = id; o.color = ''; } selC.pintar(); marcar(); if (iaBox) pintarIA(); },
       foto: fotoDe, nombre: nomP,
-      extra: function (p) { var n = (p.colores || []).length; return n > 1 ? n + ' colores' : ''; },
+      extra: function (p) { var n = (p.colores || []).length; return [precioDe(p), n > 1 ? n + ' colores' : ''].filter(Boolean).join(' · '); },
       vacio: 'Elige el tacón…'
     });
     var selC = selector({
@@ -498,7 +505,7 @@
           lista: function () { return S.productos.filter(esRopa).concat(S.productos.filter(function (x) { return !esRopa(x); })); },
           valor: function () { return p.producto && porId(p.producto) ? p.producto : ''; },
           elegir: function (id) { if (id) { p.producto = id; if (!n.value.trim()) { p.n = porId(id).nombre; n.value = p.n; } } else delete p.producto; dest(); marcar(); },
-          foto: fotoDe, nombre: nomP, extra: function (x) { return esRopa(x) ? 'Ropa' : ''; },
+          foto: fotoDe, nombre: nomP, extra: function (x) { return [precioDe(x), esRopa(x) ? 'Ropa' : 'Calzado'].filter(Boolean).join(' · '); },
           ninguno: 'No está en la tienda (uso un link)', ningunoIc: '🔗', ningunoElegido: true, vacio: ''
         });
         var link = el('input', { type: 'url', inputmode: 'url', maxlength: '300', value: p.link || '', placeholder: 'https://wa.me/57…  o  https://instagram.com/…' });
