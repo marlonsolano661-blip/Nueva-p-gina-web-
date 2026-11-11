@@ -53,10 +53,14 @@
    Si un producto no tiene descripción, se muestra un renglón con las tallas y colores reales. */
 (function () {
   'use strict';
+  /* Ropa: tallas XS…XL o "Unica" (se muestra "Única"). La guía de tallas en cm de pie es solo para calzado. */
+  var ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
+  var verT = function (t) { return t === 'Unica' ? 'Única' : t; };
+  var esRopa = function (p) { return !!p && (p.tipo === 'ropa' || (p.tallas || []).some(function (t) { return ROPA.indexOf(t) > -1; })); };
   function tallasTxt(t) {
     var n = t.map(Number);
     if (n.length > 2 && n.every(function (x) { return isFinite(x); }) && n.every(function (x, i) { return !i || x === n[i - 1] + 1; })) return n[0] + ' a ' + n[n.length - 1];
-    return t.join(' · ');
+    return t.map(verT).join(' · ');
   }
   function renglon() {
     var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.ds1')) return;
@@ -72,7 +76,7 @@
       if (lineas[1]) { var d2 = document.createElement('b'); d2.textContent = lineas[1]; el.appendChild(d2); }
     } else {
       var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
-      el.textContent = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
+      el.textContent = [t.length ? (t.length === 1 && t[0] === 'Unica' ? 'Talla única' : 'Tallas ' + tallasTxt(t)) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
     }
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
@@ -83,6 +87,12 @@
     var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
     if (id == null) return;
     var tl = pi.querySelector(':scope > .tl');
+    var prd = null; try { prd = (catalog() || []).filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { prd = null; }
+    if (esRopa(prd)) {
+      // Ropa: sin la guía de tallas de pie, y "Única" en vez de "Unica"
+      Array.prototype.forEach.call(pi.querySelectorAll('.gl, #guia'), function (x) { x.remove(); });
+      Array.prototype.forEach.call(pi.querySelectorAll('.tl .sz, .lb .cn'), function (x) { if (x.textContent === 'Unica') x.textContent = 'Única'; });
+    }
     if (tl && !pi.querySelector(':scope > .eg-dd')) {
       var lb = tl.previousElementSibling, gl = pi.querySelector(':scope > .gl');
       if (!pi.querySelector(':scope > .eg-sh')) {
@@ -97,10 +107,10 @@
         var dd = document.createElement('div'); dd.className = 'eg-dd';
         var on = tl.querySelector('.sz.on');
         var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'eg-sel'; hb.setAttribute('aria-expanded', 'false');
-        hb.textContent = on ? 'Talla ' + on.getAttribute('data-t') : 'Elige tu talla';
+        hb.textContent = on ? 'Talla ' + verT(on.getAttribute('data-t')) : 'Elige tu talla';
         var ls = document.createElement('div'); ls.className = 'eg-dd-l'; ls.hidden = true; ls.setAttribute('role', 'listbox');
         Array.prototype.forEach.call(bs, function (x) {
-          var t = x.getAttribute('data-t'), o = document.createElement('button'); o.type = 'button'; o.className = 'eg-dd-o' + (x.classList.contains('on') ? ' on' : ''); o.setAttribute('role', 'option'); o.textContent = 'Talla ' + t;
+          var t = x.getAttribute('data-t'), o = document.createElement('button'); o.type = 'button'; o.className = 'eg-dd-o' + (x.classList.contains('on') ? ' on' : ''); o.setAttribute('role', 'option'); o.textContent = 'Talla ' + verT(t);
           o.addEventListener('click', function () { document.body.classList.remove('eg-dd-ab'); Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (z) { if (z.getAttribute('data-t') === t && !z.classList.contains('on')) z.click(); }); });
           ls.appendChild(o);
         });
@@ -124,7 +134,7 @@
       if (tn.textContent !== nm) tn.textContent = nm;
       var sm = caja.querySelector('small');
       if (sm) {
-        var linea = (col ? 'Color: ' + col : '') + (tSel ? (col ? '  ·  ' : '') + 'Talla ' + tSel : '');
+        var linea = (col ? 'Color: ' + col : '') + (tSel ? (col ? '  ·  ' : '') + 'Talla ' + verT(tSel) : '');
         if (!linea) linea = 'Elige tu talla';
         if (sm.textContent !== linea) sm.textContent = linea;
       }
