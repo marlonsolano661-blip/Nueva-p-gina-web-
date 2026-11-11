@@ -255,7 +255,7 @@
     function pintarIA() {
       iaBox.textContent = '';
       iaBox.appendChild(el('h4', { text: '✨ Crear las fotos con IA con tu modelo' }));
-      iaBox.appendChild(el('p', { class: 'ofA-ay', text: 'La IA le pone a tu modelo el tacón del paso 1, copiado exacto (mismo tacón, plataforma, tiras y color), y si eliges ropa la viste con ella. Fondo blanco de estudio, misma modelo en todas las fotos. Tarda de 1 a 4 minutos. Revisas las fotos antes de usarlas.' }));
+      iaBox.appendChild(el('p', { class: 'ofA-ay', text: 'La IA le pone a tu modelo el tacón del paso 1, copiado exacto (mismo tacón, plataforma, tiras y color), y si eliges ropa la viste con ella. Fondo blanco de estudio, misma modelo en todas las fotos. Tarda de 2 a 6 minutos: primero limpia la prenda, la viste, le pone tu tacón y revisa cada foto. Revisas las fotos antes de usarlas.' }));
       // A) Modelo
       var subirM = el('button', { type: 'button', class: 'claro', text: IA.modelo ? 'Cambiar la foto de tu modelo' : '+ Subir la foto de tu modelo' });
       subirM.addEventListener('click', function () { elegirFoto(function (url) { IA.modelo = url; try { localStorage.setItem('mf_ia_modelo', url); } catch (e) {} pintarIA(); }); });
@@ -319,7 +319,7 @@
       if (!fotoTacon()) return A.msg('Elige el tacón en el paso 1 (B)');
       var trabajo = 'IA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       var vistas = ['frente'].concat(IA.lado ? ['lado'] : [], IA.espalda ? ['espalda'] : [], IA.editorial ? ['editorial'] : []);
-      IA.ocupado = true; IA.res = null; IA.estado = 'Creando ' + vistas.length + (vistas.length === 1 ? ' foto' : ' fotos') + '… puede tardar de 1 a 4 minutos. No cierres esta pantalla.';
+      IA.ocupado = true; IA.res = null; IA.estado = 'Creando ' + vistas.length + (vistas.length === 1 ? ' foto' : ' fotos') + '… puede tardar de 2 a 6 minutos. No cierres esta pantalla.';
       pintarIA();
       var t0 = Date.now();
       A.api('outfit-ia-background', { method: 'POST', body: { trabajo: trabajo, modelo: IA.modelo, tacon: fotoTacon(), prendas: prendas, vistas: vistas } })
@@ -327,7 +327,7 @@
           return (function mirar() {
             return new Promise(function (ok) { setTimeout(ok, 6000); }).then(function () { return A.api('fotos-ia-estado?trabajo=' + trabajo); }).then(function (r) {
               if (r && r.listo) return r;
-              if (Date.now() - t0 > 9 * 60 * 1000) throw new Error('La IA está tardando demasiado. Intenta de nuevo en unos minutos.');
+              if (Date.now() - t0 > 15 * 60 * 1000) throw new Error('La IA está tardando demasiado. Intenta de nuevo en unos minutos.');
               IA.estado = 'Creando… (' + Math.round((Date.now() - t0) / 1000) + ' s)'; var e = iaBox.querySelector('.estado'); if (e) e.textContent = IA.estado;
               return mirar();
             });
