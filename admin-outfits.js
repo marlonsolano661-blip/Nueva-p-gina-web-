@@ -73,6 +73,7 @@
     '.ofA-ia .res figure{margin:0;display:grid;gap:.25rem;font-size:.78rem}',
     '.ofA-ia .res img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.5rem;background:#f2f2f2}',
     '.ofA-ia .ojo{color:#8a5a00}',
+    '.ofA-ia .res > img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.5rem;background:#f2f2f2}',
     /* Selector con foto: tacón, color y producto de cada prenda */
     /* En el celular nada se sale de la pantalla */
     '.ofA-pieza{grid-template-columns:3.4rem minmax(0,1fr) auto!important}.ofA-pieza input,.ofA-dest input{min-width:0;width:100%;box-sizing:border-box}.ofA-pz,.ofA-dest>*,.ofA-campo{min-width:0}.ofA-pin .ofA-marca{flex:1 1 10rem;min-width:0;white-space:normal}',
@@ -109,6 +110,8 @@
     cargar().catch(A.falla);
   }
   btn.addEventListener('click', abrir);
+  // Si hay cambios sin guardar, el navegador pregunta antes de cerrar o recargar la página
+  window.addEventListener('beforeunload', function (e) { if (S.sucio) { e.preventDefault(); e.returnValue = ''; } });
 
   function cargar() {
     return Promise.all([A.api('outfits?admin=1'), A.api('admin-tienda?recurso=productos')]).then(function (r) {
@@ -131,7 +134,7 @@
   function selector(op) {
     var caja = el('div', {}), abierto = false, q = '';
     var minFoto = function (u, ic) { return u ? el('img', { class: 'ft', src: u, alt: '', loading: 'lazy' }) : el('span', { class: 'ft', text: ic || '👠' }); };
-    var sinTilde = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+    var sinTilde = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, ''); };
     function pintarS() {
       caja.textContent = '';
       var lista = op.lista(), v = op.valor();
@@ -316,7 +319,7 @@
 
     // ---------- ✨ Fotos con IA: tu modelo con las prendas y el tacón del look ----------
     var iaBox = el('div', { class: 'ofA-ia' });
-    var IA = { modelo: '', prendas: [], extra: [], lado: true, espalda: true, editorial: true, ocupado: false, res: null, estado: '' };
+    var IA = { modelo: '', prendas: [], extra: [], lado: true, espalda: true, editorial: true, ocupado: false, res: null, estado: '', hist: null, verHist: false };
     try { IA.modelo = localStorage.getItem('mf_ia_modelo') || ''; } catch (e) { IA.modelo = ''; }
     // Prendas ya enlazadas en el look: quedan marcadas
     o.piezas.forEach(function (x) { var pr = porId(x.producto); if (pr && esRopa(pr) && fotoDe(pr) && IA.prendas.indexOf(fotoDe(pr)) < 0) IA.prendas.push(fotoDe(pr)); });
@@ -365,6 +368,29 @@
       iaBox.appendChild(el('div', {}, [el('b', { text: 'D. Fotos a crear' }), el('div', { class: 'fila' }, [
         el('span', { text: '✓ Frente' }), el('label', { class: 'fila' }, [cL, 'De lado']), el('label', { class: 'fila' }, [cE, 'De espalda']), el('label', { class: 'fila' }, [cP, 'Pose editorial'])]),
         el('small', { class: 'ofA-ay', text: 'Cada foto cuenta para el límite de 40 fotos con IA al día.' })]));
+      // Fotos ya creadas: si se cerró la pantalla o se bloqueó el celular, aquí se recuperan
+      var verH = el('button', { type: 'button', class: 'claro', text: IA.verHist ? 'Ocultar fotos creadas antes' : '🕘 Ver fotos que ya creaste con IA' });
+      verH.addEventListener('click', function () {
+        IA.verHist = !IA.verHist;
+        if (IA.verHist && !IA.hist) { IA.hist = 'cargando'; A.api('fotos-ia-estado?recientes=1').then(function (r) { IA.hist = (r && r.trabajos) || []; pintarIA(); }).catch(function (e) { IA.hist = null; A.falla(e); pintarIA(); }); }
+        pintarIA();
+      });
+      var hBox = el('div', {}, [verH]);
+      if (IA.verHist) {
+        if (IA.hist === 'cargando') hBox.appendChild(el('p', { class: 'ofA-ay', text: 'Buscando…' }));
+        else if (IA.hist && !IA.hist.length) hBox.appendChild(el('p', { class: 'ofA-ay', text: 'Todavía no hay fotos creadas.' }));
+        else if (IA.hist) IA.hist.forEach(function (t) {
+          var fecha = new Date(t.creado_en);
+          var usarT = el('button', { type: 'button', class: 'claro', text: 'Revisar y usar estas' });
+          usarT.addEventListener('click', function () { IA.res = t.fotos; IA.verHist = false; IA.estado = 'Fotos recuperadas. Revísalas y toca "Usar estas fotos en el look".'; pintarIA(); iaBox.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+          hBox.appendChild(el('div', { style: 'margin:.6rem 0' }, [
+            el('small', { class: 'ofA-ay', text: fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) + ' · ' + fecha.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }) + ' · ' + t.fotos.length + ' fotos' }),
+            el('div', { class: 'res' }, t.fotos.map(function (f) { return el('img', { src: f.url, alt: VISTA_NOM[f.vista] || '', loading: 'lazy' }); })),
+            usarT
+          ]));
+        });
+      }
+      iaBox.appendChild(hBox);
       // Crear
       var crear = el('button', { type: 'button', class: 'crear', text: IA.ocupado ? 'Creando…' : '✨ Crear fotos' });
       crear.disabled = IA.ocupado;
@@ -395,7 +421,12 @@
       IA.ocupado = true; IA.res = null; IA.estado = 'Creando ' + vistas.length + (vistas.length === 1 ? ' foto' : ' fotos') + '… puede tardar de 2 a 6 minutos. No cierres esta pantalla.';
       pintarIA();
       var t0 = Date.now();
-      A.api('outfit-ia-background', { method: 'POST', body: { trabajo: trabajo, modelo: IA.modelo, tacon: fotoTacon(), prendas: prendas, vistas: vistas } })
+      try { localStorage.setItem('mf_ia_pendiente', JSON.stringify({ trabajo: trabajo, t0: t0 })); } catch (e) {}
+      esperar(A.api('outfit-ia-background', { method: 'POST', body: { trabajo: trabajo, modelo: IA.modelo, tacon: fotoTacon(), prendas: prendas, vistas: vistas } }), trabajo, t0);
+    }
+    // Espera el resultado. Si se cerró la pantalla a mitad, al volver a abrir el look sigue esperando (mf_ia_pendiente).
+    function esperar(inicio, trabajo, t0) {
+      inicio
         .then(function () {
           return (function mirar() {
             return new Promise(function (ok) { setTimeout(ok, 6000); }).then(function () { return A.api('fotos-ia-estado?trabajo=' + trabajo); }).then(function (r) {
@@ -407,14 +438,15 @@
           })();
         })
         .then(function (r) {
-          IA.ocupado = false;
+          IA.ocupado = false; IA.hist = null;
+          try { localStorage.removeItem('mf_ia_pendiente'); } catch (e) {}
           if (r.error) { IA.estado = '✗ ' + r.error; pintarIA(); return A.msg(r.error, true); }
           IA.res = (r.fotos || []);
           var fallas = (r.errores || []).length;
           IA.estado = IA.res.length ? '✓ Listo. Revisa las fotos y toca "Usar estas fotos en el look".' + (fallas ? ' (' + fallas + ' no se pudo crear)' : '') : '✗ La IA no pudo crear las fotos. Prueba con otra foto de la modelo o de la prenda.';
           pintarIA();
         })
-        .catch(function (e) { IA.ocupado = false; IA.estado = '✗ ' + (e.message || 'No se pudo crear'); pintarIA(); A.falla(e); });
+        .catch(function (e) { IA.ocupado = false; try { localStorage.removeItem('mf_ia_pendiente'); } catch (x) {} IA.estado = '✗ ' + (e.message || 'No se pudo crear'); pintarIA(); A.falla(e); });
     }
     function usarIA() {
       if (!IA.res || !IA.res.length) return;
@@ -426,10 +458,17 @@
         if (pr && !o.piezas.some(function (x) { return x.producto === pr.id; }) && o.piezas.length < MAX_PIEZAS) o.piezas.push({ n: pr.nombre, producto: pr.id });
       });
       o.piezas.forEach(function (x) { delete x.x; delete x.y; });
-      IA.res = null; IA.estado = '✓ Fotos puestas en el look. Ahora marca los puntos de las prendas (paso 3) y guarda.';
+      IA.res = null; IA.estado = '✓ Fotos puestas en el look. Marca los puntos de las prendas (paso 3), toca "Listo" y después "Guardar outfits".';
       marcar(); fotos(); piezas(); pintarIA();
     }
     pintarIA();
+    (function () {
+      var pend = null; try { pend = JSON.parse(localStorage.getItem('mf_ia_pendiente') || 'null'); } catch (e) {}
+      if (!pend || !pend.trabajo) return;
+      if (Date.now() - pend.t0 > 15 * 60 * 1000) { try { localStorage.removeItem('mf_ia_pendiente'); } catch (e) {} return; }
+      IA.ocupado = true; IA.estado = 'Seguimos esperando las fotos que pediste… (' + Math.round((Date.now() - pend.t0) / 1000) + ' s)';
+      pintarIA(); esperar(Promise.resolve(), pend.trabajo, pend.t0);
+    })();
 
     // Prendas que complementan el look, cada una con su punto de compra sobre la foto principal
     var piezasBox = el('div', {});
