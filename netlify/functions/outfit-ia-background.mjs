@@ -155,7 +155,7 @@ async function calificar(IA, refs, g, que) {
     '"ropa": clothes identical to the GARMENT references (type, cut, length, neckline, sleeves, fabric, sheerness, color, ruffles and details), ' +
     'and NO leftover or extra clothing from other photos (for example a white shirt visible under a sheer blouse); if no GARMENT reference, the clothes must match the base photo. ' +
     '"zapatos": identical to the SHOE reference (heel height and shape, platform, toe, every strap, buckles, color, material); be very strict. ' +
-    '"realismo": photorealistic, correct anatomy (hands, feet, legs), whole body visible head to shoes, plain off-white studio background, correct view.' });
+    '"realismo": photorealistic, correct anatomy (hands, feet, legs), whole body visible head to shoes, the warm beige loft studio set, correct view.' });
   const t = await IA.texto(parts, 'revisión');
   try {
     const j = jsonDe(t);

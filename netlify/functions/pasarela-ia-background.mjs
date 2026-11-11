@@ -33,8 +33,10 @@ const PROMPT = 'Professional fashion runway video for the shoe brand MARLON FOOT
   'with a confident, elegant model walk, natural arm swing and realistic weight shift, then pauses, poses for a beat and turns slightly so the ' +
   'heels are seen from the side. She is EXACTLY the same woman with the same face, hair, body, clothes and shoes as in the image for the whole ' +
   'video. The shoes are the hero: keep their exact design, heel height and shape, platform, straps and color in every frame, sharp and in focus, ' +
-  'feet and heels fully visible, correct anatomy, heels touching the floor naturally. Clean high-end runway or white studio set, soft professional ' +
-  'lighting, smooth slow camera tracking backward, shallow depth of field, photorealistic like a real fashion show recording, 24fps cinematic look. ' +
+  'feet and heels fully visible, correct anatomy, heels touching the floor naturally. Set: a bright minimalist loft studio with warm beige plaster ' +
+  'walls, exposed white ceiling beams, a low curved beige sofa and a polished concrete floor, soft natural window daylight; smooth slow camera ' +
+  'tracking backward, shallow depth of field, photorealistic like a real fashion campaign video, 24fps cinematic look. At the end she glances back ' +
+  'over her shoulder at the camera. ' +
   'Audio: subtle elegant runway music and the sound of heels on the floor. No text, no logos, no captions, no extra people.';
 const PROMPT_MANO = 'Realistic handheld UGC-style product video, first-person point of view, filmed on a phone in vertical format. A woman with ' +
   'long almond-shaped chrome/silver manicured nails and chunky gold rings holds the shoe from the image with both hands over her lap (light-wash ' +
