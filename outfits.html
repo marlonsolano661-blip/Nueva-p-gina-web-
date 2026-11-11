@@ -82,6 +82,30 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 .toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--k);color:var(--w);padding:.75rem 1rem;font-size:.9rem;display:flex;gap:1rem;align-items:center;transition:.3s;z-index:20;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast a{color:var(--w);font-weight:600}
+/* Celular: modelos un poco más bajas y barra fija con el tacón del look,
+   para que el producto se vea sin tener que bajar hasta el panel. */
+.bar{display:none}
+@media(max-width:959px){
+  .wrap{padding-top:1.1rem}
+  h1{font-size:2.1rem}
+  .lead{font-size:.9rem;line-height:1.5}
+  .ocas{margin-top:.7rem}
+  .layout{margin-top:.6rem}
+  /* La modelo completa (con los tacones) cabe en la pantalla, encima de la barra */
+  .stage{height:clamp(300px,calc(100svh - var(--top,330px) - 92px),620px)}
+  .wrap{padding-bottom:calc(6.5rem + env(safe-area-inset-bottom))}
+  .bar{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:.8rem;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:15;
+    background:var(--w);border-top:1px solid var(--l);box-shadow:0 -8px 24px rgba(0,0,0,.06);
+    padding:.65rem 1rem calc(.65rem + env(safe-area-inset-bottom));transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+  .bar.off{transform:translateY(110%)}
+  .bar img{width:64px;height:64px;object-fit:cover;background:var(--bg);display:block}
+  .bar .t{min-width:0;text-decoration:none;color:inherit}
+  .bar strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:600 1.05rem/1.1 "Cormorant Garamond",Georgia,serif}
+  .bar span{display:block;font-size:.8rem;color:var(--g);margin-top:.15rem;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar span b{color:var(--k)}
+  .bar button{min-height:46px;padding:0 .85rem;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .64rem Jost,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+}
+@media(max-width:959px) and (max-height:740px){.lead{display:none}h1{font-size:1.9rem}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <header class="top"><a href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="v" href="index.html">← Volver a la tienda</a></header>
@@ -117,6 +141,11 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
       </div>
     </aside>
   </div>
+</div>
+<div class="bar" id="bar" aria-label="Tacón de este look">
+  <img id="barImg" src="" alt="">
+  <a class="t" id="barLink" href="index.html"><strong id="barName"></strong><span id="barPrice"></span></a>
+  <button type="button" id="barBtn">Elegir talla</button>
 </div>
 <div class="toast" id="toast" role="status"><span>Añadido a la bolsa</span><a href="index.html">Ver bolsa</a></div>
 
@@ -184,7 +213,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       $("steps").appendChild(s); return s;
     });
     $("prev").hidden = $("next").hidden = $("desliza").hidden = n < 2;
-    layout(); panel(); filtro(f.length > 0);
+    filtro(f.length > 0); medir(); layout(); panel();
   }
   /* Botones de ocasión (Casual, Noche…): solo si los looks tienen ocasión */
   function ocasiones(base) {
@@ -196,6 +225,12 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   function filtro(on) {
     var e = $("filtro"); e.hidden = !on; if (!on) return;
     e.innerHTML = "Ideas para combinar: <b>" + esc(prod(PID).name) + '</b> · <a href="outfits.html">Ver todos los looks</a>';
+  }
+
+  /* Celular: altura de la pasarela = lo que queda de pantalla debajo del encabezado (ver --top en el CSS) */
+  function medir() {
+    var t = Math.round($("stage").getBoundingClientRect().top + scrollY);
+    document.documentElement.style.setProperty("--top", t + "px");
   }
 
   var GAP = 1;
@@ -228,6 +263,11 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var href = "index.html?producto=" + encodeURIComponent(L.producto);
     $("prod").href = href; $("seeProd").href = href;
     $("add").textContent = "Agregar a la bolsa" + (p.price != null ? " · " + fmt(p.price) : "");
+    /* Barra fija del celular */
+    $("barImg").src = $("prodImg").src; $("barImg").alt = $("prodImg").alt;
+    $("barName").textContent = p.name;
+    $("barPrice").innerHTML = (p.price != null ? "<b>" + fmt(p.price) + "</b>" : "") + (p.price != null && L.color ? " · " : "") + (L.color ? "Color " + esc(L.color) : "");
+    $("barLink").href = href;
     $("pieces").parentNode.hidden = !L.piezas.length;
     $("pieces").innerHTML = L.piezas.map(function (x) {
       var nom = typeof x === "string" ? x : x.n, f = typeof x === "string" ? "" : x.foto;
@@ -302,7 +342,15 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var t = $("toast"); t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("on"); }, 3500);
   });
 
-  addEventListener("resize", function () { layout(); });
+  /* "Elegir talla" lleva al panel; la barra se esconde mientras las tallas están en pantalla */
+  $("barBtn").addEventListener("click", function () {
+    $("sizeBox").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { $("bar").classList.toggle("off", es[0].isIntersecting); }, { threshold: 0.2 }).observe($("sizeBox"));
+  }
+
+  addEventListener("resize", function () { medir(); layout(); });
   construir();
   var API = window.MF_API_BASE || "";
   var pedir = function (r) { return fetch(API + r).then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }); };
