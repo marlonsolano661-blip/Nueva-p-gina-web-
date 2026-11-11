@@ -270,3 +270,79 @@
     '@media(max-width:799px){html body input,html body select,html body textarea,html body .dr .drf .dcb input,html body .ck-sum .dcb input{font-size:16px!important}}';
   document.head.appendChild(st);
 })();
+
+/* "Completa el look" en la página de producto: si el producto sale en un look de "Ideas de outfits",
+   se sugieren las otras prendas (o el tacón) de ese look, con su etiqueta 🏷️, precio y botón Comprar.
+   Usa los looks guardados en el panel (/api/outfits). Si no hay looks con este producto, no muestra nada. */
+(function () {
+  'use strict';
+  var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (m) { return '&#' + m.charCodeAt(0) + ';'; }); };
+  var plata = function (n) { return '$' + Number(n).toLocaleString('es-CO'); };
+  var LOOKS = null, pidiendo = false;
+  var st = document.createElement('style'); st.setAttribute('data-completa', '1');
+  st.textContent = [
+    '.cl-look{margin:1.6rem 0 .4rem;padding-top:1.2rem;border-top:1px solid #e6e6e6}',
+    '.cl-look h3{margin:0 0 .25rem;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:#b08d57}',
+    '.cl-look p{margin:0 0 .8rem;font-size:.85rem;color:#666}',
+    '.cl-t{display:flex;gap:.7rem;overflow-x:auto;padding-bottom:.4rem;scroll-snap-type:x mandatory;scrollbar-width:none}',
+    '.cl-t::-webkit-scrollbar{display:none}',
+    '.cl-c{flex:0 0 9.5rem;scroll-snap-align:start;display:grid;gap:.35rem;align-content:start;border:1px solid #e6e6e6;background:#fff;padding:.4rem;color:#111;text-decoration:none;font:inherit;text-align:left;cursor:pointer}',
+    '.cl-c img{width:100%;aspect-ratio:3/4;object-fit:cover;background:#f4f4f4;display:block}',
+    '.cl-c b{font-size:.82rem;font-weight:600;line-height:1.25}',
+    '.cl-c i{font-style:normal;font-size:.85rem}',
+    '.cl-c span{display:block;margin-top:.15rem;padding:.55rem .4rem;background:#0a0a0a;color:#fff;text-align:center;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}',
+    '.cl-ver{display:inline-block;margin-top:.6rem;font-size:.8rem;letter-spacing:.08em;color:#111}'
+  ].join('\n');
+  document.head.appendChild(st);
+
+  function sugerencias(id, cat) {
+    var porId = {}; cat.forEach(function (p) { porId[String(p.id)] = p; });
+    var out = [], vistos = {};
+    function agregar(s) { var k = s.id ? 'p' + s.id : 'n' + s.n.toLowerCase(); if (vistos[k] || String(s.id) === String(id)) return; vistos[k] = 1; out.push(s); }
+    (LOOKS || []).forEach(function (o) {
+      var piezas = (o.piezas || []).filter(function (x) { return x && typeof x === 'object' && x.n; });
+      var aqui = String(o.producto) === String(id) || piezas.some(function (x) { return String(x.producto) === String(id); });
+      if (!aqui) return;
+      // El tacón del look (cuando se está viendo una prenda)
+      var t = porId[String(o.producto)];
+      if (t && t.tallas && t.tallas.length) agregar({ id: t.id, n: t.name, precio: t.price, foto: t.img });
+      piezas.forEach(function (x) {
+        var p = x.producto ? porId[String(x.producto)] : null;
+        if (x.producto && !p) return; // producto oculto o borrado
+        if (p && !(p.tallas && p.tallas.length)) return; // agotado
+        if (p) agregar({ id: p.id, n: x.n || p.name, precio: p.price, foto: x.foto || p.img });
+        else if (x.link) agregar({ n: x.n, precio: x.precio, foto: x.foto, link: x.link });
+      });
+    });
+    return out.slice(0, 8);
+  }
+
+  function pintar() {
+    var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
+    var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
+    if (id == null) return;
+    var viejo = pi.querySelector('.cl-look');
+    if (viejo && viejo.getAttribute('data-id') === String(id)) return;
+    if (viejo) viejo.remove();
+    if (LOOKS === null) { if (!pidiendo) { pidiendo = true; fetch((window.MF_API_BASE || '') + '/api/outfits').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { LOOKS = (d && d.outfits) || []; prog(); }).catch(function () { LOOKS = []; }); } return; }
+    var cat = []; try { cat = catalog() || []; } catch (e) { return; }
+    if (!cat.length) return;
+    var s = sugerencias(id, cat);
+    var caja = document.createElement('section'); caja.className = 'cl-look'; caja.setAttribute('data-id', String(id));
+    if (!s.length) { caja.hidden = true; } else {
+      caja.innerHTML = '<h3>Completa el look</h3><p>Lo que lleva la modelo con este producto.</p><div class="cl-t">' + s.map(function (x) {
+        var dentro = (x.foto ? '<img src="' + E(x.foto) + '" alt="" loading="lazy">' : '') + '<b>🏷️ ' + E(x.n) + '</b>' + (x.precio ? '<i>' + plata(x.precio) + '</i>' : '') + '<span>Comprar →</span>';
+        return x.id ? '<button type="button" class="cl-c" data-n="prod" data-id="' + E(x.id) + '">' + dentro + '</button>'
+          : '<a class="cl-c" href="' + E(x.link) + '" target="_blank" rel="noopener">' + dentro + '</a>';
+      }).join('') + '</div><a class="cl-ver" href="outfits.html">Ver el look completo →</a>';
+    }
+    var fila = pi.querySelector(':scope > .row'), trust = pi.querySelector(':scope > .trust');
+    if (fila && fila.nextSibling) pi.insertBefore(caja, fila.nextSibling);
+    else if (trust) pi.insertBefore(caja, trust);
+    else pi.appendChild(caja);
+  }
+  var pend = false;
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { pintar(); } catch (e) { /* la ficha sigue igual */ } }); }
+  function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();

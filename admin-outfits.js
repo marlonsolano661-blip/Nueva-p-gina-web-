@@ -58,6 +58,10 @@
     '.ofA-pin .ofA-marca.esperando{background:#b08d57;border-color:#b08d57;animation:ofaLatido 1.2s ease-in-out infinite}',
     '@keyframes ofaLatido{50%{box-shadow:0 0 0 6px rgba(176,141,87,.25)}}',
     '.ofA-mapa.esperando{outline:3px solid #b08d57;outline-offset:3px}',
+    '.ofA-tabs{display:flex;gap:.45rem;overflow-x:auto;padding:.2rem .1rem .5rem}',
+    '.ofA-tab{display:grid;gap:.2rem;flex:none;width:4.6rem;padding:.25rem;border:2px solid #e3e3e3;border-radius:.55rem;background:#fff;font:inherit;font-size:.72rem;text-align:center;cursor:pointer;color:#0a0a0a}',
+    '.ofA-tab img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.35rem;background:#f2f2f2}',
+    '.ofA-tab[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
     /* Fotos con IA: tu modelo + prendas + tacón */
     '.ofA-ia{display:grid;gap:.7rem;padding:.9rem;border:1px solid #e6dcc8;border-radius:.8rem;background:#fffaf1}',
     '.ofA-ia h4{margin:0;font-size:1rem}',
@@ -128,6 +132,9 @@
   var esRopa = function (p) { return Object.keys((p && p.stock) || {}).some(function (t) { return TALLAS_ROPA.indexOf(t) > -1; }); };
   var fotoDe = function (p) { return p ? ((p.imagenes && p.imagenes[0]) || p.imagen || '') : ''; };
   var VISTA_NOM = { frente: 'Frente', lado: 'Lado', espalda: 'Espalda', editorial: 'Editorial' };
+  // Puntos de compra por foto: pts[i] = [x, y] sobre la foto i. x / y repiten el de la foto principal (pts[0]).
+  var ptsDe = function (p) { if (!Array.isArray(p.pts)) p.pts = p.x != null && p.y != null ? [[p.x, p.y]] : []; return p.pts; };
+  var sync = function (p) { var a = ptsDe(p)[0]; if (a) { p.x = a[0]; p.y = a[1]; } else { delete p.x; delete p.y; } };
   // Selector con foto (reemplaza las listas de solo texto): un botón con la foto y el nombre elegido;
   // al tocarlo se abre una cuadrícula con la foto de cada opción y, si son muchas, un buscador.
   // op = { lista(), valor(), elegir(id), foto(x), nombre(x), punto(x), extra(x), vacio, ninguno, ningunoIc }
@@ -299,8 +306,8 @@
         var cambiar = el('button', { type: 'button', class: 'claro', text: 'Cambiar esta foto' });
         cambiar.addEventListener('click', function () { elegirFoto(function (url) { f.url = url; fotos(); }); });
         var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar foto' });
-        quitar.addEventListener('click', function () { o.fotos.splice(i, 1); marcar(); fotos(); });
-        var prin = i === 0 ? el('small', { class: 'ofA-ay', text: '★ Foto principal: es la que sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer foto principal', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); marcar(); fotos(); } });
+        quitar.addEventListener('click', function () { o.fotos.splice(i, 1); o.piezas.forEach(function (p) { ptsDe(p).splice(i, 1); sync(p); }); if (fm >= o.fotos.length) fm = 0; marcar(); fotos(); piezas(); });
+        var prin = i === 0 ? el('small', { class: 'ofA-ay', text: '★ Foto principal: es la que sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer foto principal', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); o.piezas.forEach(function (p) { var a = ptsDe(p); a.length = Math.max(a.length, i + 1); a.unshift(a.splice(i, 1)[0] || null); sync(p); }); fm = 0; marcar(); fotos(); piezas(); } });
         fotosBox.appendChild(el('div', { class: 'ofA-foto' }, [el('img', { src: f.url, alt: f.e }), el('small', { class: 'ofA-ay', text: '¿Desde dónde se ve?' }), sel, prin, cambiar, quitar]));
       });
       var cuenta = {}; o.fotos.forEach(function (f) { cuenta[f.e] = (cuenta[f.e] || 0) + 1; });
@@ -457,7 +464,7 @@
         var pr = S.productos.filter(function (x) { return fotoDe(x) === u; })[0];
         if (pr && !o.piezas.some(function (x) { return x.producto === pr.id; }) && o.piezas.length < MAX_PIEZAS) o.piezas.push({ n: pr.nombre, producto: pr.id });
       });
-      o.piezas.forEach(function (x) { delete x.x; delete x.y; });
+      o.piezas.forEach(function (x) { x.pts = []; sync(x); }); fm = 0;
       IA.res = null; IA.estado = '✓ Fotos puestas en el look. Marca los puntos de las prendas (paso 3), toca "Listo" y después "Guardar outfits".';
       marcar(); fotos(); piezas(); pintarIA();
     }
@@ -474,6 +481,7 @@
     var piezasBox = el('div', {});
     var mapaBox = el('div', {});
     var activa = -1; /* prenda que se está marcando en la foto */
+    var fm = 0; /* foto del mapa en la que se marcan los puntos (0 = principal) */
     function piezas() {
       piezasBox.textContent = '';
       o.piezas.forEach(function (p, i) {
@@ -502,22 +510,24 @@
         precio.addEventListener('input', function () { var v = parseInt(precio.value, 10); if (v > 0) p.precio = v; else delete p.precio; marcar(); });
         dest();
 
-        var tiene = p.x != null && p.y != null;
-        var pin = el('button', { type: 'button', class: 'ofA-marca' + (activa === i ? ' esperando' : ''), text: activa === i ? '👇 Ahora toca la prenda en la foto' : (tiene ? '📍 Cambiar el punto de lugar' : '📍 Poner el punto en la foto') });
+        var tiene = !!ptsDe(p)[fm];
+        var nomF = o.fotos[fm] ? o.fotos[fm].e : 'Frente';
+        var con = o.fotos.map(function (f, k) { return ptsDe(p)[k] ? f.e : null; }).filter(Boolean);
+        var pin = el('button', { type: 'button', class: 'ofA-marca' + (activa === i ? ' esperando' : ''), text: activa === i ? '👇 Ahora toca la prenda en la foto' : (tiene ? '📍 Cambiar el punto (' + nomF + ')' : '📍 Poner el punto en la foto ' + nomF) });
         pin.addEventListener('click', function () {
           if (!o.fotos.length) { A.msg('Primero sube la foto de frente de la modelo'); return; }
           activa = i; piezas(); mapaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
-        var quitarPin = el('button', { type: 'button', class: 'claro', text: 'Quitar punto' });
+        var quitarPin = el('button', { type: 'button', class: 'claro', text: 'Quitar punto de ' + nomF });
         quitarPin.hidden = !tiene;
-        quitarPin.addEventListener('click', function () { delete p.x; delete p.y; marcar(); piezas(); });
+        quitarPin.addEventListener('click', function () { ptsDe(p)[fm] = null; sync(p); marcar(); piezas(); });
 
         piezasBox.appendChild(el('div', { class: 'ofA-pz' }, [
           el('div', { class: 'ofA-pieza' }, [mini, n, q]),
           el('div', { class: 'ofA-dest' }, [
             el('div', { class: 'ofA-campo' }, ['¿A dónde lleva?', el('small', { class: 'ofA-ay', text: 'Si la prenda ya está creada como producto, elígela por su foto. Si no, deja "No está en la tienda" y pega un link.' }), selD.nodo]),
             lLink, lPrecio,
-            el('div', { class: 'ofA-pin' }, [el('span', { class: 'ofA-num', text: String(i + 1) }), pin, quitarPin, tiene ? el('span', { class: 'ok', text: '✓ Punto puesto' }) : el('span', { class: 'ofA-ay', text: 'Sin punto: no sale el círculo en la foto' })])
+            el('div', { class: 'ofA-pin' }, [el('span', { class: 'ofA-num', text: String(i + 1) }), pin, quitarPin, con.length ? el('span', { class: 'ok', text: '✓ Punto en: ' + con.join(', ') }) : el('span', { class: 'ofA-ay', text: 'Sin punto: no sale el círculo en la foto' })])
           ])
         ]));
       });
@@ -531,30 +541,44 @@
     // La foto principal con los puntos numerados; al tocarla se pone el punto de la prenda activa
     function mapa() {
       mapaBox.textContent = '';
-      var f = o.fotos[0];
+      if (fm >= o.fotos.length) fm = 0;
+      var f = o.fotos[fm];
       if (!f) { mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Sube la foto de frente (paso 2) para poder marcar las prendas.' })); return; }
+      // Una pestaña por foto: cada foto (frente, lado, espalda…) lleva sus propios puntos
+      if (o.fotos.length > 1) {
+        mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Elige en qué foto marcas los puntos. Cada foto tiene los suyos: en la tienda salen en la foto que la clienta esté viendo.' }));
+        mapaBox.appendChild(el('div', { class: 'ofA-tabs' }, o.fotos.map(function (x, k) {
+          var n = o.piezas.filter(function (p) { return ptsDe(p)[k]; }).length;
+          var t = el('button', { type: 'button', class: 'ofA-tab', 'aria-pressed': k === fm ? 'true' : 'false' }, [el('img', { src: x.url, alt: '' }), el('span', { text: x.e + (n ? ' · ' + n + ' 📍' : '') })]);
+          t.addEventListener('click', function () { fm = k; piezas(); });
+          return t;
+        })));
+      }
       if (activa >= 0 && o.piezas[activa]) mapaBox.appendChild(el('p', { class: 'ofA-pide', text: 'Toca en la foto justo encima de: ' + (o.piezas[activa].n || 'prenda ' + (activa + 1)) }));
       var m = el('div', { class: 'ofA-mapa' + (activa >= 0 ? ' esperando' : ''), role: 'button', 'aria-label': 'Foto principal: toca para poner el punto de la prenda' }, [el('img', { src: f.url, alt: '' })]);
       o.piezas.forEach(function (p, i) {
-        if (p.x == null || p.y == null) return;
-        m.appendChild(el('span', { class: 'ofA-num' + (i === activa ? ' act' : ''), text: String(i + 1), style: 'left:' + p.x + '%;top:' + p.y + '%' }));
+        var q = ptsDe(p)[fm]; if (!q) return;
+        m.appendChild(el('span', { class: 'ofA-num' + (i === activa ? ' act' : ''), text: String(i + 1), style: 'left:' + q[0] + '%;top:' + q[1] + '%' }));
       });
       m.addEventListener('click', function (e) {
         if (activa < 0 || !o.piezas[activa]) {
           // Sin prenda elegida: si hay una sola, se mueve su punto; si hay varias, va a la primera que no tenga punto
-          var sin = o.piezas.map(function (x, k) { return x.x == null ? k : -1; }).filter(function (k) { return k > -1; });
+          var sin = o.piezas.map(function (x, k) { return ptsDe(x)[fm] ? -1 : k; }).filter(function (k) { return k > -1; });
           if (o.piezas.length === 1) activa = 0;
           else if (sin.length) activa = sin[0];
           else { A.msg('Toca "📍 Cambiar el punto de lugar" en la prenda que quieres mover y luego toca la foto'); return; }
         }
         var r = m.getBoundingClientRect();
         var p = o.piezas[activa];
-        p.x = Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)) * 10) / 10;
-        p.y = Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100)) * 10) / 10;
+        var a = ptsDe(p);
+        while (a.length < fm) a.push(null);
+        a[fm] = [Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)) * 10) / 10,
+          Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100)) * 10) / 10];
+        sync(p);
         activa = -1; marcar(); piezas(); A.msg('Punto puesto ✓ Recuerda guardar.');
       });
       mapaBox.appendChild(m);
-      mapaBox.appendChild(el('small', { class: 'ofA-ay', text: 'Los puntos van sobre la foto principal (★). Si cambias la foto principal, revisa que sigan en su sitio.' }));
+      mapaBox.appendChild(el('small', { class: 'ofA-ay', text: 'Estás marcando la foto: ' + f.e + (fm === 0 ? ' (★ principal)' : '') + '. Si cambias una foto por otra, revisa que los puntos sigan en su sitio.' }));
     }
     piezas();
 
@@ -578,7 +602,7 @@
       iaBox,
       el('h3', { text: '3. Ropa que lleva puesta' }),
       el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
-      el('p', { class: 'ofA-ay', text: 'Puntos de compra: toca "📍 Poner el punto en la foto" y después toca la prenda sobre la foto. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
+      el('p', { class: 'ofA-ay', text: 'Puntos de compra: elige la foto (frente, lado, espalda…), toca "📍 Poner el punto" y después toca la prenda sobre la foto. Repite en cada foto donde se vea la prenda. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
       piezasBox,
       mapaBox,
       el('h3', { text: '4. Mostrar en la tienda' }),

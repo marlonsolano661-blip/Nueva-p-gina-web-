@@ -277,17 +277,19 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     capa.textContent = ""; capa.classList.add("off"); clearTimeout(tPuntos);
     var L = OUTFITS[active];
     (L.piezas || []).forEach(function (p, i) {
-      if (typeof p === "string" || p.x == null || p.y == null) return;
+      if (typeof p === "string") return;
+      /* Cada foto (frente, lado, espalda…) tiene su propio punto: pts[ángulo]; x/y es el de la foto principal */
+      var q = p.pts && p.pts[angle] ? p.pts[angle] : (angle === 0 && p.x != null && p.y != null ? [p.x, p.y] : null);
+      if (!q) return;
       var b = document.createElement("button"); b.type = "button"; b.className = "spot";
-      b.style.left = p.x + "%"; b.style.top = p.y + "%";
+      b.style.left = q[0] + "%"; b.style.top = q[1] + "%";
       b.setAttribute("aria-label", "Ver " + p.n); b.setAttribute("aria-expanded", "false");
       var d = destino(p), pr = d && d.prod, precio = pr && pr.price != null ? pr.price : p.precio;
-      if (p.x > 55) b.className += " izq";
+      if (q[0] > 55) b.className += " izq";
       b.innerHTML = '<span class="tag"><b>🏷️ ' + esc(p.n) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
       b.addEventListener("click", function (e) { e.stopPropagation(); if (abierto === b) cerrarTarjeta(); else abrirTarjeta(p, b); });
       capa.appendChild(b);
     });
-    if (angle) return; /* los puntos son de la foto principal */
     tPuntos = setTimeout(function () { capa.classList.remove("off"); }, reduce ? 0 : (espera || 0));
   }
   function abrirTarjeta(p, b) {
