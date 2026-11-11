@@ -9,6 +9,15 @@
   try { token = sessionStorage.getItem('mf_admin_token') || ''; } catch (e) {}
   var CONT = {}, PRODS = [];
   var TALLAS = ['34', '35', '36', '37', '38', '39', '40'];
+  // Ropa: tallas en letras, o talla única para bolsos y accesorios. El tipo se deduce de las tallas guardadas.
+  var TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL'], UNICA = 'Unica';
+  var TIPOS = { calzado: TALLAS, ropa: TALLAS_ROPA, unica: [UNICA] };
+  var nomTalla = function (t) { return t === UNICA ? 'Talla única' : 'Talla ' + t; };
+  function tipoDe(stock) {
+    var k = Object.keys(stock || {});
+    if (k.indexOf(UNICA) > -1) return 'unica';
+    return k.some(function (t) { return TALLAS_ROPA.indexOf(t) > -1; }) ? 'ropa' : 'calzado';
+  }
 
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
@@ -61,7 +70,7 @@
       var u = totalU(p), foto = (p.imagenes && p.imagenes[0]) || p.imagen;
       cont.appendChild(el('article', { class: 'pcard' }, [
         foto ? el('img', { src: foto, alt: '', loading: 'lazy' }) : el('div', { class: 'sinfoto', text: 'Sin foto' }),
-        el('div', {}, [el('b', { text: p.nombre }), el('div', { class: 'meta' }, [peso(p.precio) + ' · ', el('span', { class: u ? 'est-ok' : 'est-no', text: u ? u + ' pares' : 'Agotado' }), ' · ' + (p.visible ? 'Publicado' : 'Oculto')])]),
+        el('div', {}, [el('b', { text: p.nombre }), el('div', { class: 'meta' }, [peso(p.precio) + ' · ', el('span', { class: u ? 'est-ok' : 'est-no', text: u ? u + (tipoDe(p.stock) === 'calzado' ? ' pares' : (u === 1 ? ' unidad' : ' unidades')) : 'Agotado' }), ' · ' + (p.visible ? 'Publicado' : 'Oculto')])]),
         el('div', { class: 'acc' }, [el('button', { type: 'button', text: 'Editar', onclick: function () { formProducto(p); } })]),
       ]));
     });
@@ -233,19 +242,37 @@
     var nuevo = !p; p = p || { stock: {}, imagenes: [], colores: [], visible: true, orden: 0 };
     var IMGS = (p.imagenes || []).slice();
     var f = $('#form-prod'); f.textContent = '';
-    var tallas = el('div', { class: 'tallas' }, TALLAS.map(function (t) { return el('label', {}, ['Talla ' + t, el('input', { type: 'number', min: '0', max: '9999', 'data-t': t, value: p.stock && p.stock[t] != null ? p.stock[t] : 0 })]); }));
+    var tallas = el('div', { class: 'tallas' });
+    // Tipo de producto: decide qué tallas se piden (calzado 34–40, ropa XS–XL o talla única)
+    var tipo = el('select', { id: 'f-tipo' }, [
+      el('option', { value: 'calzado', text: 'Calzado · tallas 34 a 40' }),
+      el('option', { value: 'ropa', text: 'Ropa · tallas XS, S, M, L, XL' }),
+      el('option', { value: 'unica', text: 'Ropa o accesorio · talla única' })
+    ]);
+    tipo.value = nuevo ? 'calzado' : tipoDe(p.stock);
+    function pintarTallas() {
+      var antes = {}; tallas.querySelectorAll('[data-t]').forEach(function (i) { antes[i.getAttribute('data-t')] = i.value; });
+      tallas.textContent = '';
+      TIPOS[tipo.value].forEach(function (t) {
+        var v = antes[t] != null ? antes[t] : (p.stock && p.stock[t] != null ? p.stock[t] : 0);
+        tallas.appendChild(el('label', {}, [nomTalla(t), el('input', { type: 'number', min: '0', max: '9999', 'data-t': t, value: v })]));
+      });
+    }
+    tipo.addEventListener('change', pintarTallas);
+    pintarTallas();
     var cols = (CONT.colecciones || []).map(function (c) { return el('option', { value: c.id, text: c.nombre }); });
     var sel = el('select', { id: 'f-col' }, [el('option', { value: '', text: '— sin colección —' })].concat(cols));
     sel.value = p.coleccion || '';
     var form = el('form', { class: 'form' }, [
       campo('Nombre', el('input', { id: 'f-nombre', value: p.nombre || '', maxlength: '120', required: true })),
       campo('Precio (COP, entero)', el('input', { id: 'f-precio', type: 'number', min: '1', step: '1', value: p.precio || '', required: true })),
+      campo('Tipo de producto', tipo),
       campo('Colección', sel),
       campo('Orden en la tienda (menor primero)', el('input', { id: 'f-orden', type: 'number', step: '1', value: p.orden || 0 })),
       campo('Descripción', el('textarea', { id: 'f-desc', maxlength: '1500', text: p.descripcion || '' }), 'ancho'),
       galeria(IMGS),
       selectorColores(p.colores, IMGS),
-      el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla' }), tallas]),
+      el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla (unidades disponibles de cada una)' }), tallas]),
       chk('Publicado (visible en la tienda)', 'f-vis', p.visible !== false), chk('Destacado en el inicio', 'f-dest', p.destacado),
       el('div', { class: 'ancho barra' }, [el('button', { type: 'submit', text: nuevo ? 'Crear producto' : 'Guardar cambios' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),
     ]);
@@ -387,11 +414,11 @@
     return api('admin-tienda?recurso=productos').then(function (d) {
       PRODS = d.productos || [];
       var c = $('#p-inventario'); c.textContent = '';
-      c.appendChild(el('p', { class: 'nota', text: 'Escribe cuántos pares hay de cada talla y toca "Guardar". La tienda se actualiza al instante. Los pedidos pagados descuentan solos.' }));
+      c.appendChild(el('p', { class: 'nota', text: 'Escribe cuántas unidades hay de cada talla y toca "Guardar". La tienda se actualiza al instante. Los pedidos pagados descuentan solos.' }));
       if (!PRODS.length) c.appendChild(el('p', { class: 'nota', text: 'Todavía no hay productos.' }));
       PRODS.forEach(function (p) {
-        var tallas = TALLAS.slice(); Object.keys(p.stock || {}).forEach(function (t) { if (tallas.indexOf(t) < 0) tallas.push(t); });
-        var campos = tallas.map(function (t) { return el('label', {}, ['Talla ' + t, el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '9999', 'data-t': t, value: p.stock && p.stock[t] != null ? p.stock[t] : 0 })]); });
+        var tallas = TIPOS[tipoDe(p.stock)].slice(); Object.keys(p.stock || {}).forEach(function (t) { if (tallas.indexOf(t) < 0) tallas.push(t); });
+        var campos = tallas.map(function (t) { return el('label', {}, [nomTalla(t), el('input', { type: 'number', inputmode: 'numeric', min: '0', max: '9999', 'data-t': t, value: p.stock && p.stock[t] != null ? p.stock[t] : 0 })]); });
         var tarjeta = el('article', { class: 'icard' + (totalU(p) ? '' : ' agot') }, [el('h3', { text: p.nombre }), el('div', { class: 'tallas' }, campos)]);
         tarjeta.appendChild(el('button', { type: 'button', text: 'Guardar inventario', onclick: function () {
           var stock = {}; tarjeta.querySelectorAll('[data-t]').forEach(function (i) { stock[i.getAttribute('data-t')] = parseInt(i.value || '0', 10) || 0; });

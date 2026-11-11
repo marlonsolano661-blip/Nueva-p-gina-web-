@@ -53,10 +53,14 @@
    Si un producto no tiene descripción, se muestra un renglón con las tallas y colores reales. */
 (function () {
   'use strict';
+  /* Ropa: tallas XS…XL o "Unica" (se muestra "Única"). La guía de tallas en cm de pie es solo para calzado. */
+  var ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
+  var verT = function (t) { return t === 'Unica' ? 'Única' : t; };
+  var esRopa = function (p) { return !!p && (p.tipo === 'ropa' || (p.tallas || []).some(function (t) { return ROPA.indexOf(t) > -1; })); };
   function tallasTxt(t) {
     var n = t.map(Number);
     if (n.length > 2 && n.every(function (x) { return isFinite(x); }) && n.every(function (x, i) { return !i || x === n[i - 1] + 1; })) return n[0] + ' a ' + n[n.length - 1];
-    return t.join(' · ');
+    return t.map(verT).join(' · ');
   }
   function renglon() {
     var pi = document.querySelector('#app .pd .pi'); if (!pi || pi.querySelector('.ds1')) return;
@@ -72,7 +76,7 @@
       if (lineas[1]) { var d2 = document.createElement('b'); d2.textContent = lineas[1]; el.appendChild(d2); }
     } else {
       var t = p.tallas || [], c = (p.colors || []).map(function (k) { return k && k.n; }).filter(Boolean);
-      el.textContent = [t.length ? 'Tallas ' + tallasTxt(t) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
+      el.textContent = [t.length ? (t.length === 1 && t[0] === 'Unica' ? 'Talla única' : 'Tallas ' + tallasTxt(t)) : 'Agotado por ahora', c.join(', ')].filter(Boolean).join(' · ');
     }
     var viejo = pi.querySelector(':scope > p.ds'), precio = pi.querySelector(':scope > .pr');
     if (viejo) pi.replaceChild(el, viejo); else if (precio) precio.insertAdjacentElement('afterend', el);
@@ -83,6 +87,12 @@
     var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
     if (id == null) return;
     var tl = pi.querySelector(':scope > .tl');
+    var prd = null; try { prd = (catalog() || []).filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { prd = null; }
+    if (esRopa(prd)) {
+      // Ropa: sin la guía de tallas de pie, y "Única" en vez de "Unica"
+      Array.prototype.forEach.call(pi.querySelectorAll('.gl, #guia'), function (x) { x.remove(); });
+      Array.prototype.forEach.call(pi.querySelectorAll('.tl .sz, .lb .cn'), function (x) { if (x.textContent === 'Unica') x.textContent = 'Única'; });
+    }
     if (tl && !pi.querySelector(':scope > .eg-dd')) {
       var lb = tl.previousElementSibling, gl = pi.querySelector(':scope > .gl');
       if (!pi.querySelector(':scope > .eg-sh')) {
@@ -97,10 +107,10 @@
         var dd = document.createElement('div'); dd.className = 'eg-dd';
         var on = tl.querySelector('.sz.on');
         var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'eg-sel'; hb.setAttribute('aria-expanded', 'false');
-        hb.textContent = on ? 'Talla ' + on.getAttribute('data-t') : 'Elige tu talla';
+        hb.textContent = on ? 'Talla ' + verT(on.getAttribute('data-t')) : 'Elige tu talla';
         var ls = document.createElement('div'); ls.className = 'eg-dd-l'; ls.hidden = true; ls.setAttribute('role', 'listbox');
         Array.prototype.forEach.call(bs, function (x) {
-          var t = x.getAttribute('data-t'), o = document.createElement('button'); o.type = 'button'; o.className = 'eg-dd-o' + (x.classList.contains('on') ? ' on' : ''); o.setAttribute('role', 'option'); o.textContent = 'Talla ' + t;
+          var t = x.getAttribute('data-t'), o = document.createElement('button'); o.type = 'button'; o.className = 'eg-dd-o' + (x.classList.contains('on') ? ' on' : ''); o.setAttribute('role', 'option'); o.textContent = 'Talla ' + verT(t);
           o.addEventListener('click', function () { document.body.classList.remove('eg-dd-ab'); Array.prototype.forEach.call(tl.querySelectorAll('.sz'), function (z) { if (z.getAttribute('data-t') === t && !z.classList.contains('on')) z.click(); }); });
           ls.appendChild(o);
         });
@@ -124,7 +134,7 @@
       if (tn.textContent !== nm) tn.textContent = nm;
       var sm = caja.querySelector('small');
       if (sm) {
-        var linea = (col ? 'Color: ' + col : '') + (tSel ? (col ? '  ·  ' : '') + 'Talla ' + tSel : '');
+        var linea = (col ? 'Color: ' + col : '') + (tSel ? (col ? '  ·  ' : '') + 'Talla ' + verT(tSel) : '');
         if (!linea) linea = 'Elige tu talla';
         if (sm.textContent !== linea) sm.textContent = linea;
       }
@@ -259,4 +269,80 @@
   st.textContent = 'html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}' +
     '@media(max-width:799px){html body input,html body select,html body textarea,html body .dr .drf .dcb input,html body .ck-sum .dcb input{font-size:16px!important}}';
   document.head.appendChild(st);
+})();
+
+/* "Completa el look" en la página de producto: si el producto sale en un look de "Ideas de outfits",
+   se sugieren las otras prendas (o el tacón) de ese look, con su etiqueta 🏷️, precio y botón Comprar.
+   Usa los looks guardados en el panel (/api/outfits). Si no hay looks con este producto, no muestra nada. */
+(function () {
+  'use strict';
+  var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (m) { return '&#' + m.charCodeAt(0) + ';'; }); };
+  var plata = function (n) { return '$' + Number(n).toLocaleString('es-CO'); };
+  var LOOKS = null, pidiendo = false;
+  var st = document.createElement('style'); st.setAttribute('data-completa', '1');
+  st.textContent = [
+    '.cl-look{margin:1.6rem 0 .4rem;padding-top:1.2rem;border-top:1px solid #e6e6e6}',
+    '.cl-look h3{margin:0 0 .25rem;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:#b08d57}',
+    '.cl-look p{margin:0 0 .8rem;font-size:.85rem;color:#666}',
+    '.cl-t{display:flex;gap:.7rem;overflow-x:auto;padding-bottom:.4rem;scroll-snap-type:x mandatory;scrollbar-width:none}',
+    '.cl-t::-webkit-scrollbar{display:none}',
+    '.cl-c{flex:0 0 9.5rem;scroll-snap-align:start;display:grid;gap:.35rem;align-content:start;border:1px solid #e6e6e6;background:#fff;padding:.4rem;color:#111;text-decoration:none;font:inherit;text-align:left;cursor:pointer}',
+    '.cl-c img{width:100%;aspect-ratio:3/4;object-fit:cover;background:#f4f4f4;display:block}',
+    '.cl-c b{font-size:.82rem;font-weight:600;line-height:1.25}',
+    '.cl-c i{font-style:normal;font-size:.85rem}',
+    '.cl-c span{display:block;margin-top:.15rem;padding:.55rem .4rem;background:#0a0a0a;color:#fff;text-align:center;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}',
+    '.cl-ver{display:inline-block;margin-top:.6rem;font-size:.8rem;letter-spacing:.08em;color:#111}'
+  ].join('\n');
+  document.head.appendChild(st);
+
+  function sugerencias(id, cat) {
+    var porId = {}; cat.forEach(function (p) { porId[String(p.id)] = p; });
+    var out = [], vistos = {};
+    function agregar(s) { var k = s.id ? 'p' + s.id : 'n' + s.n.toLowerCase(); if (vistos[k] || String(s.id) === String(id)) return; vistos[k] = 1; out.push(s); }
+    (LOOKS || []).forEach(function (o) {
+      var piezas = (o.piezas || []).filter(function (x) { return x && typeof x === 'object' && x.n; });
+      var aqui = String(o.producto) === String(id) || piezas.some(function (x) { return String(x.producto) === String(id); });
+      if (!aqui) return;
+      // El tacón del look (cuando se está viendo una prenda)
+      var t = porId[String(o.producto)];
+      if (t && t.tallas && t.tallas.length) agregar({ id: t.id, n: t.name, precio: t.price, foto: t.img });
+      piezas.forEach(function (x) {
+        var p = x.producto ? porId[String(x.producto)] : null;
+        if (x.producto && !p) return; // producto oculto o borrado
+        if (p && !(p.tallas && p.tallas.length)) return; // agotado
+        if (p) agregar({ id: p.id, n: x.n || p.name, precio: p.price, foto: x.foto || p.img });
+        else if (x.link) agregar({ n: x.n, precio: x.precio, foto: x.foto, link: x.link });
+      });
+    });
+    return out.slice(0, 8);
+  }
+
+  function pintar() {
+    var pi = document.querySelector('#app .pd .pi'); if (!pi) return;
+    var id = null; try { if (pg === 'prod') id = arg; } catch (e) { return; }
+    if (id == null) return;
+    var viejo = pi.querySelector('.cl-look');
+    if (viejo && viejo.getAttribute('data-id') === String(id)) return;
+    if (viejo) viejo.remove();
+    if (LOOKS === null) { if (!pidiendo) { pidiendo = true; fetch((window.MF_API_BASE || '') + '/api/outfits').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { LOOKS = (d && d.outfits) || []; prog(); }).catch(function () { LOOKS = []; }); } return; }
+    var cat = []; try { cat = catalog() || []; } catch (e) { return; }
+    if (!cat.length) return;
+    var s = sugerencias(id, cat);
+    var caja = document.createElement('section'); caja.className = 'cl-look'; caja.setAttribute('data-id', String(id));
+    if (!s.length) { caja.hidden = true; } else {
+      caja.innerHTML = '<h3>Completa el look</h3><p>Lo que lleva la modelo con este producto.</p><div class="cl-t">' + s.map(function (x) {
+        var dentro = (x.foto ? '<img src="' + E(x.foto) + '" alt="" loading="lazy">' : '') + '<b>🏷️ ' + E(x.n) + '</b>' + (x.precio ? '<i>' + plata(x.precio) + '</i>' : '') + '<span>Comprar →</span>';
+        return x.id ? '<button type="button" class="cl-c" data-n="prod" data-id="' + E(x.id) + '">' + dentro + '</button>'
+          : '<a class="cl-c" href="' + E(x.link) + '" target="_blank" rel="noopener">' + dentro + '</a>';
+      }).join('') + '</div><a class="cl-ver" href="outfits.html">Ver el look completo →</a>';
+    }
+    var fila = pi.querySelector(':scope > .row'), trust = pi.querySelector(':scope > .trust');
+    if (fila && fila.nextSibling) pi.insertBefore(caja, fila.nextSibling);
+    else if (trust) pi.insertBefore(caja, trust);
+    else pi.appendChild(caja);
+  }
+  var pend = false;
+  function prog() { if (pend) return; pend = true; requestAnimationFrame(function () { pend = false; try { pintar(); } catch (e) { /* la ficha sigue igual */ } }); }
+  function iniciar() { new MutationObserver(prog).observe(document.getElementById('app') || document.body, { childList: true, subtree: true }); prog(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

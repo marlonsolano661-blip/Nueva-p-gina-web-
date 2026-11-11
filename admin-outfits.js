@@ -11,7 +11,7 @@
   if (!A || !tabs) return;
   var el = function () { return A.el.apply(null, arguments); };
   var MAX_LOOKS = 12, MAX_FOTOS = 4, MAX_PIEZAS = 8;
-  var ANGULOS = ['Frente', 'Lado', 'Espalda', 'Detalle'];
+  var ANGULOS = ['Frente', 'Lado', 'Espalda', 'Editorial', 'Detalle'];
   var OCASIONES = ['Casual', 'Oficina', 'Noche', 'Fiesta', 'Cita', 'Boda o evento', 'Vacaciones'];
   var S = { lista: [], productos: [], editando: -1, sucio: false };
 
@@ -38,7 +38,66 @@
     '.ofA-bar{align-items:flex-start}',
     '.ofA-aviso{padding:.6rem .8rem;border-radius:.6rem;background:#fff4e0;border:1px solid #f0d9a8;font-size:.88rem;line-height:1.4}',
     '.ofA-campo{display:grid;gap:.2rem;font-weight:600}',
-    '.ofA-foto button{font-size:.8rem}'
+    '.ofA-foto button{font-size:.8rem}',
+    /* Puntos de compra: cada prenda puede llevar a un producto de la tienda o a un link */
+    '.ofA-pz{padding:.6rem;border:1px solid #e3e3e3;border-radius:.7rem;background:#fff;margin:.5rem 0}',
+    '.ofA-pz .ofA-pieza{margin:0}',
+    '.ofA-dest{display:grid;gap:.45rem;margin-top:.55rem}',
+    '.ofA-dest label{display:grid;gap:.15rem;font-size:.85rem;font-weight:600}',
+    '.ofA-pz [hidden]{display:none!important}',
+    '.ofA-pin{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}',
+    '.ofA-pin .ok{font-size:.82rem;color:#2e7d32}',
+    '.ofA-num{display:inline-grid;place-items:center;width:1.4rem;height:1.4rem;border-radius:50%;background:#0a0a0a;color:#fff;font-size:.72rem;font-weight:700;flex:none}',
+    '.ofA-mapa{position:relative;width:min(100%,22rem);aspect-ratio:3/4;border-radius:.6rem;overflow:hidden;background:#f2f2f2;cursor:crosshair;touch-action:manipulation}',
+    '.ofA-mapa img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}',
+    '.ofA-mapa .ofA-num{position:absolute;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.35);pointer-events:none}',
+    '.ofA-mapa .ofA-num.act{background:#b08d57}',
+    '.ofA-pide{padding:.6rem .8rem;border-radius:.6rem;background:#0a0a0a;color:#fff;font-size:.9rem;margin:.4rem 0}',
+    /* Botón de marcar: negro y grande para que no se pierda; dorado mientras espera el toque en la foto */
+    '.ofA-pin .ofA-marca{background:#0a0a0a;color:#fff;border-color:#0a0a0a;font-weight:700;padding:.7rem 1.1rem;flex:1 1 12rem}',
+    '.ofA-pin .ofA-marca.esperando{background:#b08d57;border-color:#b08d57;animation:ofaLatido 1.2s ease-in-out infinite}',
+    '@keyframes ofaLatido{50%{box-shadow:0 0 0 6px rgba(176,141,87,.25)}}',
+    '.ofA-mapa.esperando{outline:3px solid #b08d57;outline-offset:3px}',
+    '.ofA-tabs{display:flex;gap:.45rem;overflow-x:auto;padding:.2rem .1rem .5rem}',
+    '.ofA-tab{display:grid;gap:.2rem;flex:none;width:4.6rem;padding:.25rem;border:2px solid #e3e3e3;border-radius:.55rem;background:#fff;font:inherit;font-size:.72rem;text-align:center;cursor:pointer;color:#0a0a0a}',
+    '.ofA-tab img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.35rem;background:#f2f2f2}',
+    '.ofA-tab[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
+    /* Fotos con IA: tu modelo + prendas + tacón */
+    '.ofA-ia{display:grid;gap:.7rem;padding:.9rem;border:1px solid #e6dcc8;border-radius:.8rem;background:#fffaf1}',
+    '.ofA-ia h4{margin:0;font-size:1rem}',
+    '.ofA-ia .fila{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}',
+    '.ofA-ia .min{width:4.2rem;height:5.6rem;object-fit:cover;border-radius:.4rem;background:#f2f2f2;border:1px solid #e3e3e3;display:block}',
+    '.ofA-ia .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.6rem,1fr));gap:.5rem}',
+    '.ofA-ia .chip{display:grid;gap:.25rem;padding:.3rem;border:2px solid #e3e3e3;border-radius:.6rem;background:#fff;cursor:pointer;font-size:.75rem;text-align:center;line-height:1.2}',
+    '.ofA-ia .chip img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.35rem;background:#f2f2f2}',
+    '.ofA-ia .chip[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
+    '.ofA-ia .crear{background:#0a0a0a;color:#fff;border-color:#0a0a0a;font-weight:700;padding:.8rem 1.1rem}',
+    '.ofA-ia .estado{font-size:.88rem;margin:0}',
+    '.ofA-ia .res{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:.6rem}',
+    '.ofA-ia .res figure{margin:0;display:grid;gap:.25rem;font-size:.78rem}',
+    '.ofA-ia .res img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.5rem;background:#f2f2f2}',
+    '.ofA-ia .ojo{color:#8a5a00}',
+    '.ofA-ia .res > img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:.5rem;background:#f2f2f2}',
+    /* Selector con foto: tacón, color y producto de cada prenda */
+    /* En el celular nada se sale de la pantalla */
+    '.ofA-pieza{grid-template-columns:3.4rem minmax(0,1fr) auto!important}.ofA-pieza input,.ofA-dest input{min-width:0;width:100%;box-sizing:border-box}.ofA-pz,.ofA-dest>*,.ofA-campo{min-width:0}.ofA-pin .ofA-marca{flex:1 1 10rem;min-width:0;white-space:normal}',
+    '.ofA-pick{min-width:0;box-sizing:border-box;display:flex;align-items:center;gap:.6rem;width:100%;padding:.4rem .9rem .4rem .45rem;border:1px solid #d9d2c4;border-radius:.9rem;background:#fffdf8;color:#0a0a0a;text-align:left;font:inherit;font-weight:600;cursor:pointer}',
+    '.ofA-pick .ft,.ofA-menu .ft{width:2.8rem;height:2.8rem;object-fit:cover;border-radius:.55rem;background:#f2f2f2;flex:none;display:grid;place-items:center;font-size:1.1rem;color:#999}',
+    '.ofA-pick .tx{flex:1;line-height:1.25}.ofA-pick .fl{font-style:normal;color:#777;font-size:.8rem}',
+    '.ofA-menu{margin-top:.5rem;padding:.6rem;border:1px solid #e3e3e3;border-radius:.8rem;background:#fff;display:grid;gap:.55rem;font-weight:400}',
+    '.ofA-menu input{width:100%}',
+    /* Lista como la de Productos: foto a la izquierda, nombre y precio a la derecha */
+    '.ofA-menu .grid{display:flex;flex-direction:column;gap:.45rem;max-height:62vh;overflow:auto;padding:.1rem}',
+    '#p-outfits .ofA-menu .op{flex:none;display:grid!important;grid-template-columns:4.2rem minmax(0,1fr) auto;gap:.8rem;align-items:center;width:100%;min-height:0!important;height:auto!important;padding:.45rem .8rem .45rem .45rem!important;border:2px solid #ece6da!important;border-radius:1rem!important;background:#fffdf8!important;color:#0a0a0a!important;font:inherit;text-align:left;white-space:normal;box-shadow:none;cursor:pointer}',
+    '#p-outfits .ofA-menu .op .ft{width:4.2rem;height:4.2rem;border-radius:.7rem}',
+    '#p-outfits .ofA-menu .op .nm{display:grid;gap:.15rem;min-width:0}',
+    '#p-outfits .ofA-menu .op .nm b{font-size:1rem;line-height:1.2;font-weight:700}',
+    '#p-outfits .ofA-menu .op .nm small{font-size:.85rem;color:#6b6b6b;font-weight:400}',
+    '#p-outfits .ofA-menu .op .ck{width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid #d9d2c4;display:grid;place-items:center;font-size:.9rem;color:#fff}',
+    '#p-outfits .ofA-menu .op[aria-pressed="true"]{border-color:#0a0a0a!important;background:#fff!important}',
+    '#p-outfits .ofA-menu .op[aria-pressed="true"] .ck{background:#0a0a0a;border-color:#0a0a0a}',
+    '.ofA-menu .nada{grid-column:1/-1;color:#777;font-size:.85rem;margin:0}',
+    '.ofA-pick .pt,.ofA-menu .pt{display:inline-block;width:1rem;height:1rem;border-radius:50%;border:1px solid rgba(0,0,0,.15);vertical-align:-.15rem;margin-right:.3rem}'
   ].join('\n');
   document.head.appendChild(css);
 
@@ -60,6 +119,8 @@
     cargar().catch(A.falla);
   }
   btn.addEventListener('click', abrir);
+  // Si hay cambios sin guardar, el navegador pregunta antes de cerrar o recargar la página
+  window.addEventListener('beforeunload', function (e) { if (S.sucio) { e.preventDefault(); e.returnValue = ''; } });
 
   function cargar() {
     return Promise.all([A.api('outfits?admin=1'), A.api('admin-tienda?recurso=productos')]).then(function (r) {
@@ -71,6 +132,70 @@
   var copia = function (o) { return JSON.parse(JSON.stringify(o)); };
   var porId = function (id) { return S.productos.filter(function (p) { return String(p.id) === String(id); })[0] || null; };
   var marcar = function () { S.sucio = true; A.msg('Tienes cambios sin guardar'); };
+  // Ropa: productos con tallas XS…XL o talla única (los demás son tacones)
+  var TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
+  var esRopa = function (p) { return Object.keys((p && p.stock) || {}).some(function (t) { return TALLAS_ROPA.indexOf(t) > -1; }); };
+  var fotoDe = function (p) { return p ? ((p.imagenes && p.imagenes[0]) || p.imagen || '') : ''; };
+  var precioDe = function (p) { var n = Number(p && p.precio); return n > 0 ? '$' + n.toLocaleString('es-CO') : ''; };
+  var VISTA_NOM = { frente: 'Frente', lado: 'Lado', espalda: 'Espalda', editorial: 'Editorial' };
+  // Puntos de compra por foto: pts[i] = [x, y] sobre la foto i. x / y repiten el de la foto principal (pts[0]).
+  var ptsDe = function (p) { if (!Array.isArray(p.pts)) p.pts = p.x != null && p.y != null ? [[p.x, p.y]] : []; return p.pts; };
+  var sync = function (p) { var a = ptsDe(p)[0]; if (a) { p.x = a[0]; p.y = a[1]; } else { delete p.x; delete p.y; } };
+  // Selector con foto (reemplaza las listas de solo texto): un botón con la foto y el nombre elegido;
+  // al tocarlo se abre una cuadrícula con la foto de cada opción y, si son muchas, un buscador.
+  // op = { lista(), valor(), elegir(id), foto(x), nombre(x), punto(x), extra(x), vacio, ninguno, ningunoIc }
+  function selector(op) {
+    var caja = el('div', {}), abierto = false, q = '';
+    var minFoto = function (u, ic) { return u ? el('img', { class: 'ft', src: u, alt: '', loading: 'lazy' }) : el('span', { class: 'ft', text: ic || '👠' }); };
+    var sinTilde = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, ''); };
+    function pintarS() {
+      caja.textContent = '';
+      var lista = op.lista(), v = op.valor();
+      var sel = v ? lista.filter(function (x) { return String(x.id) === String(v); })[0] : null;
+      var etiqueta = sel ? op.nombre(sel) : (op.ninguno && v === '' && op.ningunoElegido ? op.ninguno : op.vacio);
+      var b = el('button', { type: 'button', class: 'ofA-pick', 'aria-expanded': abierto ? 'true' : 'false' }, [
+        sel ? minFoto(op.foto(sel)) : minFoto('', op.ningunoElegido ? op.ningunoIc : '＋'),
+        el('span', { class: 'tx' }, [sel && op.punto && op.punto(sel) ? el('i', { class: 'pt', style: 'background:' + op.punto(sel) }) : null, etiqueta]),
+        el('i', { class: 'fl', text: abierto ? 'Cerrar ▲' : 'Cambiar ▼' })
+      ]);
+      b.addEventListener('click', function () { abierto = !abierto; q = ''; pintarS(); });
+      caja.appendChild(b);
+      if (!abierto) return;
+      var menu = el('div', { class: 'ofA-menu' }), grid = el('div', { class: 'grid' });
+      if (lista.length > 8) {
+        var bus = el('input', { type: 'search', placeholder: 'Buscar por nombre…', 'aria-label': 'Buscar' });
+        bus.addEventListener('input', function () { q = sinTilde(bus.value.trim()); llenar(); });
+        menu.appendChild(bus);
+      }
+      function elegir(id) { abierto = false; op.elegir(id); pintarS(); }
+      function llenar() {
+        grid.textContent = '';
+        if (op.ninguno && !q) {
+          var n = el('button', { type: 'button', class: 'op', 'aria-pressed': !v && op.ningunoElegido ? 'true' : 'false' }, [minFoto('', op.ningunoIc), el('span', { class: 'nm' }, [el('b', { text: op.ninguno }), el('small', { text: 'Pegas un link de WhatsApp, Instagram u otra página' })]), el('span', { class: 'ck', text: '✓' })]);
+          n.addEventListener('click', function () { elegir(''); });
+          grid.appendChild(n);
+        }
+        var vis = lista.filter(function (x) { return !q || sinTilde(op.nombre(x)).indexOf(q) > -1; });
+        vis.forEach(function (x) {
+          var o2 = el('button', { type: 'button', class: 'op', 'aria-pressed': String(x.id) === String(v) ? 'true' : 'false' }, [
+            minFoto(op.foto(x)),
+            el('span', { class: 'nm' }, [el('b', {}, [op.punto && op.punto(x) ? el('i', { class: 'pt', style: 'background:' + op.punto(x) }) : null, op.nombre(x)]),
+              op.extra && op.extra(x) ? el('small', { text: op.extra(x) }) : null]),
+            el('span', { class: 'ck', text: '✓' })
+          ]);
+          o2.addEventListener('click', function () { elegir(x.id); });
+          grid.appendChild(o2);
+        });
+        if (!vis.length && !(op.ninguno && !q)) grid.appendChild(el('p', { class: 'nada', text: q ? 'No hay nada con ese nombre.' : 'No hay opciones.' }));
+      }
+      llenar();
+      menu.appendChild(grid);
+      caja.appendChild(menu);
+    }
+    pintarS();
+    return { nodo: caja, pintar: pintarS };
+  }
+
   function nuevo() { return { id: 'o' + Date.now().toString(36), nombre: '', ocasion: '', visible: true, producto: '', color: '', fotos: [], piezas: [] }; }
 
   // Elegir una foto del teléfono y subirla (misma calidad que las fotos de productos)
@@ -153,21 +278,25 @@
     selO.value = o.ocasion || '';
     selO.addEventListener('change', function () { o.ocasion = selO.value; marcar(); });
 
-    var selP = el('select', {}, [el('option', { value: '', text: 'Elige el tacón…' })].concat(S.productos.map(function (p) {
-      return el('option', { value: p.id, text: p.nombre + (p.visible === false ? ' (oculto)' : '') });
-    })));
-    selP.value = o.producto || '';
-    var selC = el('select', {});
-    function colores() {
-      var p = porId(selP.value), cs = (p && p.colores) || [];
-      selC.textContent = '';
-      selC.appendChild(el('option', { value: '', text: cs.length ? 'Elige el color…' : 'Sin colores' }));
-      cs.forEach(function (c) { selC.appendChild(el('option', { value: c.n, text: c.n })); });
-      selC.value = cs.some(function (c) { return c.n === o.color; }) ? o.color : '';
-    }
-    selP.addEventListener('change', function () { o.producto = selP.value; o.color = ''; colores(); marcar(); });
-    selC.addEventListener('change', function () { o.color = selC.value; marcar(); });
-    colores();
+    // Tacón y color: con foto para reconocerlos rápido
+    var nomP = function (p) { return p.nombre + (p.visible === false ? ' (oculto)' : ''); };
+    var selP = selector({
+      lista: function () { return S.productos.filter(function (p) { return !esRopa(p) || String(p.id) === String(o.producto); }); },
+      valor: function () { return o.producto || ''; },
+      elegir: function (id) { if (String(id) !== String(o.producto)) { o.producto = id; o.color = ''; } selC.pintar(); marcar(); if (iaBox) pintarIA(); },
+      foto: fotoDe, nombre: nomP,
+      extra: function (p) { var n = (p.colores || []).length; return [precioDe(p), n > 1 ? n + ' colores' : ''].filter(Boolean).join(' · '); },
+      vacio: 'Elige el tacón…'
+    });
+    var selC = selector({
+      lista: function () { var p = porId(o.producto); return ((p && p.colores) || []).map(function (c) { return { id: c.n, c: c }; }); },
+      valor: function () { return o.color || ''; },
+      elegir: function (id) { o.color = id; marcar(); if (iaBox) pintarIA(); },
+      foto: function (x) { return x.c.img || fotoDe(porId(o.producto)); },
+      nombre: function (x) { return x.c.n; },
+      punto: function (x) { return /^#[0-9a-f]{6}$/i.test(x.c.h || '') ? x.c.h : ''; },
+      vacio: 'Elige el color…'
+    });
 
     var vis = el('input', { type: 'checkbox' }); vis.checked = o.visible !== false;
     vis.addEventListener('change', function () { o.visible = vis.checked; marcar(); });
@@ -184,8 +313,8 @@
         var cambiar = el('button', { type: 'button', class: 'claro', text: 'Cambiar esta foto' });
         cambiar.addEventListener('click', function () { elegirFoto(function (url) { f.url = url; fotos(); }); });
         var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar foto' });
-        quitar.addEventListener('click', function () { o.fotos.splice(i, 1); marcar(); fotos(); });
-        var prin = i === 0 ? el('small', { class: 'ofA-ay', text: '★ Foto principal: es la que sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer foto principal', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); marcar(); fotos(); } });
+        quitar.addEventListener('click', function () { o.fotos.splice(i, 1); o.piezas.forEach(function (p) { ptsDe(p).splice(i, 1); sync(p); }); if (fm >= o.fotos.length) fm = 0; marcar(); fotos(); piezas(); });
+        var prin = i === 0 ? el('small', { class: 'ofA-ay', text: '★ Foto principal: es la que sale en la pasarela' }) : el('button', { type: 'button', class: 'claro', text: 'Hacer foto principal', onclick: function () { o.fotos.unshift(o.fotos.splice(i, 1)[0]); o.piezas.forEach(function (p) { var a = ptsDe(p); a.length = Math.max(a.length, i + 1); a.unshift(a.splice(i, 1)[0] || null); sync(p); }); fm = 0; marcar(); fotos(); piezas(); } });
         fotosBox.appendChild(el('div', { class: 'ofA-foto' }, [el('img', { src: f.url, alt: f.e }), el('small', { class: 'ofA-ay', text: '¿Desde dónde se ve?' }), sel, prin, cambiar, quitar]));
       });
       var cuenta = {}; o.fotos.forEach(function (f) { cuenta[f.e] = (cuenta[f.e] || 0) + 1; });
@@ -202,8 +331,164 @@
     }
     fotos();
 
-    // Prendas que complementan el look
+    // ---------- ✨ Fotos con IA: tu modelo con las prendas y el tacón del look ----------
+    var iaBox = el('div', { class: 'ofA-ia' });
+    var IA = { modelo: '', prendas: [], extra: [], lado: true, espalda: true, editorial: true, ocupado: false, res: null, estado: '', hist: null, verHist: false };
+    try { IA.modelo = localStorage.getItem('mf_ia_modelo') || ''; } catch (e) { IA.modelo = ''; }
+    // Prendas ya enlazadas en el look: quedan marcadas
+    o.piezas.forEach(function (x) { var pr = porId(x.producto); if (pr && esRopa(pr) && fotoDe(pr) && IA.prendas.indexOf(fotoDe(pr)) < 0) IA.prendas.push(fotoDe(pr)); });
+    function fotoTacon() {
+      var p = porId(o.producto); if (!p) return '';
+      var c = (p.colores || []).filter(function (k) { return k.n === o.color; })[0];
+      return (c && c.img) || fotoDe(p);
+    }
+    function pintarIA() {
+      iaBox.textContent = '';
+      iaBox.appendChild(el('h4', { text: '✨ Crear las fotos con IA con tu modelo' }));
+      iaBox.appendChild(el('p', { class: 'ofA-ay', text: 'La IA le pone a tu modelo el tacón del paso 1, copiado exacto (mismo tacón, plataforma, tiras y color), y si eliges ropa la viste con ella. Fondo blanco de estudio, misma modelo en todas las fotos. Tarda de 2 a 6 minutos: primero limpia la prenda, la viste, le pone tu tacón y revisa cada foto. Revisas las fotos antes de usarlas.' }));
+      // A) Modelo
+      var subirM = el('button', { type: 'button', class: 'claro', text: IA.modelo ? 'Cambiar la foto de tu modelo' : '+ Subir la foto de tu modelo' });
+      subirM.addEventListener('click', function () { elegirFoto(function (url) { IA.modelo = url; try { localStorage.setItem('mf_ia_modelo', url); } catch (e) {} pintarIA(); }); });
+      iaBox.appendChild(el('div', {}, [el('b', { text: 'A. Tu modelo' }), el('small', { class: 'ofA-ay', text: 'Una foto de cuerpo completo, de frente, con buena luz y la cara visible. Se recuerda para tus próximos looks. Usa fotos de modelos que hayan dado su permiso.' }),
+        el('div', { class: 'fila' }, [IA.modelo ? el('img', { class: 'min', src: IA.modelo, alt: 'Tu modelo' }) : null, subirM])]));
+      // B) Tacón
+      var ft = fotoTacon(), pt = porId(o.producto);
+      iaBox.appendChild(el('div', {}, [el('b', { text: 'B. El tacón' }),
+        ft ? el('div', { class: 'fila' }, [el('img', { class: 'min', src: ft, alt: '' }), el('span', { text: (pt ? pt.nombre : '') + (o.color ? ' · ' + o.color : '') })])
+          : el('small', { class: 'ofA-ay', text: 'Elige el tacón (y su color) en el paso 1, arriba.' })]));
+      // C) Prendas
+      var ropa = S.productos.filter(function (x) { return esRopa(x) && fotoDe(x); });
+      var chips = el('div', { class: 'chips' });
+      ropa.forEach(function (x) {
+        var u = fotoDe(x), on = IA.prendas.indexOf(u) > -1;
+        var ch = el('button', { type: 'button', class: 'chip', 'aria-pressed': on ? 'true' : 'false' }, [el('img', { src: u, alt: '' }), x.nombre]);
+        ch.addEventListener('click', function () { var i = IA.prendas.indexOf(u); if (i > -1) IA.prendas.splice(i, 1); else if (IA.prendas.length + IA.extra.length < 3) IA.prendas.push(u); else A.msg('Máximo 3 prendas por foto'); pintarIA(); });
+        chips.appendChild(ch);
+      });
+      IA.extra.forEach(function (u, i) {
+        var ch = el('button', { type: 'button', class: 'chip', 'aria-pressed': 'true' }, [el('img', { src: u, alt: '' }), 'Quitar']);
+        ch.addEventListener('click', function () { IA.extra.splice(i, 1); pintarIA(); });
+        chips.appendChild(ch);
+      });
+      var subirP = el('button', { type: 'button', class: 'claro', text: '+ Subir foto de una prenda' });
+      subirP.addEventListener('click', function () { if (IA.prendas.length + IA.extra.length >= 3) return A.msg('Máximo 3 prendas por foto'); elegirFoto(function (url) { IA.extra.push(url); pintarIA(); }); });
+      iaBox.appendChild(el('div', {}, [el('b', { text: 'C. La ropa (opcional, hasta 3 prendas)' }),
+        el('small', { class: 'ofA-ay', text: 'Si no eliges nada, tu modelo conserva la ropa de su foto y solo se le cambian los zapatos. ' + (ropa.length ? 'Toca tus prendas de la tienda para elegirlas, o sube una foto (en gancho, maniquí o plana, nítida y sin arrugas).' : 'Para vestirla con otra ropa, sube una foto de la prenda.') }),
+        chips, subirP]));
+      // D) Vistas
+      var cL = el('input', { type: 'checkbox' }); cL.checked = IA.lado; cL.addEventListener('change', function () { IA.lado = cL.checked; });
+      var cE = el('input', { type: 'checkbox' }); cE.checked = IA.espalda; cE.addEventListener('change', function () { IA.espalda = cE.checked; });
+      var cP = el('input', { type: 'checkbox' }); cP.checked = IA.editorial; cP.addEventListener('change', function () { IA.editorial = cP.checked; });
+      iaBox.appendChild(el('div', {}, [el('b', { text: 'D. Fotos a crear' }), el('div', { class: 'fila' }, [
+        el('span', { text: '✓ Frente' }), el('label', { class: 'fila' }, [cL, 'De lado']), el('label', { class: 'fila' }, [cE, 'De espalda']), el('label', { class: 'fila' }, [cP, 'Pose editorial'])]),
+        el('small', { class: 'ofA-ay', text: 'Cada foto cuenta para el límite de 40 fotos con IA al día.' })]));
+      // Fotos ya creadas: si se cerró la pantalla o se bloqueó el celular, aquí se recuperan
+      var verH = el('button', { type: 'button', class: 'claro', text: IA.verHist ? 'Ocultar fotos creadas antes' : '🕘 Ver fotos que ya creaste con IA' });
+      verH.addEventListener('click', function () {
+        IA.verHist = !IA.verHist;
+        if (IA.verHist && !IA.hist) { IA.hist = 'cargando'; A.api('fotos-ia-estado?recientes=1').then(function (r) { IA.hist = (r && r.trabajos) || []; pintarIA(); }).catch(function (e) { IA.hist = null; A.falla(e); pintarIA(); }); }
+        pintarIA();
+      });
+      var hBox = el('div', {}, [verH]);
+      if (IA.verHist) {
+        if (IA.hist === 'cargando') hBox.appendChild(el('p', { class: 'ofA-ay', text: 'Buscando…' }));
+        else if (IA.hist && !IA.hist.length) hBox.appendChild(el('p', { class: 'ofA-ay', text: 'Todavía no hay fotos creadas.' }));
+        else if (IA.hist) IA.hist.forEach(function (t) {
+          var fecha = new Date(t.creado_en);
+          var usarT = el('button', { type: 'button', class: 'claro', text: 'Revisar y usar estas' });
+          usarT.addEventListener('click', function () { IA.res = t.fotos; IA.verHist = false; IA.estado = 'Fotos recuperadas. Revísalas y toca "Usar estas fotos en el look".'; pintarIA(); iaBox.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+          hBox.appendChild(el('div', { style: 'margin:.6rem 0' }, [
+            el('small', { class: 'ofA-ay', text: fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) + ' · ' + fecha.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }) + ' · ' + t.fotos.length + ' fotos' }),
+            el('div', { class: 'res' }, t.fotos.map(function (f) { return el('img', { src: f.url, alt: VISTA_NOM[f.vista] || '', loading: 'lazy' }); })),
+            usarT
+          ]));
+        });
+      }
+      iaBox.appendChild(hBox);
+      // Crear
+      var crear = el('button', { type: 'button', class: 'crear', text: IA.ocupado ? 'Creando…' : '✨ Crear fotos' });
+      crear.disabled = IA.ocupado;
+      crear.addEventListener('click', crearIA);
+      iaBox.appendChild(crear);
+      if (IA.estado) iaBox.appendChild(el('p', { class: 'estado', role: 'status', text: IA.estado }));
+      // Resultado
+      if (IA.res && IA.res.length) {
+        var res = el('div', { class: 'res' });
+        IA.res.forEach(function (f) {
+          res.appendChild(el('figure', {}, [el('img', { src: f.url, alt: VISTA_NOM[f.vista] || '' }), el('figcaption', { text: VISTA_NOM[f.vista] || f.vista }),
+            f.revisada === false ? el('small', { class: 'ojo', text: '⚠ Revísala: ' + (f.nota || 'puede tener detalles distintos') }) : null]));
+        });
+        var usar = el('button', { type: 'button', text: 'Usar estas fotos en el look' });
+        usar.addEventListener('click', usarIA);
+        var otra = el('button', { type: 'button', class: 'claro', text: 'Descartar' });
+        otra.addEventListener('click', function () { IA.res = null; IA.estado = ''; pintarIA(); });
+        iaBox.appendChild(res);
+        iaBox.appendChild(el('div', { class: 'fila' }, [usar, otra]));
+      }
+    }
+    function crearIA() {
+      var prendas = IA.prendas.concat(IA.extra);
+      if (!IA.modelo) return A.msg('Sube primero la foto de tu modelo (A)');
+      if (!fotoTacon()) return A.msg('Elige el tacón en el paso 1 (B)');
+      var trabajo = 'IA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      var vistas = ['frente'].concat(IA.lado ? ['lado'] : [], IA.espalda ? ['espalda'] : [], IA.editorial ? ['editorial'] : []);
+      IA.ocupado = true; IA.res = null; IA.estado = 'Creando ' + vistas.length + (vistas.length === 1 ? ' foto' : ' fotos') + '… puede tardar de 2 a 6 minutos. No cierres esta pantalla.';
+      pintarIA();
+      var t0 = Date.now();
+      try { localStorage.setItem('mf_ia_pendiente', JSON.stringify({ trabajo: trabajo, t0: t0 })); } catch (e) {}
+      esperar(A.api('outfit-ia-background', { method: 'POST', body: { trabajo: trabajo, modelo: IA.modelo, tacon: fotoTacon(), prendas: prendas, vistas: vistas } }), trabajo, t0);
+    }
+    // Espera el resultado. Si se cerró la pantalla a mitad, al volver a abrir el look sigue esperando (mf_ia_pendiente).
+    function esperar(inicio, trabajo, t0) {
+      inicio
+        .then(function () {
+          return (function mirar() {
+            return new Promise(function (ok) { setTimeout(ok, 6000); }).then(function () { return A.api('fotos-ia-estado?trabajo=' + trabajo); }).then(function (r) {
+              if (r && r.listo) return r;
+              if (Date.now() - t0 > 15 * 60 * 1000) throw new Error('La IA está tardando demasiado. Intenta de nuevo en unos minutos.');
+              IA.estado = 'Creando… (' + Math.round((Date.now() - t0) / 1000) + ' s)'; var e = iaBox.querySelector('.estado'); if (e) e.textContent = IA.estado;
+              return mirar();
+            });
+          })();
+        })
+        .then(function (r) {
+          IA.ocupado = false; IA.hist = null;
+          try { localStorage.removeItem('mf_ia_pendiente'); } catch (e) {}
+          if (r.error) { IA.estado = '✗ ' + r.error; pintarIA(); return A.msg(r.error, true); }
+          IA.res = (r.fotos || []);
+          var fallas = (r.errores || []).length;
+          IA.estado = IA.res.length ? '✓ Listo. Revisa las fotos y toca "Usar estas fotos en el look".' + (fallas ? ' (' + fallas + ' no se pudo crear)' : '') : '✗ La IA no pudo crear las fotos. Prueba con otra foto de la modelo o de la prenda.';
+          pintarIA();
+        })
+        .catch(function (e) { IA.ocupado = false; try { localStorage.removeItem('mf_ia_pendiente'); } catch (x) {} IA.estado = '✗ ' + (e.message || 'No se pudo crear'); pintarIA(); A.falla(e); });
+    }
+    function usarIA() {
+      if (!IA.res || !IA.res.length) return;
+      if (o.fotos.length && !window.confirm('¿Reemplazar las fotos actuales del look por las fotos creadas con IA?')) return;
+      o.fotos = IA.res.slice(0, MAX_FOTOS).map(function (f) { return { e: VISTA_NOM[f.vista] || 'Frente', url: f.url }; });
+      // Las prendas de la tienda que usaste quedan enlazadas en "Ropa que lleva puesta"; los puntos se marcan de nuevo en la foto nueva
+      IA.prendas.forEach(function (u) {
+        var pr = S.productos.filter(function (x) { return fotoDe(x) === u; })[0];
+        if (pr && !o.piezas.some(function (x) { return x.producto === pr.id; }) && o.piezas.length < MAX_PIEZAS) o.piezas.push({ n: pr.nombre, producto: pr.id });
+      });
+      o.piezas.forEach(function (x) { x.pts = []; sync(x); }); fm = 0;
+      IA.res = null; IA.estado = '✓ Fotos puestas en el look. Marca los puntos de las prendas (paso 3), toca "Listo" y después "Guardar outfits".';
+      marcar(); fotos(); piezas(); pintarIA();
+    }
+    pintarIA();
+    (function () {
+      var pend = null; try { pend = JSON.parse(localStorage.getItem('mf_ia_pendiente') || 'null'); } catch (e) {}
+      if (!pend || !pend.trabajo) return;
+      if (Date.now() - pend.t0 > 15 * 60 * 1000) { try { localStorage.removeItem('mf_ia_pendiente'); } catch (e) {} return; }
+      IA.ocupado = true; IA.estado = 'Seguimos esperando las fotos que pediste… (' + Math.round((Date.now() - pend.t0) / 1000) + ' s)';
+      pintarIA(); esperar(Promise.resolve(), pend.trabajo, pend.t0);
+    })();
+
+    // Prendas que complementan el look, cada una con su punto de compra sobre la foto principal
     var piezasBox = el('div', {});
+    var mapaBox = el('div', {});
+    var activa = -1; /* prenda que se está marcando en la foto */
+    var fm = 0; /* foto del mapa en la que se marcan los puntos (0 = principal) */
     function piezas() {
       piezasBox.textContent = '';
       o.piezas.forEach(function (p, i) {
@@ -213,14 +498,94 @@
         if (p.foto) mini.appendChild(el('img', { src: p.foto, alt: '', style: 'width:100%;height:100%;object-fit:cover;border-radius:.4rem' })); else mini.textContent = '+ Foto';
         mini.addEventListener('click', function () { elegirFoto(function (url) { p.foto = url; piezas(); }); });
         var q = el('button', { type: 'button', class: 'claro', text: 'Quitar', 'aria-label': 'Quitar esta prenda' });
-        q.addEventListener('click', function () { o.piezas.splice(i, 1); marcar(); piezas(); });
-        piezasBox.appendChild(el('div', { class: 'ofA-pieza' }, [mini, n, q]));
+        q.addEventListener('click', function () { o.piezas.splice(i, 1); if (activa === i) activa = -1; marcar(); piezas(); });
+
+        // A dónde lleva el punto: un producto de la tienda o un link
+        var selD = selector({
+          lista: function () { return S.productos.filter(esRopa).concat(S.productos.filter(function (x) { return !esRopa(x); })); },
+          valor: function () { return p.producto && porId(p.producto) ? p.producto : ''; },
+          elegir: function (id) { if (id) { p.producto = id; if (!n.value.trim()) { p.n = porId(id).nombre; n.value = p.n; } } else delete p.producto; dest(); marcar(); },
+          foto: fotoDe, nombre: nomP, extra: function (x) { return [precioDe(x), esRopa(x) ? 'Ropa' : 'Calzado'].filter(Boolean).join(' · '); },
+          ninguno: 'No está en la tienda (uso un link)', ningunoIc: '🔗', ningunoElegido: true, vacio: ''
+        });
+        var link = el('input', { type: 'url', inputmode: 'url', maxlength: '300', value: p.link || '', placeholder: 'https://wa.me/57…  o  https://instagram.com/…' });
+        var precio = el('input', { type: 'number', inputmode: 'numeric', min: '0', step: '100', value: p.precio || '', placeholder: 'Ej: 89900' });
+        var lLink = el('label', {}, ['Link de la prenda', el('small', { class: 'ofA-ay', text: 'A dónde va la clienta al tocar "Ver prenda": tu WhatsApp, Instagram u otra página. Debe empezar por https://' }), link]);
+        var lPrecio = el('label', {}, ['Precio (opcional)', precio]);
+        function dest() { var t = !!(p.producto && porId(p.producto)); lLink.hidden = t; lPrecio.hidden = t; }
+        link.addEventListener('input', function () { var v = link.value.trim(); if (v) p.link = v; else delete p.link; marcar(); });
+        precio.addEventListener('input', function () { var v = parseInt(precio.value, 10); if (v > 0) p.precio = v; else delete p.precio; marcar(); });
+        dest();
+
+        var tiene = !!ptsDe(p)[fm];
+        var nomF = o.fotos[fm] ? o.fotos[fm].e : 'Frente';
+        var con = o.fotos.map(function (f, k) { return ptsDe(p)[k] ? f.e : null; }).filter(Boolean);
+        var pin = el('button', { type: 'button', class: 'ofA-marca' + (activa === i ? ' esperando' : ''), text: activa === i ? '👇 Ahora toca la prenda en la foto' : (tiene ? '📍 Cambiar el punto (' + nomF + ')' : '📍 Poner el punto en la foto ' + nomF) });
+        pin.addEventListener('click', function () {
+          if (!o.fotos.length) { A.msg('Primero sube la foto de frente de la modelo'); return; }
+          activa = i; piezas(); mapaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        var quitarPin = el('button', { type: 'button', class: 'claro', text: 'Quitar punto de ' + nomF });
+        quitarPin.hidden = !tiene;
+        quitarPin.addEventListener('click', function () { ptsDe(p)[fm] = null; sync(p); marcar(); piezas(); });
+
+        piezasBox.appendChild(el('div', { class: 'ofA-pz' }, [
+          el('div', { class: 'ofA-pieza' }, [mini, n, q]),
+          el('div', { class: 'ofA-dest' }, [
+            el('div', { class: 'ofA-campo' }, ['¿A dónde lleva?', el('small', { class: 'ofA-ay', text: 'Si la prenda ya está creada como producto, elígela por su foto. Si no, deja "No está en la tienda" y pega un link.' }), selD.nodo]),
+            lLink, lPrecio,
+            el('div', { class: 'ofA-pin' }, [el('span', { class: 'ofA-num', text: String(i + 1) }), pin, quitarPin, con.length ? el('span', { class: 'ok', text: '✓ Punto en: ' + con.join(', ') }) : el('span', { class: 'ofA-ay', text: 'Sin punto: no sale el círculo en la foto' })])
+          ])
+        ]));
       });
       if (o.piezas.length < MAX_PIEZAS) {
         var add = el('button', { type: 'button', class: 'claro', text: o.piezas.length ? '+ Otra prenda que lleva puesta' : '+ Agregar una prenda que lleva puesta' });
         add.addEventListener('click', function () { o.piezas.push({ n: '' }); marcar(); piezas(); });
         piezasBox.appendChild(add);
       }
+      mapa();
+    }
+    // La foto principal con los puntos numerados; al tocarla se pone el punto de la prenda activa
+    function mapa() {
+      mapaBox.textContent = '';
+      if (fm >= o.fotos.length) fm = 0;
+      var f = o.fotos[fm];
+      if (!f) { mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Sube la foto de frente (paso 2) para poder marcar las prendas.' })); return; }
+      // Una pestaña por foto: cada foto (frente, lado, espalda…) lleva sus propios puntos
+      if (o.fotos.length > 1) {
+        mapaBox.appendChild(el('p', { class: 'ofA-ay', text: 'Elige en qué foto marcas los puntos. Cada foto tiene los suyos: en la tienda salen en la foto que la clienta esté viendo.' }));
+        mapaBox.appendChild(el('div', { class: 'ofA-tabs' }, o.fotos.map(function (x, k) {
+          var n = o.piezas.filter(function (p) { return ptsDe(p)[k]; }).length;
+          var t = el('button', { type: 'button', class: 'ofA-tab', 'aria-pressed': k === fm ? 'true' : 'false' }, [el('img', { src: x.url, alt: '' }), el('span', { text: x.e + (n ? ' · ' + n + ' 📍' : '') })]);
+          t.addEventListener('click', function () { fm = k; piezas(); });
+          return t;
+        })));
+      }
+      if (activa >= 0 && o.piezas[activa]) mapaBox.appendChild(el('p', { class: 'ofA-pide', text: 'Toca en la foto justo encima de: ' + (o.piezas[activa].n || 'prenda ' + (activa + 1)) }));
+      var m = el('div', { class: 'ofA-mapa' + (activa >= 0 ? ' esperando' : ''), role: 'button', 'aria-label': 'Foto principal: toca para poner el punto de la prenda' }, [el('img', { src: f.url, alt: '' })]);
+      o.piezas.forEach(function (p, i) {
+        var q = ptsDe(p)[fm]; if (!q) return;
+        m.appendChild(el('span', { class: 'ofA-num' + (i === activa ? ' act' : ''), text: String(i + 1), style: 'left:' + q[0] + '%;top:' + q[1] + '%' }));
+      });
+      m.addEventListener('click', function (e) {
+        if (activa < 0 || !o.piezas[activa]) {
+          // Sin prenda elegida: si hay una sola, se mueve su punto; si hay varias, va a la primera que no tenga punto
+          var sin = o.piezas.map(function (x, k) { return ptsDe(x)[fm] ? -1 : k; }).filter(function (k) { return k > -1; });
+          if (o.piezas.length === 1) activa = 0;
+          else if (sin.length) activa = sin[0];
+          else { A.msg('Toca "📍 Cambiar el punto de lugar" en la prenda que quieres mover y luego toca la foto'); return; }
+        }
+        var r = m.getBoundingClientRect();
+        var p = o.piezas[activa];
+        var a = ptsDe(p);
+        while (a.length < fm) a.push(null);
+        a[fm] = [Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100)) * 10) / 10,
+          Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100)) * 10) / 10];
+        sync(p);
+        activa = -1; marcar(); piezas(); A.msg('Punto puesto ✓ Recuerda guardar.');
+      });
+      mapaBox.appendChild(m);
+      mapaBox.appendChild(el('small', { class: 'ofA-ay', text: 'Estás marcando la foto: ' + f.e + (fm === 0 ? ' (★ principal)' : '') + '. Si cambias una foto por otra, revisa que los puntos sigan en su sitio.' }));
     }
     piezas();
 
@@ -228,20 +593,25 @@
     listo.addEventListener('click', function () { S.editando = -1; pintar(); A.msg('Recuerda tocar "Guardar outfits" para publicar los cambios.'); window.scrollTo(0, 0); });
 
     var campo = function (titulo, ayuda, control) { return el('label', { class: 'ofA-campo' }, [titulo, el('small', { class: 'ofA-ay', text: ayuda }), control]); };
+    // Igual que campo, pero en un div: dentro de un <label> cada toque en la cuadrícula activaría el botón
+    var caja = function (titulo, ayuda, control) { return el('div', { class: 'ofA-campo' }, [titulo, el('small', { class: 'ofA-ay', text: ayuda }), control]); };
     sec.appendChild(el('div', { class: 'ofA-ed' }, [
       el('p', { class: 'nota', text: 'Estás editando UN look. Todo lo de esta pantalla es de un solo outfit: la misma modelo, con la misma ropa y el mismo tacón.' }),
       el('h3', { text: '1. Datos del look' }),
       campo('Nombre del look', 'Así se llama el outfit en la pasarela. Ej: "Jean y blusa blanca", "Vestido camel".', nombre),
       campo('Ocasión', 'Para qué plan sirve este outfit. Sale como etiqueta pequeña encima del nombre.', selO),
-      campo('Tacón', 'El zapato de tu tienda que lleva puesto la modelo en estas fotos. La clienta lo puede comprar desde el look.', selP),
-      campo('Color del tacón', 'El color de ese zapato que se ve en las fotos.', selC),
+      caja('Tacón', 'El zapato de tu tienda que lleva puesto la modelo en estas fotos. Toca para ver todos con su foto.', selP.nodo),
+      caja('Color del tacón', 'El color de ese zapato que se ve en las fotos.', selC.nodo),
       el('h3', { text: '2. Fotos de la modelo con este outfit' }),
       el('p', { class: 'ofA-ay', text: 'Solo fotos de ESTE outfit. Empieza por la de frente (será la foto principal de la pasarela) y, si tienes, agrega la de lado, espalda o un detalle. Máximo ' + MAX_FOTOS + '. Si tienes otra ropa, es otro look: vuelve a la lista y toca "+ Nuevo look".' }),
       avisoFotos,
       fotosBox,
+      iaBox,
       el('h3', { text: '3. Ropa que lleva puesta' }),
       el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
+      el('p', { class: 'ofA-ay', text: 'Puntos de compra: elige la foto (frente, lado, espalda…), toca "📍 Poner el punto" y después toca la prenda sobre la foto. Repite en cada foto donde se vea la prenda. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
       piezasBox,
+      mapaBox,
       el('h3', { text: '4. Mostrar en la tienda' }),
       el('div', { style: 'display:flex;align-items:center;gap:.5rem' }, [vis, el('span', { text: 'Mostrar este look en la tienda' })]),
       el('p', { class: 'ofA-ay', text: 'Si lo desmarcas, el look queda guardado aquí pero las clientas no lo ven.' }),

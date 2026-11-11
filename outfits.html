@@ -82,13 +82,61 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 .toast{position:fixed;left:50%;bottom:calc(1.2rem + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--k);color:var(--w);padding:.75rem 1rem;font-size:.9rem;display:flex;gap:1rem;align-items:center;transition:.3s;z-index:20;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast a{color:var(--w);font-weight:600}
+/* Puntos de compra sobre la modelo del centro: un círculo palpitando en cada prenda */
+.spots{position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:3/4;transform:translateX(-50%);z-index:20;pointer-events:none;transition:opacity .35s}
+.spots.off{opacity:0}.spots.off .spot{pointer-events:none}
+.spot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:0;padding:0;background:none;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.spot::before{content:"";position:absolute;inset:4px;border-radius:50%;background:rgba(255,255,255,.75);animation:latido 1.9s ease-out infinite}
+.spot::after{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:var(--w);box-shadow:0 0 0 1.5px rgba(10,10,10,.18),0 2px 8px rgba(0,0,0,.35);transition:transform .2s,background .2s}
+.spot[aria-expanded="true"]::after{background:var(--k);box-shadow:0 0 0 3px var(--w),0 2px 8px rgba(0,0,0,.35);transform:scale(1.1)}
+/* Etiqueta fija junto al punto: nombre y precio de la prenda (a la izquierda si el punto está a la derecha) */
+.spot .tag{position:absolute;left:30px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-start;max-width:150px;padding:.3rem .55rem;background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(0,0,0,.18);text-align:left;pointer-events:none;white-space:nowrap}
+.spot.izq .tag{left:auto;right:30px;align-items:flex-end;text-align:right}
+.spot .tag b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font:600 .72rem/1.2 Figtree,Helvetica,sans-serif;color:var(--k)}
+.spot .tag i{display:block;font:500 .68rem/1.2 Figtree,Helvetica,sans-serif;font-style:normal;color:var(--g);font-variant-numeric:tabular-nums}
+.spot[aria-expanded="true"] .tag{opacity:0}
+@keyframes latido{0%{transform:scale(.45);opacity:.95}70%{transform:scale(1.35);opacity:0}100%{transform:scale(1.35);opacity:0}}
+.pz-card{position:absolute;z-index:25;display:grid;grid-template-columns:64px minmax(0,1fr);gap:.7rem;align-items:center;padding:.6rem;background:var(--w);border:1px solid var(--l);box-shadow:0 10px 30px rgba(0,0,0,.14);animation:aparece .25s ease-out}
+.pz-card img{width:64px;height:80px;object-fit:cover;background:var(--bg);display:block}
+.pz-card.sin-foto{grid-template-columns:minmax(0,1fr)}
+.pz-card strong{display:block;font:600 1.15rem/1.1 "Cormorant Garamond",Georgia,serif}
+.pz-card .pr{display:block;font-weight:600;font-size:.9rem;margin-top:.15rem;font-variant-numeric:tabular-nums}
+.pz-card a{display:inline-flex;align-items:center;margin-top:.45rem;min-height:36px;padding:0 .8rem;background:var(--k);color:var(--w);text-decoration:none;font:500 .62rem Jost,Helvetica,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.pz-card .x{position:absolute;top:2px;right:2px;width:32px;height:32px;border:0;background:none;cursor:pointer;font-size:1.1rem;color:var(--g)}
+@keyframes aparece{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pieces li a{color:inherit;text-underline-offset:3px;text-decoration-color:var(--o)}
+@media(prefers-reduced-motion:reduce){.spot::before{animation:none;opacity:.6}.pz-card{animation:none}}
+/* Celular: modelos un poco más bajas y barra fija con el tacón del look,
+   para que el producto se vea sin tener que bajar hasta el panel. */
+.bar{display:none}
+@media(max-width:959px){
+  /* Encabezado corto: solo el título, para que las modelos tengan más espacio */
+  .wrap{padding-top:.9rem}
+  .head .k,.lead{display:none}
+  h1{font-size:1.9rem}
+  .ocas{margin-top:.6rem}
+  .layout{margin-top:.6rem}
+  /* La modelo completa (con los tacones) cabe en la pantalla, encima de la barra */
+  .stage{height:clamp(300px,calc(100svh - var(--top,330px) - 92px),620px)}
+  .wrap{padding-bottom:calc(6.5rem + env(safe-area-inset-bottom))}
+  .bar{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:.8rem;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:15;
+    background:var(--w);border-top:1px solid var(--l);box-shadow:0 -8px 24px rgba(0,0,0,.06);
+    padding:.65rem 1rem calc(.65rem + env(safe-area-inset-bottom));transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+  .bar.off{transform:translateY(110%)}
+  .bar img{width:64px;height:64px;object-fit:cover;background:var(--bg);display:block}
+  .bar .t{min-width:0;text-decoration:none;color:inherit}
+  .bar strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:600 1.05rem/1.1 "Cormorant Garamond",Georgia,serif}
+  .bar span{display:block;font-size:.8rem;color:var(--g);margin-top:.15rem;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar span b{color:var(--k)}
+  .bar button{min-height:46px;padding:0 .85rem;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .64rem Jost,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <header class="top"><a href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="v" href="index.html">← Volver a la tienda</a></header>
 
 <div class="wrap">
   <div class="head">
-    <div><p class="k">Ideas de outfits</p><h1>Cómo combinar tus tacones</h1></div>
+    <div><p class="k">Ideas de outfits</p><h1>Try the look</h1></div>
     <p class="lead">Looks completos de pies a cabeza. Cambia de look con las flechas o deslizando, y mira cada outfit de frente y de lado.</p>
   </div>
   <p class="filtro" id="filtro" hidden></p>
@@ -118,6 +166,11 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
     </aside>
   </div>
 </div>
+<div class="bar" id="bar" aria-label="Tacón de este look">
+  <img id="barImg" src="" alt="">
+  <a class="t" id="barLink" href="index.html"><strong id="barName"></strong><span id="barPrice"></span></a>
+  <button type="button" id="barBtn">Elegir talla</button>
+</div>
 <div class="toast" id="toast" role="status"><span>Añadido a la bolsa</span><a href="index.html">Ver bolsa</a></div>
 
 <script src="outfits-img/negro-jean-frente.js"></script>
@@ -132,7 +185,7 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 var EJEMPLOS = [
   { nombre: "Jean clásico", ocasion: "Casual", producto: "sandalia-miel-elite-mf", color: "Negro",
     angulos: [["Frente", "negro-jean-frente"], ["Lado", "negro-jean-lado"]],
-    piezas: ["Camisa blanca", "Jean recto tiro alto", "Cinturón blanco", "Accesorios dorados"] },
+    piezas: [{ n: "Camisa blanca", x: 44, y: 30 }, { n: "Jean recto tiro alto", x: 56, y: 66 }, { n: "Cinturón blanco", x: 50, y: 46 }, "Accesorios dorados"] },
   { nombre: "Vestido camel", ocasion: "Cita", producto: "sandalia-miel-elite-mf", color: "Camel",
     angulos: [["Frente", "camel-vestido-frente"]],
     piezas: ["Vestido midi de punto acanalado", "Pulseras doradas", "Aretes de argolla"] },
@@ -170,6 +223,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     if (!OUTFITS.length) { OC = ""; OUTFITS = base; ocasiones(base); }
     n = OUTFITS.length; active = 0; angle = 0;
     $("stage").textContent = ""; $("steps").textContent = "";
+    capa = document.createElement("div"); capa.className = "spots off"; capa.id = "spots";
     figs = OUTFITS.map(function (L, i) {
       var b = document.createElement("div"); b.className = "fig";
       b.innerHTML = '<img alt="Modelo con el look ' + esc(L.nombre) + '">';
@@ -177,6 +231,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       b.addEventListener("click", function () { if (movido) return; if (i !== active) go(i); });
       $("stage").appendChild(b); return b;
     });
+    $("stage").appendChild(capa);
     steps = OUTFITS.map(function (L, i) {
       var s = document.createElement("button"); s.type = "button"; s.className = "step";
       s.textContent = String(i + 1).padStart(2, "0") + " · " + L.nombre;
@@ -184,7 +239,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       $("steps").appendChild(s); return s;
     });
     $("prev").hidden = $("next").hidden = $("desliza").hidden = n < 2;
-    layout(); panel(); filtro(f.length > 0);
+    filtro(f.length > 0); medir(); layout(); panel(); puntos(300);
   }
   /* Botones de ocasión (Casual, Noche…): solo si los looks tienen ocasión */
   function ocasiones(base) {
@@ -197,6 +252,67 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var e = $("filtro"); e.hidden = !on; if (!on) return;
     e.innerHTML = "Ideas para combinar: <b>" + esc(prod(PID).name) + '</b> · <a href="outfits.html">Ver todos los looks</a>';
   }
+
+  /* Celular: altura de la pasarela = lo que queda de pantalla debajo del encabezado (ver --top en el CSS) */
+  function medir() {
+    var t = Math.round($("stage").getBoundingClientRect().top + scrollY);
+    document.documentElement.style.setProperty("--top", t + "px");
+  }
+
+  /* ---------- Puntos de compra ---------- */
+  var capa = null, tarjeta = null, abierto = null, tPuntos = 0;
+  /* A dónde lleva una prenda: su producto en la tienda o el link que pegaron en el panel */
+  function destino(p) {
+    if (!p || typeof p === "string") return null;
+    if (p.producto) return { href: "index.html?producto=" + encodeURIComponent(p.producto), fuera: false, prod: CAT[p.producto] || null };
+    if (p.link && /^https:\/\//.test(p.link)) return { href: p.link, fuera: true, prod: null };
+    return null;
+  }
+  function cerrarTarjeta() {
+    if (tarjeta) { tarjeta.remove(); tarjeta = null; }
+    if (abierto) { abierto.setAttribute("aria-expanded", "false"); abierto = null; }
+  }
+  function puntos(espera) {
+    cerrarTarjeta(); if (!capa) return;
+    capa.textContent = ""; capa.classList.add("off"); clearTimeout(tPuntos);
+    var L = OUTFITS[active];
+    (L.piezas || []).forEach(function (p, i) {
+      if (typeof p === "string") return;
+      /* Cada foto (frente, lado, espalda…) tiene su propio punto: pts[ángulo]; x/y es el de la foto principal */
+      var q = p.pts && p.pts[angle] ? p.pts[angle] : (angle === 0 && p.x != null && p.y != null ? [p.x, p.y] : null);
+      if (!q) return;
+      var b = document.createElement("button"); b.type = "button"; b.className = "spot";
+      b.style.left = q[0] + "%"; b.style.top = q[1] + "%";
+      b.setAttribute("aria-label", "Ver " + p.n); b.setAttribute("aria-expanded", "false");
+      var d = destino(p), pr = d && d.prod, precio = pr && pr.price != null ? pr.price : p.precio;
+      if (q[0] > 55) b.className += " izq";
+      b.innerHTML = '<span class="tag"><b>🏷️ ' + esc(p.n) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
+      b.addEventListener("click", function (e) { e.stopPropagation(); if (abierto === b) cerrarTarjeta(); else abrirTarjeta(p, b); });
+      capa.appendChild(b);
+    });
+    tPuntos = setTimeout(function () { capa.classList.remove("off"); }, reduce ? 0 : (espera || 0));
+  }
+  function abrirTarjeta(p, b) {
+    cerrarTarjeta();
+    var d = destino(p), pr = d && d.prod, foto = p.foto || (pr && pr.img) || "";
+    var precio = pr && pr.price != null ? pr.price : p.precio;
+    var t = document.createElement("div"); t.className = "pz-card" + (foto ? "" : " sin-foto"); t.setAttribute("role", "dialog"); t.setAttribute("aria-label", p.n);
+    t.innerHTML = (foto ? '<img src="' + esc(foto) + '" alt="">' : "") +
+      "<div><strong>🏷️ " + esc(p.n) + "</strong>" + (precio ? '<span class="pr">' + fmt(precio) + "</span>" : "") +
+      (d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">Comprar →</a>" : "") + "</div>" +
+      '<button class="x" type="button" aria-label="Cerrar">×</button>';
+    t.querySelector(".x").addEventListener("click", function (e) { e.stopPropagation(); cerrarTarjeta(); });
+    t.addEventListener("click", function (e) { e.stopPropagation(); });
+    $("stage").appendChild(t); tarjeta = t; abierto = b; b.setAttribute("aria-expanded", "true");
+    /* La tarjeta se pone cerca del punto, sin salirse de la pasarela */
+    var s = $("stage").getBoundingClientRect(), r = b.getBoundingClientRect();
+    var cx = r.left + r.width / 2 - s.left, cy = r.top + r.height / 2 - s.top;
+    var w = Math.min(270, s.width - 16); t.style.width = w + "px";
+    t.style.left = Math.max(8, Math.min(s.width - w - 8, cx - w / 2)) + "px";
+    if (cy > s.height * 0.55) t.style.bottom = (s.height - cy + 24) + "px"; else t.style.top = (cy + 24) + "px";
+  }
+  document.addEventListener("click", function () { if (tarjeta) cerrarTarjeta(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarTarjeta(); });
 
   var GAP = 1;
   /* dx: cuánto se ha arrastrado con el dedo (en píxeles); las modelos lo siguen en vivo */
@@ -214,6 +330,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       f.setAttribute("aria-current", a === 0); f.setAttribute("aria-hidden", a !== 0);
     });
     steps.forEach(function (s, i) { s.setAttribute("aria-current", i === active); });
+    if (capa && dx) { capa.classList.add("off"); cerrarTarjeta(); }
   }
 
   function panel() {
@@ -228,10 +345,16 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var href = "index.html?producto=" + encodeURIComponent(L.producto);
     $("prod").href = href; $("seeProd").href = href;
     $("add").textContent = "Agregar a la bolsa" + (p.price != null ? " · " + fmt(p.price) : "");
+    /* Barra fija del celular */
+    $("barImg").src = $("prodImg").src; $("barImg").alt = $("prodImg").alt;
+    $("barName").textContent = p.name;
+    $("barPrice").innerHTML = (p.price != null ? "<b>" + fmt(p.price) + "</b>" : "") + (p.price != null && L.color ? " · " : "") + (L.color ? "Color " + esc(L.color) : "");
+    $("barLink").href = href;
     $("pieces").parentNode.hidden = !L.piezas.length;
     $("pieces").innerHTML = L.piezas.map(function (x) {
-      var nom = typeof x === "string" ? x : x.n, f = typeof x === "string" ? "" : x.foto;
-      return f ? '<li class="f"><img src="' + esc(f) + '" alt="" loading="lazy">' + esc(nom) + "</li>" : "<li>" + esc(nom) + "</li>";
+      var nom = typeof x === "string" ? x : x.n, f = typeof x === "string" ? "" : x.foto, d = destino(x);
+      var txt = d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">" + esc(nom) + "</a>" : esc(nom);
+      return f ? '<li class="f"><img src="' + esc(f) + '" alt="" loading="lazy">' + txt + "</li>" : "<li>" + txt + "</li>";
     }).join("");
     $("anglesWrap").hidden = L.angulos.length < 2;
     $("angles").innerHTML = L.angulos.map(function (a, i) {
@@ -247,13 +370,14 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
 
   function setAngle(i) {
     angle = i; var img = figs[active].querySelector("img"); img.style.opacity = 0;
+    puntos(250);
     setTimeout(function () { ponerFoto(img, OUTFITS[active].angulos[i][1]); img.style.opacity = 1; }, reduce ? 0 : 200);
     Array.prototype.forEach.call(document.querySelectorAll(".angle"), function (b) { b.setAttribute("aria-pressed", b.dataset.a == i); });
   }
   function go(i) {
     if (angle) ponerFoto(figs[active].querySelector("img"), OUTFITS[active].angulos[0][1]);
     active = (i + n) % n; angle = 0; $("hint").textContent = ""; $("sizeBox").classList.remove("need");
-    layout(); panel();
+    layout(); panel(); puntos(reduce ? 0 : 650);
   }
 
   $("prev").addEventListener("click", function () { go(active - 1); });
@@ -269,6 +393,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   var x0 = null, dx = 0, st = $("stage");
   st.addEventListener("pointerdown", function (e) {
     if (n < 2 || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if (e.target.closest(".spot, .pz-card")) return; /* tocar un punto o su tarjeta no arrastra la pasarela */
     x0 = e.clientX; dx = 0; movido = false; st.classList.add("drag");
     try { st.setPointerCapture(e.pointerId); } catch (er) { /* nada */ }
   });
@@ -284,7 +409,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       /* toque corto: si fue sobre la modelo de un lado, pasa a ese look */
       var r = st.getBoundingClientRect(), c = r.left + r.width / 2;
       if (x > c + GAP * 0.45) go(active + 1); else if (x < c - GAP * 0.45) go(active - 1); else layout();
-    } else layout();
+    } else { layout(); if (!movido || Math.abs(dx) <= Math.min(60, GAP * 0.25)) puntos(150); }
     dx = 0;
   }
   st.addEventListener("pointerup", soltar);
@@ -302,14 +427,22 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var t = $("toast"); t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("on"); }, 3500);
   });
 
-  addEventListener("resize", function () { layout(); });
+  /* "Elegir talla" lleva al panel; la barra se esconde mientras las tallas están en pantalla */
+  $("barBtn").addEventListener("click", function () {
+    $("sizeBox").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { $("bar").classList.toggle("off", es[0].isIntersecting); }, { threshold: 0.2 }).observe($("sizeBox"));
+  }
+
+  addEventListener("resize", function () { medir(); layout(); });
   construir();
   var API = window.MF_API_BASE || "";
   var pedir = function (r) { return fetch(API + r).then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }); };
   /* Nombre, precio, fotos y tallas disponibles desde el catálogo de la tienda */
   pedir("/api/catalogo").then(function (d) {
     if (!d || !Array.isArray(d.productos)) return;
-    d.productos.forEach(function (p) { CAT[p.id] = p; }); panel(); filtro(!$("filtro").hidden);
+    d.productos.forEach(function (p) { CAT[p.id] = p; }); panel(); filtro(!$("filtro").hidden); if (x0 === null) puntos(0); /* precios reales en las etiquetas */
   });
   /* Looks armados en el panel: reemplazan a los de ejemplo */
   pedir("/api/outfits").then(function (d) {
