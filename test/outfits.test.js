@@ -52,3 +52,12 @@ test('rechaza links que no son https', () => {
   assert.match(validar([look({ piezas: [{ n: 'Blusa', link: 'javascript:alert(1)' }] })]).error, /https/);
   assert.match(validar([look({ piezas: [{ n: 'Blusa', link: 'http://x.co' }] })]).error, /https/);
 });
+
+test('pasarela en video: guarda un .mp4 por https y rechaza lo demás', () => {
+  const mp4 = 'https://x.supabase.co/storage/v1/object/public/productos/pasarela-ia-1.mp4';
+  assert.equal(validar([look({ video: mp4 })]).valor[0].video, mp4);
+  assert.equal('video' in validar([look({})]).valor[0], false);
+  assert.match(validar([look({ video: 'javascript:alert(1)' })]).error, /video/);
+  assert.match(validar([look({ video: 'https://x.co/a.mp4" onerror="x' })]).error, /video/);
+  assert.match(validar([look({ video: 'https://x.co/a.gif' })]).error, /video/);
+});

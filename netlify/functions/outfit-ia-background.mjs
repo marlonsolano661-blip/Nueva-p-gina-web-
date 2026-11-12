@@ -30,6 +30,9 @@ const MAX_PRENDAS = 3;
 const VISTAS = ['frente', 'lado', 'espalda', 'editorial'];
 const LIMITE_MS = 13 * 60 * 1000; // la función de fondo vive 15 min: después de 13 no se rehacen fotos
 const NOTA_OK = 8;                 // calificación mínima del revisor (1 a 10)
+// Intentos por paso (modo equilibrado, para cuidar los créditos): cada intento es una imagen cobrada.
+// La foto de frente es la que más importa (de ella salen las demás vistas y el video): se permite un reintento.
+const INTENTOS = { vestir: 1, frente: 2, vista: 1 };
 
 // Respaldo si la lista en vivo no responde (en orden de preferencia)
 const IMAGEN_RESPALDO = ['gemini-3-pro-image-preview', 'gemini-3.1-flash-image-preview', 'gemini-2.5-flash-image'];
@@ -55,11 +58,14 @@ async function modelosDisponibles() {
 }
 
 // ---------- Instrucciones (reglas de la marca) ----------
-const ESTUDIO = 'Photorealistic professional fashion catalog photo for the shoe brand MARLON FOOTWEAR (MF), as shot by a professional ' +
-  'footwear photographer on a full-frame camera with a 50mm lens: high resolution, natural skin texture, correct anatomy, realistic fabric ' +
-  'folds and drape, realistic perspective and natural soft shadows. White seamless studio background in a soft off-white (#F6F6F4, almost pure ' +
-  'white) with a soft natural floor shadow, even professional lighting, no props, no text, no logos, no watermarks. Vertical 3:4 framing with ' +
-  'the WHOLE body visible from the top of the head to the soles of the shoes, centered, small margin above the head and below the feet. ';
+// Set de la marca ("Loft MF"): estudio tipo loft cálido, como las campañas de moda en línea.
+const ESTUDIO = 'Photorealistic professional e-commerce fashion campaign photo for the shoe brand MARLON FOOTWEAR (MF), as shot by a professional ' +
+  'fashion photographer on a full-frame camera with a 50mm lens: high resolution, natural skin texture, correct anatomy, realistic fabric ' +
+  'folds and drape, realistic perspective and natural soft shadows. SET ("MF loft"): a bright minimalist loft studio with warm beige ' +
+  'limewash plaster walls, exposed white-painted ceiling beams and pipes, a low curved beige velvet sofa behind her, polished light-grey ' +
+  'concrete floor, soft natural window daylight from the side, warm neutral color grading, background slightly out of focus. No text, no logos, ' +
+  'no watermarks. Vertical 3:4 framing with the WHOLE body visible from the top of the head to the soles of the shoes, centered, small margin ' +
+  'above the head and below the feet. ';
 const PERSONA = 'IDENTITY: it must be exactly the same woman as in the MODEL photo: same face and facial features, same skin tone, same hair ' +
   '(color, length, style), same body shape and proportions. Do not beautify, slim, age or change her. ';
 const ZAPATO = 'SHOES, THE MOST IMPORTANT RULE: the SHOE photo is the definitive reference of a product sold in the store. Reproduce it ' +
@@ -69,10 +75,14 @@ const ZAPATO = 'SHOES, THE MOST IMPORTANT RULE: the SHOE photo is the definitive
   'or moving straps, buckles or embellishments; changing colors, materials or finishes; simplifying or reinterpreting the product; using a ' +
   'similar shoe instead of this one. Fit the shoe naturally to the foot without deforming it. Both shoes sharp, in focus and clearly visible. ';
 const POSE = {
-  frente: 'POSE: full front view facing the camera, elegant and confident, standing straight with feet slightly apart so both shoes are fully visible.',
-  lado: 'POSE: full side profile, turned 90 degrees (her left side to the camera), clearly showing the height, shape and structure of the heel; shoes fully visible.',
-  espalda: 'POSE: full back view, her back to the camera, showing the back of both shoes with the original heel and strap structure.',
-  editorial: 'POSE: professional, sophisticated high-end fashion campaign pose, one leg slightly forward to highlight the shoes, shoes clearly visible, full body.',
+  frente: 'POSE: full-body front view facing the camera, confident fashion-catalog stance: one hand resting on her hip, weight on one leg, ' +
+    'chin slightly down, direct gaze to the camera, feet slightly apart so both shoes are fully visible.',
+  lado: 'POSE: full side profile, turned 90 degrees (her left side to the camera), one knee slightly bent, clearly showing the height, shape and ' +
+    'structure of the heel; shoes fully visible.',
+  espalda: 'POSE: full-body back view, her back to the camera, looking back over her shoulder at the camera with a soft confident expression, ' +
+    'showing the back of both shoes with the original heel and strap structure.',
+  editorial: 'POSE: relaxed high-end catalog pose, both hands casually in the pockets (or one hand in a pocket), one leg slightly forward to ' +
+    'highlight the shoes, shoes clearly visible, full body.',
 };
 const VISTA_EN = { frente: 'front', lado: 'side profile', espalda: 'back', editorial: 'editorial full-body' };
 
@@ -145,7 +155,7 @@ async function calificar(IA, refs, g, que) {
     '"ropa": clothes identical to the GARMENT references (type, cut, length, neckline, sleeves, fabric, sheerness, color, ruffles and details), ' +
     'and NO leftover or extra clothing from other photos (for example a white shirt visible under a sheer blouse); if no GARMENT reference, the clothes must match the base photo. ' +
     '"zapatos": identical to the SHOE reference (heel height and shape, platform, toe, every strap, buckles, color, material); be very strict. ' +
-    '"realismo": photorealistic, correct anatomy (hands, feet, legs), whole body visible head to shoes, plain off-white studio background, correct view.' });
+    '"realismo": photorealistic, correct anatomy (hands, feet, legs), whole body visible head to shoes, the warm beige loft studio set, correct view.' });
   const t = await IA.texto(parts, 'revisión');
   try {
     const j = jsonDe(t);
@@ -193,6 +203,51 @@ async function leer(src) {
   return { mimeType, data: Buffer.from(await r.arrayBuffer()).toString('base64') };
 }
 
+// ---------- Súper modelo MF: una modelo virtual exclusiva de la marca ----------
+// POST { modo: "supermodelo", trabajo, estilo: { piel, cabello, edad, cuerpo, rasgos } }
+// Crea 3 opciones de una mujer que NO existe (ficticia, no se parece a nadie real), de cuerpo completo, de frente,
+// con ropa básica neutra (se reemplaza al vestirla) y fondo de estudio. La que elijas en el panel queda como la modelo de la marca.
+const OPCIONES_MODELO = 3;
+const txtCorto = (v, n) => String(v || '').replace(/[<>"`{}]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+async function superModelo(c, b, fin, t0) {
+  const e = b && typeof b.estilo === 'object' && b.estilo ? b.estilo : {};
+  const estilo = {
+    piel: txtCorto(e.piel, 60) || 'warm golden sun-kissed Latina skin tone',
+    cabello: txtCorto(e.cabello, 80) || 'long voluminous brunette hair with soft caramel balayage, glossy loose waves, middle part',
+    edad: txtCorto(e.edad, 30) || '25 to 30 years old',
+    cuerpo: txtCorto(e.cuerpo, 80) || 'tall, slim and toned fashion-model build',
+    rasgos: txtCorto(e.rasgos, 200),
+  };
+  const hoy = Date.now() - 24 * 3600 * 1000;
+  const usadas = ((await db.eventosPorTipo(c, ['fotos_ia'], 100)) || []).filter((x) => new Date(x.creado_en).getTime() > hoy)
+    .reduce((n, x) => n + ((x.detalle && Array.isArray(x.detalle.fotos)) ? x.detalle.fotos.length : 0), 0);
+  if (usadas + OPCIONES_MODELO > MAX_FOTOS_DIA) {
+    await fin({ error: `Límite diario de ${MAX_FOTOS_DIA} fotos con IA: hoy quedan ${Math.max(0, MAX_FOTOS_DIA - usadas)}. Intenta mañana.` });
+    return;
+  }
+  if (!process.env.GEMINI_API_KEY) { await fin({ error: 'La IA no está disponible en este momento (AI Gateway sin credenciales)' }); return; }
+  const IA = crearIA(await modelosDisponibles());
+  const prompt = 'Create a brand-new, original, FICTIONAL woman who does not exist and does not resemble any real person, celebrity or ' +
+    'existing model. She is the exclusive house model of the shoe brand MARLON FOOTWEAR. ' +
+    `Appearance: ${estilo.piel}; ${estilo.cabello}; ${estilo.edad}; ${estilo.cuerpo}. ${estilo.rasgos ? 'Extra details: ' + estilo.rasgos + '. ' : ''}` +
+    'Glamorous but natural and believable, like a real professional e-commerce fashion model: real skin texture with pores and tiny ' +
+    'imperfections, no plastic or airbrushed look, soft glam makeup (warm bronzed skin, defined brows, nude-brown lips), small gold dome earrings, ' +
+    'confident relaxed expression, looking at the camera. Her face must be unique and original: do NOT copy or resemble any real model, influencer ' +
+    'or celebrity. Wardrobe: a plain fitted black long-sleeve top, a plain fitted black mini skirt and simple nude pointed-toe pumps (basic outfit, ' +
+    'no logos). ' + ESTUDIO + POSE.frente + ' True-to-life colors, like a real campaign photo.';
+  const fotos = [], errores = [];
+  for (let i = 0; i < OPCIONES_MODELO; i++) {
+    if (Date.now() - t0 > LIMITE_MS) break;
+    try {
+      const g = await IA.imagen([{ text: prompt + (i ? ` Variation ${i + 1}: a different face from the other options, same brief.` : '') }]);
+      const ext = g.mime.includes('jpeg') ? 'jpg' : g.mime.includes('webp') ? 'webp' : 'png';
+      const url = await db.subirFoto(c, `supermodelo-${Date.now()}-${i}-${crypto.randomBytes(4).toString('hex')}.${ext}`, g.buf, g.mime);
+      fotos.push({ vista: 'modelo', url });
+    } catch (x) { errores.push({ vista: 'modelo', error: String(x && x.message || x).slice(0, 400) }); }
+  }
+  await fin({ fotos, errores, supermodelo: true, segundos: Math.round((Date.now() - t0) / 1000) });
+}
+
 export default async (req) => {
   const c = cfg('admin');
   const auth = String(req.headers.get('authorization') || '');
@@ -205,6 +260,7 @@ export default async (req) => {
   const fin = (detalle) => db.registrarEvento(c, 'fotos_ia', trabajo, detalle);
   const t0 = Date.now();
   try {
+    if (b.modo === 'supermodelo') { await superModelo(c, b, fin, t0); return; }
     const modelo = String(b.modelo || '').trim(), tacon = String(b.tacon || '').trim();
     const prendas = (Array.isArray(b.prendas) ? b.prendas : []).map((x) => String(x || '').trim()).filter(Boolean).slice(0, MAX_PRENDAS);
     const vistas = VISTAS.filter((v) => v === 'frente' || (Array.isArray(b.vistas) && b.vistas.includes(v)));
@@ -254,7 +310,7 @@ export default async (req) => {
         'trace of the old clothes may remain, not even under sheer fabrics (under a sheer garment only skin or the lining shown in the garment reference). ' +
         'Do not add any other clothes, bags or jewelry. Keep her face, hair, skin tone, body, pose, framing and her current shoes exactly the same. ' +
         PERSONA + FICHA_P;
-      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo].concat(refsPrendas), intentos: 2, t0,
+      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo].concat(refsPrendas), intentos: INTENTOS.vestir, t0,
         que: 'the same woman as the MODEL reference wearing exactly the GARMENT references, nothing else from her original clothes' });
       if (r) { base = deGen(r.g); notaBase = r.nota; }
     }
@@ -274,7 +330,7 @@ export default async (req) => {
       const partes = [{ text: 'BASE photo of the woman (keep her and her clothes exactly):' }, im(base), { text: 'SHOE photo (the exact product to put on her feet):' }, im(imTacon)];
       const prompt = 'Using the BASE photo, replace ONLY the shoes she wears with the exact product from the SHOE photo. Keep the woman, her face, hair, ' +
         'body and her clothes exactly as in the BASE photo. Place her on the studio background described below. ' + ESTUDIO + PERSONA + ZAPATO + FICHA_Z + POSE.frente;
-      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: 3, t0,
+      const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: INTENTOS.frente, t0,
         que: 'front view, full body, same woman wearing the same clothes as the references and exactly the SHOE reference on both feet' });
       if (r) { frente = r; await subir('frente', r); }
     } catch (e) { errores.push({ vista: 'frente', error: String(e.message || e).slice(0, 600) }); }
@@ -288,7 +344,7 @@ export default async (req) => {
           { text: 'SHOE photo (the exact product):' }, im(imTacon)].concat(limpias.flatMap((x, i) => [{ text: `GARMENT ${i + 1}:` }, im(x)]));
         const prompt = `Create a new photo of the SAME woman from the FRONT photo, wearing exactly the same clothes and the same shoes, only changing the view and pose. ` +
           ESTUDIO + PERSONA + ZAPATO + FICHA_Z + FICHA_P + POSE[v];
-        const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: 2, t0,
+        const r = await mejorIntento(IA, { partes, prompt, refs: [refModelo, refZapato].concat(refsRopa), intentos: INTENTOS.vista, t0,
           que: `${VISTA_EN[v]} view, full body, same woman, same clothes and exactly the SHOE reference` });
         if (r) await subir(v, r);
       } catch (e) { errores.push({ vista: v, error: String(e.message || e).slice(0, 600) }); }

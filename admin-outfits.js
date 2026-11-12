@@ -305,6 +305,7 @@
     var fotosBox = el('div', { class: 'ofA-fotos' });
     var avisoFotos = el('p', { class: 'ofA-aviso', role: 'status' }); avisoFotos.hidden = true;
     function fotos() {
+      if (vdBox) pintarVideo(); // la pasarela en video parte de la foto principal
       fotosBox.textContent = '';
       o.fotos.forEach(function (f, i) {
         var sel = el('select', { 'aria-label': '¿Desde dónde se ve la modelo?' }, ANGULOS.map(function (a) { return el('option', { value: a, text: a }); }));
@@ -335,6 +336,132 @@
     var iaBox = el('div', { class: 'ofA-ia' });
     var IA = { modelo: '', prendas: [], extra: [], lado: true, espalda: true, editorial: true, ocupado: false, res: null, estado: '', hist: null, verHist: false };
     try { IA.modelo = localStorage.getItem('mf_ia_modelo') || ''; } catch (e) { IA.modelo = ''; }
+    // Súper modelo MF (guardada en el servidor) y si el servidor tiene la clave de Google para video
+    IA.marca = null; IA.hayVideo = null;
+    IA.sm = { abierto: false, ocupado: false, estado: '', opciones: null, piel: '', cabello: '', edad: '', cuerpo: '', rasgos: '' };
+    IA.vd = { ocupado: false, estado: '', url: '', formato: 'vertical', calidad: 'rapida', tipo: 'pasarela' };
+    A.api('fotos-ia-estado?modelo=1').then(function (r) {
+      IA.marca = r && r.modelo ? r.modelo : null; IA.hayVideo = !!(r && r.video);
+      if (!IA.modelo && IA.marca) IA.modelo = IA.marca.url;
+      pintarIA(); pintarVideo();
+    }).catch(function () { /* el resto del editor funciona igual */ });
+    function ponerModelo(url) { IA.modelo = url; try { localStorage.setItem('mf_ia_modelo', url); } catch (e) {} pintarIA(); }
+    // Espera un trabajo de IA (fotos, súper modelo o video) consultando /api/fotos-ia-estado cada 6 s
+    function sondear(trabajo, t0, avance) {
+      return new Promise(function (ok) { setTimeout(ok, 6000); }).then(function () { return A.api('fotos-ia-estado?trabajo=' + trabajo); }).then(function (r) {
+        if (r && r.listo) return r;
+        if (Date.now() - t0 > 15 * 60 * 1000) throw new Error('La IA está tardando demasiado. Intenta de nuevo en unos minutos.');
+        avance(Math.round((Date.now() - t0) / 1000));
+        return sondear(trabajo, t0, avance);
+      });
+    }
+    var nuevoTrabajo = function () { return 'IA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
+
+    // ---------- ✨ Súper modelo MF: formulario de estilo y 3 opciones para elegir ----------
+    function formSuperModelo() {
+      var S2 = IA.sm, caja = el('div', { class: 'ofA-ia', style: 'background:#fff' });
+      caja.appendChild(el('b', { text: 'Cómo quieres a tu súper modelo MF' }));
+      caja.appendChild(el('small', { class: 'ofA-ay', text: 'Describe el estilo en palabras sencillas (puedes dejar en blanco lo que quieras: la IA usa una modelo latina elegante). Se crean 3 opciones de una mujer que no existe; eliges una y queda como la modelo de tu marca. Cuenta 3 fotos del límite diario.' }));
+      function campoSM(clave, titulo, ej) {
+        var i = el('input', { type: 'text', maxlength: clave === 'rasgos' ? '200' : '80', value: S2[clave], placeholder: ej });
+        i.addEventListener('input', function () { S2[clave] = i.value; });
+        return el('label', { class: 'ofA-campo' }, [titulo, i]);
+      }
+      caja.appendChild(campoSM('piel', 'Tono de piel', 'Ej: trigueña, morena clara, blanca, afro…'));
+      caja.appendChild(campoSM('cabello', 'Cabello', 'Ej: largo castaño ondulado, negro liso, rizado…'));
+      caja.appendChild(campoSM('edad', 'Edad aproximada', 'Ej: 25 a 30 años'));
+      caja.appendChild(campoSM('cuerpo', 'Contextura', 'Ej: alta y delgada, curvy, atlética…'));
+      caja.appendChild(campoSM('rasgos', 'Otros detalles (opcional)', 'Ej: ojos color miel, pecas suaves, estilo elegante'));
+      var b = el('button', { type: 'button', class: 'crear', text: S2.ocupado ? 'Creando…' : '✨ Crear 3 opciones' });
+      b.disabled = S2.ocupado;
+      b.addEventListener('click', function () {
+        var trabajo = nuevoTrabajo(), t0 = Date.now();
+        S2.ocupado = true; S2.opciones = null; S2.estado = 'Creando 3 opciones… tarda de 1 a 3 minutos. No cierres esta pantalla.'; pintarIA();
+        A.api('outfit-ia-background', { method: 'POST', body: { modo: 'supermodelo', trabajo: trabajo, estilo: { piel: S2.piel, cabello: S2.cabello, edad: S2.edad, cuerpo: S2.cuerpo, rasgos: S2.rasgos } } })
+          .then(function () { return sondear(trabajo, t0, function (s) { S2.estado = 'Creando… (' + s + ' s)'; var e = iaBox.querySelector('.sm-estado'); if (e) e.textContent = S2.estado; }); })
+          .then(function (r) {
+            S2.ocupado = false;
+            if (r.error) { S2.estado = '✗ ' + r.error; return pintarIA(); }
+            S2.opciones = r.fotos || [];
+            S2.estado = S2.opciones.length ? '✓ Elige la que más te guste.' : '✗ No se pudo crear. Intenta de nuevo.';
+            pintarIA();
+          })
+          .catch(function (e) { S2.ocupado = false; S2.estado = '✗ ' + (e.message || 'No se pudo crear'); pintarIA(); });
+      });
+      caja.appendChild(b);
+      if (S2.estado) caja.appendChild(el('p', { class: 'estado sm-estado', role: 'status', text: S2.estado }));
+      if (S2.opciones && S2.opciones.length) {
+        caja.appendChild(el('div', { class: 'res' }, S2.opciones.map(function (f) {
+          var elegir = el('button', { type: 'button', text: 'Elegir esta' });
+          elegir.addEventListener('click', function () {
+            A.api('fotos-ia-estado', { method: 'POST', body: { modelo: { url: f.url } } }).then(function (r) {
+              IA.marca = r.modelo; S2.abierto = false; S2.opciones = null; S2.estado = '';
+              ponerModelo(f.url); A.msg('Súper modelo MF guardada ✓ Se usa en todos tus looks.');
+            }).catch(A.falla);
+          });
+          return el('figure', {}, [el('img', { src: f.url, alt: 'Opción de súper modelo' }), elegir]);
+        })));
+      }
+      return caja;
+    }
+
+    // ---------- 🎬 Pasarela en video (Google Veo): anima la foto de frente del look ----------
+    var vdBox = el('div', { class: 'ofA-ia' });
+    function pintarVideo() {
+      var V = IA.vd; vdBox.textContent = '';
+      vdBox.appendChild(el('h4', { text: '🎬 Videos con IA' }));
+      vdBox.appendChild(el('p', { class: 'ofA-ay', text: 'Dos tipos de video de 8 segundos: "Pasarela" (la modelo de la foto principal camina como en un desfile) o "Zapato en la mano" (estilo TikTok: unas manos con uñas cuidadas y anillos giran tu tacón para mostrarlo por todos lados). Tarda de 2 a 6 minutos. Revisa que el tacón se vea igual antes de usarlo. Máximo 6 videos al día.' }));
+      var selT = el('select', {}, [el('option', { value: 'pasarela', text: '🚶‍♀️ Pasarela: la modelo camina con el look' }), el('option', { value: 'mano', text: '🤲 Zapato en la mano (estilo TikTok / Instagram)' })]);
+      selT.value = V.tipo; selT.addEventListener('change', function () { V.tipo = selT.value; pintarVideo(); });
+      vdBox.appendChild(el('label', { class: 'ofA-campo' }, ['Tipo de video', selT]));
+      if (IA.hayVideo === false) {
+        vdBox.appendChild(el('p', { class: 'ofA-aviso', text: 'Falta activar el video: crea una clave en Google AI Studio (aistudio.google.com → Get API key, con tu tarjeta) y guárdala en Netlify como variable GOOGLE_VEO_API_KEY. Los videos se cobran en Google (≈ US$0,64 a US$3,20 cada uno), no en créditos de Netlify.' }));
+      }
+      if (o.video) {
+        var quitar = el('button', { type: 'button', class: 'claro', text: 'Quitar el video del look' });
+        quitar.addEventListener('click', function () { delete o.video; marcar(); pintarVideo(); });
+        vdBox.appendChild(el('div', {}, [el('small', { class: 'ofA-ay', text: '✓ Este look ya tiene video de pasarela:' }),
+          el('video', { src: o.video, controls: true, muted: true, playsinline: true, style: 'width:min(100%,16rem);border-radius:.6rem;background:#000' }), quitar]));
+      }
+      var f0 = V.tipo === 'mano' ? { url: fotoTacon() } : o.fotos[0];
+      if (V.tipo === 'mano' && !f0.url) { vdBox.appendChild(el('small', { class: 'ofA-ay', text: 'Elige el tacón y su color en el paso 1.' })); return; }
+      if (!f0) { vdBox.appendChild(el('small', { class: 'ofA-ay', text: 'Primero crea o sube la foto de frente del look (paso 2).' })); return; }
+      var selF = el('select', {}, [el('option', { value: 'vertical', text: 'Vertical 9:16 (Instagram, TikTok, celular)' }), el('option', { value: 'horizontal', text: 'Horizontal 16:9 (web, YouTube)' })]);
+      selF.value = V.formato; selF.addEventListener('change', function () { V.formato = selF.value; });
+      var selC = el('select', {}, [el('option', { value: 'rapida', text: 'Rápida (≈ US$0,96 por video)' }), el('option', { value: 'alta', text: 'Máxima calidad (≈ US$3,20 por video)' })]);
+      selC.value = V.calidad; selC.addEventListener('change', function () { V.calidad = selC.value; });
+      var crear = el('button', { type: 'button', class: 'crear', text: V.ocupado ? 'Creando video…' : (V.tipo === 'mano' ? '🎬 Crear video del zapato en la mano' : '🎬 Crear pasarela en video') });
+      crear.disabled = V.ocupado || IA.hayVideo === false;
+      crear.addEventListener('click', function () {
+        if (!/\/storage\/v1\/object\/public\/productos\//.test(f0.url)) return A.msg(V.tipo === 'mano' ? 'La foto del tacón debe estar subida en la tienda' : 'La foto principal debe estar subida en la tienda (crea las fotos con IA o súbela de nuevo)', true);
+        if (!window.confirm('Se creará 1 video de 8 segundos (' + (V.calidad === 'alta' ? '≈ US$3,20' : '≈ US$0,96') + ' en tu cuenta de Google). ¿Continuar?')) return;
+        var trabajo = nuevoTrabajo(), t0 = Date.now();
+        V.ocupado = true; V.url = ''; V.estado = 'Creando el video… tarda de 2 a 6 minutos. No cierres esta pantalla.'; pintarVideo();
+        A.api('pasarela-ia-background', { method: 'POST', body: { trabajo: trabajo, tipo: V.tipo, foto: V.tipo === 'mano' ? '' : f0.url, tacon: fotoTacon(), formato: V.formato, calidad: V.calidad } })
+          .then(function () { return sondear(trabajo, t0, function (s) { V.estado = 'Creando video… (' + s + ' s)'; var e = vdBox.querySelector('.estado'); if (e) e.textContent = V.estado; }); })
+          .then(function (r) {
+            V.ocupado = false;
+            if (r.error) { V.estado = '✗ ' + r.error; return pintarVideo(); }
+            V.url = r.videos && r.videos[0] ? r.videos[0].url : '';
+            V.estado = V.url ? '✓ Listo. Míralo y, si el tacón se ve bien, toca "Usar este video en el look".' : '✗ No llegó el video. Intenta de nuevo.';
+            pintarVideo();
+          })
+          .catch(function (e) { V.ocupado = false; V.estado = '✗ ' + (e.message || 'No se pudo crear'); pintarVideo(); });
+      });
+      vdBox.appendChild(el('div', { class: 'fila' }, [el('img', { class: 'min', src: f0.url, alt: 'Foto de partida' }), el('small', { class: 'ofA-ay', text: V.tipo === 'mano' ? 'Usa la foto de este tacón: la IA lo pone en las manos y lo anima (siempre vertical).' : 'Parte de la foto principal (★) del look.' })]));
+      if (V.tipo !== 'mano') vdBox.appendChild(el('label', { class: 'ofA-campo' }, ['Formato', selF]));
+      vdBox.appendChild(el('label', { class: 'ofA-campo' }, ['Calidad', selC]));
+      vdBox.appendChild(crear);
+      if (V.estado) vdBox.appendChild(el('p', { class: 'estado', role: 'status', text: V.estado }));
+      if (V.url) {
+        var usar = el('button', { type: 'button', text: 'Usar este video en el look' });
+        usar.addEventListener('click', function () { o.video = V.url; V.url = ''; V.estado = '✓ Video puesto. Toca "Listo" y después "Guardar outfits". Para descargarlo y subirlo a Instagram o TikTok, mantén presionado el video.'; marcar(); pintarVideo(); });
+        var desc = el('button', { type: 'button', class: 'claro', text: 'Descartar' });
+        desc.addEventListener('click', function () { V.url = ''; V.estado = ''; pintarVideo(); });
+        vdBox.appendChild(el('video', { src: V.url, controls: true, autoplay: true, muted: true, loop: true, playsinline: true, style: 'width:min(100%,16rem);border-radius:.6rem;background:#000' }));
+        vdBox.appendChild(el('div', { class: 'fila' }, [usar, desc]));
+      }
+    }
     // Prendas ya enlazadas en el look: quedan marcadas
     o.piezas.forEach(function (x) { var pr = porId(x.producto); if (pr && esRopa(pr) && fotoDe(pr) && IA.prendas.indexOf(fotoDe(pr)) < 0) IA.prendas.push(fotoDe(pr)); });
     function fotoTacon() {
@@ -346,11 +473,20 @@
       iaBox.textContent = '';
       iaBox.appendChild(el('h4', { text: '✨ Crear las fotos con IA con tu modelo' }));
       iaBox.appendChild(el('p', { class: 'ofA-ay', text: 'La IA le pone a tu modelo el tacón del paso 1, copiado exacto (mismo tacón, plataforma, tiras y color), y si eliges ropa la viste con ella. Fondo blanco de estudio, misma modelo en todas las fotos. Tarda de 2 a 6 minutos: primero limpia la prenda, la viste, le pone tu tacón y revisa cada foto. Revisas las fotos antes de usarlas.' }));
-      // A) Modelo
-      var subirM = el('button', { type: 'button', class: 'claro', text: IA.modelo ? 'Cambiar la foto de tu modelo' : '+ Subir la foto de tu modelo' });
-      subirM.addEventListener('click', function () { elegirFoto(function (url) { IA.modelo = url; try { localStorage.setItem('mf_ia_modelo', url); } catch (e) {} pintarIA(); }); });
-      iaBox.appendChild(el('div', {}, [el('b', { text: 'A. Tu modelo' }), el('small', { class: 'ofA-ay', text: 'Una foto de cuerpo completo, de frente, con buena luz y la cara visible. Se recuerda para tus próximos looks. Usa fotos de modelos que hayan dado su permiso.' }),
-        el('div', { class: 'fila' }, [IA.modelo ? el('img', { class: 'min', src: IA.modelo, alt: 'Tu modelo' }) : null, subirM])]));
+      // A) Modelo: la súper modelo MF (creada con IA) o la foto de una modelo real
+      var subirM = el('button', { type: 'button', class: 'claro', text: IA.modelo ? 'Usar otra foto (modelo real)' : '+ Subir la foto de una modelo real' });
+      subirM.addEventListener('click', function () { elegirFoto(function (url) { ponerModelo(url); }); });
+      var crearSM = el('button', { type: 'button', class: 'crear', text: IA.sm.abierto ? 'Cerrar' : (IA.marca ? '✨ Crear otra súper modelo MF' : '✨ Crear la súper modelo MF con IA') });
+      crearSM.addEventListener('click', function () { IA.sm.abierto = !IA.sm.abierto; pintarIA(); });
+      var usarMarca = IA.marca && IA.marca.url !== IA.modelo ? el('button', { type: 'button', class: 'claro', text: 'Usar la súper modelo MF' }) : null;
+      if (usarMarca) usarMarca.addEventListener('click', function () { ponerModelo(IA.marca.url); });
+      var esMarca = IA.marca && IA.marca.url === IA.modelo;
+      iaBox.appendChild(el('div', {}, [el('b', { text: 'A. La modelo' }),
+        el('small', { class: 'ofA-ay', text: 'La súper modelo MF es una modelo virtual exclusiva de tu marca, creada con IA: siempre la misma cara y cuerpo en todos tus looks. También puedes usar la foto de una modelo real (cuerpo completo, de frente, con su permiso).' }),
+        el('div', { class: 'fila' }, [IA.modelo ? el('img', { class: 'min', src: IA.modelo, alt: 'La modelo' }) : null,
+          IA.modelo ? el('span', { text: esMarca ? '★ Súper modelo MF' : 'Modelo real' }) : null]),
+        el('div', { class: 'fila' }, [crearSM, usarMarca, subirM])]));
+      if (IA.sm.abierto) iaBox.appendChild(formSuperModelo());
       // B) Tacón
       var ft = fotoTacon(), pt = porId(o.producto);
       iaBox.appendChild(el('div', {}, [el('b', { text: 'B. El tacón' }),
@@ -428,7 +564,7 @@
     }
     function crearIA() {
       var prendas = IA.prendas.concat(IA.extra);
-      if (!IA.modelo) return A.msg('Sube primero la foto de tu modelo (A)');
+      if (!IA.modelo) return A.msg('Primero elige la modelo (A): crea la súper modelo MF o sube una foto');
       if (!fotoTacon()) return A.msg('Elige el tacón en el paso 1 (B)');
       var trabajo = 'IA-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       var vistas = ['frente'].concat(IA.lado ? ['lado'] : [], IA.espalda ? ['espalda'] : [], IA.editorial ? ['editorial'] : []);
@@ -476,6 +612,7 @@
       marcar(); fotos(); piezas(); pintarIA();
     }
     pintarIA();
+    pintarVideo();
     (function () {
       var pend = null; try { pend = JSON.parse(localStorage.getItem('mf_ia_pendiente') || 'null'); } catch (e) {}
       if (!pend || !pend.trabajo) return;
@@ -607,6 +744,7 @@
       avisoFotos,
       fotosBox,
       iaBox,
+      vdBox,
       el('h3', { text: '3. Ropa que lleva puesta' }),
       el('p', { class: 'ofA-ay', text: 'Escribe cada prenda que se ve en las fotos (blusa, jean, vestido, bolso, cinturón…). Sale en "Para combinar". No pongas aquí otros looks. La foto de la prenda es opcional: toca "+ Foto" si quieres mostrarla.' }),
       el('p', { class: 'ofA-ay', text: 'Puntos de compra: elige la foto (frente, lado, espalda…), toca "📍 Poner el punto" y después toca la prenda sobre la foto. Repite en cada foto donde se vea la prenda. En la tienda sale un círculo palpitando ahí; al tocarlo, la clienta ve la prenda y el botón "Ver prenda".' }),
