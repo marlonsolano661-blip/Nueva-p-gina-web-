@@ -15,7 +15,7 @@
   var reduce = false;
   try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin matchMedia */ }
   var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (m) { return '&#' + m.charCodeAt(0) + ';'; }); };
-  var money = function (n) { return '$' + Math.round(Number(n) || 0).toLocaleString('es-CO'); };
+  var money = function (n) { return Number(n) > 0 ? '$' + Math.round(Number(n)).toLocaleString('es-CO') : 'Precio por confirmar'; };
   var EASE = 'cubic-bezier(.22,.8,.18,1)';
 
   /* ================= estilos ================= */
@@ -81,23 +81,52 @@
     '.pc-pn summary::-webkit-details-marker{display:none}.pc-pn summary::after{content:"+";transition:transform .3s}.pc-pn details[open] summary::after{transform:rotate(45deg)}',
     '.pc-pn details p{margin:0;padding:0 .1rem .9rem;color:#4a4a46;line-height:1.55;font-size:.82rem}.pc-pn details a{color:inherit}',
     '.pc-pad{height:.8rem}',
+    '.pc-vw{display:flex;gap:.3rem;margin-top:1rem;padding:.25rem;border-radius:999px;background:#f2f2ef;width:max-content;max-width:100%}',
+    '.pc-vw button{border:0;border-radius:999px;background:none;padding:.55rem .9rem;cursor:pointer;font:500 .6rem/1 Jost,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#767672;transition:background .3s,color .3s}',
+    '.pc-vw button.on{background:#0a0a0a;color:#fff}.pc-vw button[hidden]{display:none}',
+    '.pc-mod{position:absolute;z-index:9;mix-blend-mode:multiply;transition-property:opacity,transform,height;left:0;top:2%;width:60%;height:96%;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .5s ' + EASE + ',transform .7s ' + EASE + '}',
+    '.pc.mod .pc-mod{opacity:1;pointer-events:auto;transform:none}.pc.mod .pc-it.cur{opacity:0!important;transition:opacity .35s}.pc.mod .pc-rail{opacity:0}',
+    '.pc-mod img{flex:1;min-height:0;max-width:100%;object-fit:contain;mix-blend-mode:multiply;cursor:pointer;transition:opacity .3s}',
+    '.pc-mod img.ld{opacity:0}',
+    '.pc-mod video{display:none;flex:1;min-height:0;max-width:100%;object-fit:contain;background:#fff}',
+    '.pc-mod.vid video{display:block}.pc-mod.vid img,.pc-mod.vid .pc-md{display:none}',
+    '.pc-md{display:flex;gap:6px;padding:.6rem 0 .2rem}.pc-md i{width:5px;height:5px;border-radius:50%;background:#d6d6d2;transition:all .4s}.pc-md i.on{width:16px;border-radius:3px;background:#0a0a0a}',
+    '.pc-cs{align-items:center}',
     /* la tienda centra y pone en mayúsculas los títulos: en el panel se respeta su propio estilo */
     'html body .pc .pc-pn,html body .pc .pc-pn h3,html body .pc .pc-pn .pc-k,html body .pc .pc-pn .pc-pr{text-align:left}',
     'html body .pc .pc-pn h3{text-transform:none;letter-spacing:-.01em}',
     '@media(max-width:760px){',
     '  .pc-ar{display:none}',
-    '  .pc-pn{left:.6rem;right:.6rem;top:auto;bottom:.6rem;width:auto;max-height:58%;transform:translateY(60px);border-radius:20px;padding:1.3rem 1.1rem .4rem}',
+    '  .pc-pn{left:.5rem;right:.5rem;top:auto;bottom:.5rem;width:auto;max-height:50%;transform:translateY(60px);border-radius:20px;padding:1rem 1rem .3rem}',
+    '  .pc.ex .pc-rail{opacity:0}',
+    '  .pc-pn h3{margin:.25rem 0 .2rem}.pc-lb{margin:.85rem 0 .5rem}.pc-add{margin-top:.9rem;padding:.9rem 1.2rem}.pc-full{margin:.75rem auto .3rem}',
+    '  .pc-x{top:.7rem;right:.7rem}',
     '  .pc.ex .pc-pn{transform:none}',
-    '  .pc-pn h3{font-size:1.6rem}',
+    '  .pc-mod{top:6px;width:100%;height:calc(50% - 10px)}',
+    '  .pc-vw{margin-top:.7rem}',
+    '  .pc-pn::before{content:"";display:block;width:2.4rem;height:4px;border-radius:2px;background:#d6d6d2;margin:-.4rem auto .6rem}',
+    '  .pc.ex.vidv .pc-pn{transform:translateY(calc(100% - 4.9rem));overflow:hidden;cursor:pointer}',
+    '  .pc.ex.vidv .pc-pn .pc-x{opacity:0;pointer-events:none}',
+    '  .pc.ex.vidv .pc-pn::before{opacity:0}',
+    '  .pc.vidv .pc-mod{height:calc(100% - 5.6rem)}',
+    '  .pc-ver{display:none}.pc.ex.vidv .pc-ver{display:block;position:absolute;left:0;right:0;top:.55rem;text-align:center;font:500 .58rem/1 Jost,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#767672}',
+    '  .pc-pn h3{font-size:1.45rem}',
     '}',
     '@media(prefers-reduced-motion:reduce){.pc-it,.pc-fig,.pc-pn{transition-duration:.01s!important}}'
   ].join('\n');
   var st = document.createElement('style'); st.setAttribute('data-perchero', '1'); st.textContent = css; document.head.appendChild(st);
 
   /* ================= datos ================= */
-  function productos() {
+  function base() {
     try { if (typeof catalog === 'function') return catalog() || []; } catch (e) { /* sin catálogo */ }
     return Array.isArray(window.MF_CATALOGO_PRODUCTOS) ? window.MF_CATALOGO_PRODUCTOS : [];
+  }
+  // Prendas de prueba (DATA/vestidos-demo.js): salen en el perchero aunque aún no estén en el catálogo de la tienda
+  function extras() { return Array.isArray(window.MF_PRODUCTOS_EXTRA) ? window.MF_PRODUCTOS_EXTRA : []; }
+  function enCatalogo(id) { return base().some(function (p) { return p && String(p.id) === String(id); }); }
+  function productos() {
+    var B = base(), X = extras().filter(function (x) { return !B.some(function (p) { return p && String(p.id) === String(x.id); }); });
+    return X.concat(B);
   }
   function porId(id) { return productos().filter(function (p) { return p && String(p.id) === String(id); })[0] || null; }
   function agotado(p) { return Array.isArray(p.tallas) && !p.tallas.length; }
@@ -117,6 +146,7 @@
   var CACHE = {};
   function recortar(u) {
     if (!u) return Promise.resolve({ src: '', ok: false });
+    if (/^data:image\/(webp|png)/.test(u) || /\.(webp|png)(\?|$)/i.test(u) && /(recortes|vestidos)\//.test(u)) return Promise.resolve({ src: u, ok: true }); // ya viene sin fondo
     if (CACHE[u]) return CACHE[u];
     CACHE[u] = new Promise(function (ok) {
       var im = new Image(); im.crossOrigin = 'anonymous'; im.decoding = 'async';
@@ -182,7 +212,8 @@
       var all = P.filter(function (p) { return p && p.id != null && !agotado(p) && (p.img || (p.imgs || []).length); });
       orden = all.filter(function (p) { return p.destacado; }).concat(all.filter(function (p) { return !p.destacado; }));
     }
-    orden = orden.slice(0, fija.length ? 16 : 24);
+    var X = extras().filter(function (x) { return !enCatalogo(x.id); });
+    orden = X.concat(orden.filter(function (p) { return X.indexOf(p) < 0; })).slice(0, (fija.length ? 16 : 24) + X.length);
     return Promise.all(orden.map(function (p) {
       if (recorte(p)) return Promise.resolve({ p: p, ci: 0, src: recorte(p), ok: true });
       // primera foto con fondo blanco: la de cada color, luego las de la galería
@@ -198,14 +229,14 @@
         });
       };
       return Promise.resolve(prueba());
-    })).then(function (r) { return r.filter(Boolean).slice(0, fija.length ? 16 : 12); });
+    })).then(function (r) { return r.filter(Boolean).slice(0, (fija.length ? 16 : 12) + X.length); });
   }
 
   /* ================= armado ================= */
   var FL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>', FR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
   var HOOK = '<svg class="pc-hk" viewBox="0 0 40 60" preserveAspectRatio="none" aria-hidden="true"><path d="M20 58 L20 16 Q20 4 28 4 Q35 4 35 11" fill="none" stroke="#a9adb3" stroke-width="2.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/><circle cx="20" cy="57" r="2.2" fill="#9097a0"/></svg>';
   var LISTA = null, armando = false;
-  var S = { cur: 0, ex: false, sec: null, its: [], L: {}, raf: 0, last: 0, toque: 0, vis: true, ci: 0, talla: '' };
+  var S = { vista: 'frente', pose: 0, atras: false, cur: 0, ex: false, sec: null, its: [], L: {}, raf: 0, last: 0, toque: 0, vis: true, ci: 0, talla: '' };
 
   function html(L) {
     var logo = 'assets/logo-negro.png';
@@ -220,6 +251,7 @@
       '<div class="pc-now" aria-live="polite"></div>' +
       '<button class="pc-ar p" type="button" aria-label="Modelo anterior">' + FL + '</button><button class="pc-ar n" type="button" aria-label="Modelo siguiente">' + FR + '</button>' +
       '<div class="pc-dots" aria-hidden="true">' + dots + '</div>' +
+      '<div class="pc-mod" aria-hidden="true"><img alt="" draggable="false"><video muted playsinline loop preload="none"></video><div class="pc-md"></div></div>' +
       '<aside class="pc-pn" aria-hidden="true" aria-label="Detalle del modelo"></aside></section>';
   }
 
@@ -268,8 +300,8 @@
       el.classList.toggle('cur', o === 0);
       el.tabIndex = o === 0 ? 0 : -1;
       if (S.ex && o === 0) {
-        var sc = L.m ? Math.min(0.95, (L.H * 0.4 - 30) / L.gh) : Math.min(1.45, (L.H * 0.86) / L.gh);
-        var x = L.m ? L.cx : L.W * 0.3, y = L.m ? 18 : (L.H - L.gh * sc) / 2;
+        var sc = L.m ? Math.min(1.15, (L.H * 0.48 - 26) / L.gh) : Math.min(1.45, (L.H * 0.86) / L.gh);
+        var x = L.m ? L.cx : L.W * 0.3, y = L.m ? 12 : (L.H - L.gh * sc) / 2;
         el.style.transform = 'translate(' + (x - L.gw / 2) + 'px,' + y + 'px) scale(' + sc + ')';
         el.style.opacity = 1; el.style.zIndex = 8; fig.style.transform = 'none';
       } else {
@@ -327,18 +359,19 @@
   function panel() {
     var x = LISTA[idx(S.cur)], p = porId(x.p.id) || x.p, pn = S.sec.querySelector('.pc-pn');
     var cols = p.colors || [], tallas = Array.isArray(p.tallas) ? p.tallas : [];
-    S.ci = Math.min(x.ci || 0, Math.max(0, cols.length - 1)); S.talla = '';
+    S.ci = Math.min(x.ci || 0, Math.max(0, cols.length - 1)); S.talla = ''; S.atras = false; S.vista = 'frente'; S.pose = 0; S.sec.classList.remove('mod');
     var nro = String(idx(S.cur) + 1).padStart(2, '0') + ' / ' + String(n()).padStart(2, '0');
     var col = p.coleccion ? String(p.coleccion) : 'Marlon Footwear';
-    pn.innerHTML = '<button class="pc-x" type="button" data-pc-x aria-label="Cerrar"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11"/></svg></button>' +
+    pn.innerHTML = '<span class="pc-ver">▲ Toca para comprar</span><button class="pc-x" type="button" data-pc-x aria-label="Cerrar"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11"/></svg></button>' +
       '<div class="pc-k">' + E(col) + ' · ' + nro + '</div>' +
       '<h3>' + E(p.name) + '</h3>' +
       '<div class="pc-pr">' + money(p.price) + '<small>Envío nacional</small></div>' +
       (cols.length ? '<div class="pc-lb"><span>Color<b data-pc-cn>' + E((cols[S.ci] || {}).n || '') + '</b></span></div><div class="pc-cs">' +
-        cols.map(function (c, k) { return '<button class="pc-c' + (k === S.ci ? ' on' : '') + '" type="button" data-pc-c="' + k + '" style="background:' + E(c.h || '#ddd') + '" aria-label="' + E(c.n || 'Color') + '" title="' + E(c.n || '') + '"></button>'; }).join('') + '</div>' : '') +
+        cols.map(function (c, k) { return '<button class="pc-c' + (k === S.ci ? ' on' : '') + '" type="button" data-pc-c="' + k + '" style="background:' + E(c.h || '#ddd') + '" aria-label="' + E(c.n || 'Color') + '" title="' + E(c.n || '') + '"></button>'; }).join('') +
+        '</div>' : '') + vistas(p) +
       '<div class="pc-lb"><span>Talla<b data-pc-tn>' + (tallas.length ? 'Elige tu talla' : '') + '</b></span>' + (tallas.length ? '' : '<span>Agotado</span>') + '</div>' +
       (tallas.length ? '<div class="pc-ts"><span class="pc-th"></span>' + tallas.map(function (t) { return '<button type="button" data-pc-t="' + E(t) + '">' + E(t) + '</button>'; }).join('') + '</div>' : '') +
-      '<button class="pc-add" type="button" data-pc-add' + (tallas.length ? '' : ' disabled') + '><span data-pc-al>' + (tallas.length ? 'Agregar a la bolsa' : 'Agotado') + '</span><span>' + money(p.price) + '</span></button>' +
+      '<button class="pc-add" type="button" data-pc-add' + (tallas.length ? '' : ' disabled') + '><span data-pc-al>' + (tallas.length ? 'Agregar a la bolsa' : 'Agotado') + '</span><span>' + (Number(p.price) > 0 ? money(p.price) : '') + '</span></button>' +
       '<button class="pc-full" type="button" data-pc-full>Ver todos los detalles</button>' +
       (p.desc ? '<details><summary>Descripción</summary><p>' + E(p.desc) + '</p></details>' : '') +
       '<details><summary>Envíos</summary><p>Enviamos a toda Colombia. Consulta tiempos y costos en <a href="envios.html">envíos</a>.</p></details>' +
@@ -357,7 +390,12 @@
   }
   function ponerColor(k) {
     var x = LISTA[idx(S.cur)], p = porId(x.p.id) || x.p, pn = S.sec.querySelector('.pc-pn');
-    S.ci = k;
+    var antes = S.vista; S.ci = k; S.atras = false; S.vista = 'frente';
+    var mv = S.sec.querySelector('.pc-mod'); mv.classList.remove('vid'); try { mv.querySelector('video').pause(); } catch (e) { /* nada */ }
+    var vw = pn.querySelector('.pc-vw'); if (vw) { var tmpv = document.createElement('div'); tmpv.innerHTML = vistas(p); vw.parentNode.replaceChild(tmpv.firstChild || document.createComment(''), vw); }
+    S.sec.classList.remove('mod', 'vidv');
+    if (antes === 'modelo' && modelosDe(p, k).length) { setTimeout(function () { vista('modelo'); }, 0); }
+    if (antes === 'video' && (videoDe(p, k) || animDe(p, k))) { setTimeout(function () { vista('video'); }, 0); }
     [].forEach.call(pn.querySelectorAll('.pc-c'), function (b) { b.classList.toggle('on', +b.getAttribute('data-pc-c') === k); });
     var cn = pn.querySelector('[data-pc-cn]'); if (cn) cn.textContent = ((p.colors || [])[k] || {}).n || '';
     var it = S.its[idx(S.cur)], img = it.fig.querySelector('img'), u = fotoColor(p, k);
@@ -386,12 +424,16 @@
     if (!S.ex || !S.sec) return;
     S.ex = false; S.sec.classList.remove('ex'); bloquear(false);
     S.sec.querySelector('.pc-pn').setAttribute('aria-hidden', 'true');
+    if (S.atras) voltear(true);
+    S.vista = 'frente'; S.sec.classList.remove('mod', 'vidv');
+    var mc = S.sec.querySelector('.pc-mod'); mc.classList.remove('vid'); try { mc.querySelector('video').pause(); } catch (e) { /* nada */ }
     // el zapato vuelve con el color que se eligió
     poner(); info(); S.its[idx(S.cur)].v -= 70; S.toque = performance.now();
   }
   function agregar() {
     var x = LISTA[idx(S.cur)], p = porId(x.p.id);
     if (!p) return;
+    if (!enCatalogo(p.id)) { if (typeof toast === 'function') toast('Prenda de prueba: aún no está a la venta'); return; }
     if (!S.talla) {
       var tn = S.sec.querySelector('[data-pc-tn]'); if (tn) { tn.textContent = 'Elige tu talla'; }
       var ts = S.sec.querySelector('.pc-ts'); if (ts && ts.animate) ts.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 320 });
@@ -410,6 +452,95 @@
       selT = ''; selC = 0;
     } catch (e) { /* si algo falla, se abre la página del producto para comprar desde ahí */ abrirProducto(p.id); }
   }
+  // Prendas con foto de espalda (p.espalda o la de cada color): la prenda gira sobre el gancho y muestra el otro lado
+  function espaldaDe(p, ci) { var c = (p.colors || [])[ci]; return (c && c.espalda) || p.espalda || ''; }
+  function tieneEspalda(p) { return !!(p.espalda || (p.colors || []).some(function (c) { return c && c.espalda; })); }
+  function voltear(sinAnim) {
+    var x = LISTA[idx(S.cur)], p = porId(x.p.id) || x.p, atras = espaldaDe(p, S.ci);
+    if (!atras && !S.atras) return;
+    var it = S.its[idx(S.cur)], fig = it.fig, img = fig.querySelector('img');
+    S.atras = !S.atras;
+    var ir2 = recortar(S.atras ? atras : fotoColor(p, S.ci));
+    if (sinAnim || reduce) { ir2.then(function (r) { img.src = r.src; fig.classList.toggle('card', !r.ok); }); return; }
+    fig.style.transition = 'transform .32s ease-in'; fig.style.transform = 'rotateY(90deg)';
+    setTimeout(function () {
+      ir2.then(function (r) {
+        img.src = r.src; fig.classList.toggle('card', !r.ok);
+        fig.style.transition = 'none'; fig.style.transform = 'rotateY(-90deg)'; void fig.offsetWidth;
+        fig.style.transition = 'transform .45s cubic-bezier(.2,.9,.3,1.2)'; fig.style.transform = 'none';
+        it.v += 40;
+        setTimeout(function () { fig.style.transition = ''; }, 500);
+      });
+    }, 320);
+  }
+  // Fotos de la modelo con la prenda puesta: p.modelo o las de cada color (colors[k].modelo), lista de fotos
+  function modelosDe(p, ci) { var c = (p.colors || [])[ci], m = (c && c.modelo) || p.modelo || []; return Array.isArray(m) ? m : [m]; }
+  // Video de la prenda puesta: p.video o el de cada color (colors[k].video), una dirección de video .mp4
+  function videoDe(p, ci) { var c = (p.colors || [])[ci]; return (c && c.video) || p.video || ''; }
+  // Respaldo del video como imagen animada (webp/gif): se usa si el navegador no reproduce videos
+  function animDe(p, ci) { var c = (p.colors || [])[ci]; return (c && c.animacion) || p.animacion || ''; }
+  function tieneVideo(p) { return !!(p.video || p.animacion || (p.colors || []).some(function (c) { return c && (c.video || c.animacion); })); }
+  // iPhone no reproduce videos incrustados como texto (data:); se pasan a un archivo temporal del navegador (blob:)
+  var VCACHE = {};
+  function fuenteVideo(u) {
+    if (!/^data:/.test(u)) return Promise.resolve(u);
+    if (!VCACHE[u]) VCACHE[u] = fetch(u).then(function (r) { return r.blob(); }).then(function (b) { return URL.createObjectURL(b); });
+    return VCACHE[u];
+  }
+  function tieneModelo(p) { return !!((p.modelo && p.modelo.length) || (p.colors || []).some(function (c) { return c && c.modelo && c.modelo.length; })); }
+  // Selector de vistas del panel: Frente · Espalda · Modelo (solo las que existen para el color elegido)
+  function vistas(p) {
+    if (!tieneEspalda(p) && !tieneModelo(p) && !tieneVideo(p)) return '';
+    var e = !!espaldaDe(p, S.ci), m = modelosDe(p, S.ci).length > 0;
+    var b = function (v, t, ok) { return '<button type="button" data-pc-v="' + v + '"' + (S.vista === v ? ' class="on"' : '') + (ok ? '' : ' hidden') + '>' + t + '</button>'; };
+    return '<div class="pc-vw" role="tablist">' + b('frente', 'Frente', true) + (tieneEspalda(p) ? b('espalda', 'Espalda', e) : '') + (tieneModelo(p) ? b('modelo', 'Modelo', m) : '') + (tieneVideo(p) ? b('video', 'Video', !!(videoDe(p, S.ci) || animDe(p, S.ci))) : '') + '</div>';
+  }
+  function vista(v) {
+    var x = LISTA[idx(S.cur)], p = porId(x.p.id) || x.p;
+    if (v === S.vista) { if (v === 'modelo') otraPose(); return; }
+    if (S.atras && v !== 'espalda') voltear(true);
+    S.vista = v;
+    [].forEach.call(S.sec.querySelectorAll('[data-pc-v]'), function (b) { b.classList.toggle('on', b.getAttribute('data-pc-v') === v); });
+    var mod = S.sec.querySelector('.pc-mod'), vid = mod.querySelector('video');
+    S.sec.classList.toggle('vidv', v === 'video' && S.L.m);
+    if (v !== 'video') { mod.classList.remove('vid'); try { vid.pause(); } catch (e) { /* nada */ } }
+    if (v === 'modelo') { S.pose = 0; pose(p); S.sec.classList.add('mod'); return; }
+    if (v === 'video') {
+      var u = videoDe(p, S.ci), an = animDe(p, S.ci);
+      var foto = modelosDe(p, S.ci)[0] || fotoColor(p, S.ci);
+      // si el teléfono no puede reproducirlo: la imagen animada si existe, si no la foto de la modelo (nunca un cuadro negro)
+      var sinVideo = function () {
+        if (S.vista !== 'video') return; mod.classList.remove('vid');
+        var im = mod.querySelector('img'); mod.querySelector('.pc-md').innerHTML = '';
+        if (an) { im.src = an; S.sec.classList.add('mod'); return; }
+        S.pose = 0; if (modelosDe(p, S.ci).length) pose(p); else im.src = foto;
+      };
+      if (!u) { sinVideo(); return; }
+      vid.onerror = sinVideo;
+      if (foto) vid.poster = foto;
+      mod.classList.add('vid'); S.sec.classList.add('mod');
+      fuenteVideo(u).then(function (src) {
+        if (S.vista !== 'video') return;
+        if (vid.getAttribute('data-u') !== u) { vid.setAttribute('data-u', u); vid.src = src; }
+        try { vid.currentTime = 0; var pr = vid.play(); if (pr && pr.catch) pr.catch(function () { vid.controls = true; }); } catch (e) { vid.controls = true; }
+      }, sinVideo);
+      return;
+    }
+    S.sec.classList.remove('mod');
+    if ((v === 'espalda') !== S.atras) voltear();
+  }
+  function pose(p) {
+    var L2 = modelosDe(p, S.ci), mod = S.sec.querySelector('.pc-mod'), img = mod.querySelector('img');
+    if (!L2.length) return;
+    S.pose = ((S.pose % L2.length) + L2.length) % L2.length;
+    img.classList.add('ld');
+    var u = L2[S.pose], pre = new Image();
+    pre.onload = pre.onerror = function () { img.src = u; img.classList.remove('ld'); };
+    pre.src = u;
+    mod.querySelector('.pc-md').innerHTML = L2.length > 1 ? L2.map(function (_, k) { return '<i' + (k === S.pose ? ' class="on"' : '') + '></i>'; }).join('') : '';
+    img.alt = p.name + ' puesto';
+  }
+  function otraPose() { var x = LISTA[idx(S.cur)], p = porId(x.p.id) || x.p; if (modelosDe(p, S.ci).length < 2) return; S.pose++; pose(p); }
   // Se abre con la navegación de la tienda (como tocar una tarjeta del catálogo)
   function abrirProducto(id) {
     if (S.ex) { S.ex = false; bloquear(false); }
@@ -424,6 +555,7 @@
     sec.addEventListener('click', function (e) {
       var t = e.target; if (!t || !t.closest) return;
       if (S.mov) return;
+      if (S.sec.classList.contains('vidv') && t.closest('.pc-pn')) { S.sec.classList.remove('vidv'); return; }
       if (t.closest('[data-pc-x]')) { cerrar(); return; }
       if (t.closest('[data-pc-go]')) { abrir(); return; }
       if (t.closest('.pc-ar.p')) { ir(S.cur - 1); return; }
@@ -431,6 +563,8 @@
       var c = t.closest('[data-pc-c]'); if (c) { ponerColor(+c.getAttribute('data-pc-c')); return; }
       var tb = t.closest('[data-pc-t]'); if (tb) { ponerTalla(tb.getAttribute('data-pc-t')); return; }
       if (t.closest('[data-pc-add]')) { agregar(); return; }
+      var vb = t.closest('[data-pc-v]'); if (vb) { vista(vb.getAttribute('data-pc-v')); return; }
+      if (t.closest('.pc-mod img')) { otraPose(); return; }
       if (t.closest('[data-pc-full]')) { var x = LISTA[idx(S.cur)]; cerrar(); abrirProducto(x.p.id); return; }
       var it = t.closest('.pc-it');
       if (it) { var i = +it.getAttribute('data-pi'), o = off(i); if (S.ex) return; if (o === 0) abrir(); else ir(S.cur + o); return; }
