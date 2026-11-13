@@ -29,10 +29,9 @@
   window.addEventListener('storage', function (e) { if (e.key === K) { F = leer(); } });
 })();
 
-/* Carga "La vitrina" y las animaciones de navegación (vitrina.js), su lista de fotos sin fondo (DATA/recortes.js)
-   y "El perchero" del inicio (perchero.js), que usa la misma lista y reemplaza a La vitrina cuando carga.
+/* Carga "La vitrina" y las animaciones de navegación (vitrina.js) con su lista de fotos sin fondo (DATA/recortes.js).
    Se cargan en orden y sin bloquear la página. Si no cargan, la tienda funciona igual. */
 (function () {
   if (window.__mfVitrinaCarga || !document.getElementById('app')) return; window.__mfVitrinaCarga = 1;
-  ['DATA/recortes.js', 'DATA/vestidos-demo.js', 'vitrina.js', 'perchero.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
+  ['DATA/recortes.js', 'vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
 })();
