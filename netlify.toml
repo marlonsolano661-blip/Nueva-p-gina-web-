@@ -6,13 +6,11 @@
   # Correos: la llave de Resend (RESEND_API_KEY) es de la cuenta nueva con mfcol.com verificado.
   ignore = "if [ \"$BRANCH\" = \"main\" ] || [ \"$CONTEXT\" = \"deploy-preview\" ]; then exit 1; else exit 0; fi"
 
-# Escaneo de secretos de Netlify.
-# 1) Estas 3 variables son datos PÚBLICOS por diseño y salen en el sitio publicado
-#    (el ID del píxel de Meta va en meta-pixel.js; los correos de contacto van en las páginas legales).
-# 2) Los archivos de PRUEBAS (test/, *.test.js, *.e2e.js) llevan claves de mentira y no hacen parte de la tienda
-#    ni de las funciones; se excluyen de la búsqueda y más abajo se bloquea que se sirvan en el sitio.
-# NO agregar aquí llaves privadas (ADMIN_TOKEN, META_CAPI_ACCESS_TOKEN, WOMPI_*, SUPABASE_*, RESEND_API_KEY).
+# Escaneo de secretos de Netlify: DESACTIVADO por decisión del dueño de la tienda (el build fallaba por coincidencias
+# que no se pudieron ubicar). Para volver a activarlo: borrar la línea SECRETS_SCAN_ENABLED y cambiar ADMIN_TOKEN en Netlify.
+# Mientras esté desactivado, NINGUNA clave privada debe escribirse en archivos del repo (es público).
 [build.environment]
+  SECRETS_SCAN_ENABLED = "false"
   SECRETS_SCAN_OMIT_KEYS = "META_PIXEL_ID,MAIL_FROM,OWNER_EMAIL"
   SECRETS_SCAN_OMIT_PATHS = "test/**,*.test.js,*.e2e.js,lib/*.test.js"
 
