@@ -132,29 +132,3 @@ table { width:100%; border-collapse:collapse; font-size:.85rem; display:block; o
 .lado .cfg .it { min-height:2.9rem; font-size:1rem; text-decoration:none; }
 .lado .cab .ib { width:3.2rem; height:3.2rem; min-height:0; padding:0; border-radius:50%; background:var(--w); border-color:var(--g2); color:var(--k); }
 .lado .cab .ib:hover:not(:disabled) { background:var(--g1); color:var(--k); }
-
-/* Inicio: botones anchos */
-.atajos { margin:0 0 1.4rem; }
-.wide-fila { display:grid; grid-template-columns:1fr; gap:.7rem; }
-@media (min-width:600px) { .wide-fila { grid-template-columns:1fr 1fr; } }
-button.wide { display:flex; justify-content:flex-start; align-items:center; gap:1rem; width:100%; min-height:4.4rem; padding:.9rem 1.3rem; border-radius:1.4rem; background:var(--w); border:1.5px solid var(--g2); color:var(--k); text-align:left; font-weight:500; box-shadow:0 1px 0 var(--g2); }
-button.wide:hover:not(:disabled) { background:var(--g1); border-color:var(--k); color:var(--k); }
-button.wide .tx { flex:1; min-width:0; display:grid; gap:.1rem; } button.wide b { font-size:1.08rem; font-weight:700; line-height:1.25; } button.wide small { color:var(--g3); font-size:.9rem; line-height:1.3; font-weight:400; }
-button.wide .fl { flex:none; width:1.3rem; height:1.3rem; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-button.wide.grande { min-height:7.2rem; flex-direction:row; background:var(--k); color:#fff; border-color:var(--k); }
-button.wide.grande b { font:700 1.9rem/1.05 'Cormorant Garamond',Georgia,serif; } button.wide.grande small { color:#d0d0d4; font-size:.95rem; }
-button.wide.grande:hover:not(:disabled) { background:#26262a; color:#fff; border-color:#26262a; }
-.wide-h { margin:1.5rem 0 .6rem; font:700 .8rem/1 Figtree,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--g3); }
-.wide-lista { display:grid; gap:.55rem; }
-@media (min-width:760px) { .wide-lista { grid-template-columns:1fr 1fr; } }
-
-/* Lookbook y Perchero */
-.lo-lista { display:grid; gap:.6rem; margin:.8rem 0; }
-.lo-it { display:grid; grid-template-columns:2rem 4.2rem 1fr; gap:.4rem .8rem; align-items:center; padding:.7rem; background:var(--w); border-radius:1.2rem; box-shadow:0 1px 0 var(--g2); }
-.lo-it img, .lo-sf { width:4.2rem; height:5.2rem; object-fit:cover; border-radius:.7rem; background:var(--g1); display:grid; place-items:center; font-size:.7rem; color:var(--g3); text-align:center; }
-.lo-n { font-weight:700; color:var(--g3); text-align:center; } .lo-tx b { display:block; line-height:1.25; overflow-wrap:anywhere; } .lo-tx small { color:var(--g3); }
-.lo-ac { grid-column:1 / -1; display:flex; gap:.4rem; flex-wrap:wrap; } .lo-ac button { min-height:2.7rem; padding:.4rem 1rem; }
-@media (min-width:700px) { .lo-it { grid-template-columns:2rem 4.2rem 1fr auto; } .lo-ac { grid-column:auto; } }
-.lo-edit { display:grid; gap:0; } .lo-edit .form { margin:.3rem 0 0; }
-.lo-prods { display:grid; gap:.1rem; max-height:20rem; overflow:auto; border:1.5px solid var(--g2); border-radius:1rem; padding:.4rem .8rem; }
-.lo-barra { position:sticky; bottom:0; display:flex; gap:.6rem; flex-wrap:wrap; padding:.8rem 0 1rem; background:linear-gradient(#f2f2f300,var(--g1) 30%); }

@@ -602,9 +602,8 @@
   var cargarWhatsapp = function () { return window.mfAdminVentas ? window.mfAdminVentas.abrir() : Promise.reject(new Error('Pedidos WhatsApp no cargó: revisa que admin-ventas.js esté subido')); };
   var cargarFinanzas = function () { return window.mfAdminFinanzas ? window.mfAdminFinanzas.abrir() : Promise.reject(new Error('Finanzas no cargó: revisa que admin-ventas.js esté subido')); };
   var CARGA = { whatsapp: cargarWhatsapp, finanzas: cargarFinanzas, comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro,
-    vitrina: function () { return modulo('mfAdminVitrina', 'La vitrina'); }, facturas: function () { return modulo('mfAdminFacturas', 'Facturas'); }, papelera: function () { return modulo('mfAdminPapelera', 'La papelera'); },
-    lookbook: function () { return modulo('mfAdminLookbook', 'El lookbook'); }, perchero: function () { return modulo('mfAdminPerchero', 'El perchero'); } };
-  var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro', vitrina: 'La vitrina', facturas: 'Facturas', papelera: 'Papelera', lookbook: 'Lookbook', perchero: 'Perchero' };
+    vitrina: function () { return modulo('mfAdminVitrina', 'La vitrina'); }, facturas: function () { return modulo('mfAdminFacturas', 'Facturas'); }, papelera: function () { return modulo('mfAdminPapelera', 'La papelera'); } };
+  var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro', vitrina: 'La vitrina', facturas: 'Facturas', papelera: 'Papelera' };
   // ---------- Ayuda de cada sección: qué es, cómo se usa y qué cuidar ----------
   var AYUDA = {
     pedidos: { sirve: 'Aquí ves las compras hechas en la tienda online (con su pago) y registras el despacho de cada una.',
@@ -643,12 +642,6 @@
       pasos: ['Marca los productos que quieres mostrar y ordénalos.', 'Pulsa guardar.'], ojo: 'Si la lista queda vacía, la tienda usa la lista por defecto.' },
     facturas: { sirve: 'Crea comprobantes de venta en PDF y envíalos por WhatsApp.',
       pasos: ['Llena los datos de la clienta y agrega los productos.', 'Pulsa para generar el comprobante y envíalo.'], ojo: 'El historial de facturas se guarda en este dispositivo.' },
-    lookbook: { sirve: 'Galería de looks para el inicio de la tienda: cada look es una foto con los productos que se ven en ella. La clienta toca un producto y va directo a comprarlo.',
-      pasos: ['Pulsa «+ Nuevo look» y sube la foto.', 'En «Editar» escribe un título y marca los productos que se ven en la foto.', 'Ordena los looks con las flechas y pulsa «Guardar lookbook».'],
-      ojo: 'Un look oculto o sin guardar no se ve en la tienda. Si un producto se oculta o se elimina, desaparece solo del look.' },
-    perchero: { sirve: 'Ordena a mano todo el catálogo: la tienda muestra los productos en este orden.',
-      pasos: ['Sube o baja cada producto con las flechas, o pulsa «Primero» para ponerlo de primero.', 'Pulsa «Guardar orden».'],
-      ojo: 'Los productos nuevos aparecen al final hasta que los ordenes.' },
     papelera: { sirve: 'Aquí queda la versión anterior de todo lo que cambias o eliminas. Lo nuevo reemplaza a lo viejo; lo viejo se guarda aquí por si lo necesitas.',
       pasos: ['Busca lo que quieres recuperar (más reciente arriba).', 'Pulsa «Restaurar»: vuelve a la tienda y lo que estaba activo pasa a la papelera.', '«Eliminar» lo borra para siempre.'], ojo: 'Se guardan las últimas 60 versiones; las más antiguas se van borrando solas.' },
     registro: { sirve: 'El historial de lo que ha pasado en la tienda: pagos, despachos y cambios.',

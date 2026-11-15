@@ -73,11 +73,6 @@
     '.rstar{color:#c9a24a;letter-spacing:.08em}',
     /* ---- Medios de pago en "Pago seguro" ---- */
     '.rpay{display:flex;flex-wrap:wrap;gap:5px;margin-top:.45rem}',
-    '.rlb{padding:64px 6vw 72px;border-top:1px solid var(--ch);background:#fff}.rlb .rcp-head{margin-bottom:28px}.rlb-g{display:grid;grid-template-columns:1fr;gap:34px}',
-    '@media(min-width:700px){.rlb-g{grid-template-columns:repeat(2,1fr)}}@media(min-width:1100px){.rlb-g{grid-template-columns:repeat(3,1fr)}}',
-    '.rlk-ph{aspect-ratio:3/4;background:var(--ro);overflow:hidden}.rlk-ph img{width:100%;height:100%;object-fit:cover;display:block}',
-    '.rlk h3{margin:14px 0 8px;font:400 1.35rem/1.2 "Cormorant Garamond",Georgia,serif}.rlk-p{display:flex;flex-wrap:wrap;gap:8px}',
-    '.rlk-p button{border:1px solid var(--ch);background:#fff;color:var(--tx);border-radius:0;padding:.5rem .9rem;font:400 .7rem Jost,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;min-height:2.6rem}.rlk-p button:hover{border-color:var(--tx)}',
     '.rpay i{font:600 .58rem/1 Jost,sans-serif;font-style:normal;letter-spacing:.06em;padding:.32rem .45rem;border:1px solid #d6d6d2;border-radius:4px;color:#3a3a38;background:#fff}'
   ].join('\n');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -131,23 +126,7 @@
     return '<div class="rvbg"><div class="rvals"><div><h3>Envío</h3><p>' + E(env) + '</p></div><div><h3>Pago seguro</h3><p>Tarjeta, Nequi o PSE con Wompi.</p></div><div><h3>Ediciones limitadas</h3><p>Pocas unidades por modelo.</p></div></div></div>';
   }
 
-  /* ---- Lookbook: looks con foto y los productos que se ven en cada uno (se edita en el panel) ---- */
-  function lookbook() {
-    var L = (window.MF_CONTENIDO && window.MF_CONTENIDO.lookbook) || [], C = catalog();
-    var hechos = L.map(function (l) {
-      var ps = (l.productos || []).map(function (id) { return C.filter(function (p) { return String(p.id) === String(id); })[0]; }).filter(Boolean);
-      return { l: l, ps: ps };
-    }).filter(function (x) { return x.l && x.l.foto; });
-    if (!hechos.length) return '';
-    return '<section class="rlb" id="lookbook" data-rnew="lookbook"><div class="rcp-head"><div class="rey">Lookbook</div><h2>Looks para inspirarte</h2></div><div class="rlb-g">' +
-      hechos.map(function (x) {
-        return '<article class="rlk"><div class="rlk-ph">' + img(x.l.foto, x.l.titulo || 'Look Marlon Footwear', true) + '</div>' +
-          (x.l.titulo ? '<h3>' + E(x.l.titulo) + '</h3>' : '') +
-          (x.ps.length ? '<div class="rlk-p">' + x.ps.map(function (p) { return '<button type="button" data-lbp="' + E(p.id) + '">' + E(p.name) + '</button>'; }).join('') + '</div>' : '') + '</article>';
-      }).join('') + '</div></section>';
-  }
-
-  function home() { return '<div data-rnew="home">' + hero() + portadas() + lookbook() + '</div>'; }
+  function home() { return '<div data-rnew="home">' + hero() + portadas() + '</div>'; }
 
   /* ---- Página de una colección (o de todos los modelos) ---- */
   function chips() {
@@ -234,7 +213,6 @@
   document.addEventListener('click', function (e) {
     var t = e.target && e.target.closest ? e.target : null; if (!t) return;
     var b;
-    if ((b = t.closest('[data-lbp]'))) { nav('prod', b.getAttribute('data-lbp')); return; }
     if ((b = t.closest('[data-ver]'))) { window.MF_COL = b.getAttribute('data-ver') || ''; try { Q = ''; } catch (x) { /* */ } nav('col'); return; }
     if ((b = t.closest('[data-r]'))) {
       var a = b.getAttribute('data-r');
