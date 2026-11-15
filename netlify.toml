@@ -6,11 +6,15 @@
   # Correos: la llave de Resend (RESEND_API_KEY) es de la cuenta nueva con mfcol.com verificado.
   ignore = "if [ \"$BRANCH\" = \"main\" ] || [ \"$CONTEXT\" = \"deploy-preview\" ]; then exit 1; else exit 0; fi"
 
-# Escaneo de secretos de Netlify: estas 3 variables son datos PÚBLICOS por diseño y salen en el sitio publicado
-# (el ID del píxel de Meta va en meta-pixel.js; los correos de contacto van en las páginas legales).
-# Por eso se excluyen del escaneo. NO agregar aquí llaves privadas (ADMIN_TOKEN, META_CAPI_ACCESS_TOKEN, WOMPI_*, SUPABASE_*, RESEND_API_KEY).
+# Escaneo de secretos de Netlify.
+# 1) Estas 3 variables son datos PÚBLICOS por diseño y salen en el sitio publicado
+#    (el ID del píxel de Meta va en meta-pixel.js; los correos de contacto van en las páginas legales).
+# 2) Los archivos de PRUEBAS (test/, *.test.js, *.e2e.js) llevan claves de mentira y no hacen parte de la tienda
+#    ni de las funciones; se excluyen de la búsqueda y más abajo se bloquea que se sirvan en el sitio.
+# NO agregar aquí llaves privadas (ADMIN_TOKEN, META_CAPI_ACCESS_TOKEN, WOMPI_*, SUPABASE_*, RESEND_API_KEY).
 [build.environment]
   SECRETS_SCAN_OMIT_KEYS = "META_PIXEL_ID,MAIL_FROM,OWNER_EMAIL"
+  SECRETS_SCAN_OMIT_PATHS = "test/**,*.test.js,*.e2e.js,lib/*.test.js"
 
 [functions]
   directory = "netlify/functions"
@@ -31,6 +35,37 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+  force = true
+
+# Los archivos de pruebas no son parte de la tienda: que no se puedan abrir desde internet.
+[[redirects]]
+  from = "/test/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/frontend.e2e.js"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/seguimiento-admin-sql.test.js"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/sugerir-color.test.js"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/lib/descuentos.test.js"
+  to = "/404.html"
+  status = 404
   force = true
 
 [[headers]]
