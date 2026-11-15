@@ -44,6 +44,6 @@ Los montos del webhook siguen validándose contra `monto_centavos`, que ahora ya
 ## Límites conocidos
 - Imágenes: se guardan como URL (`https://…` o `assets/…`). No hay almacenamiento de archivos subidos.
 - Despacho manual: las guías y transportadoras las escribe el administrador; no hay consulta automática a transportadoras.
-- `admin.html` (administrador antiguo, solo `localStorage`) se deja intacto pero **ya no gobierna el catálogo** de la tienda.
+- `admin.html` ahora solo redirige a `admin-tienda.html` (el panel único). Ya no existe el administrador antiguo basado en `localStorage`.
 - `panel-pedidos.html` sigue funcionando; el centro de control incluye la misma información (más envío y despacho).
 - Los inventarios del archivo `DATA/` (p. ej. 1 unidad por talla) se cargan tal cual: confírmalos antes de publicar.

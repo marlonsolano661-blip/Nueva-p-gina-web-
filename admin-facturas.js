@@ -312,7 +312,9 @@
       A.api('admin-tienda?recurso=envio').then(function (d) { TARIFA = Number(d.tarifa) || 0; }),
     ]);
   }
+  var omitir = false; // al venir desde un pedido, el router no debe reiniciar el formulario ya lleno
   function abrir() {
+    if (omitir) { omitir = false; return Promise.resolve(); }
     F = nueva(); ULTIMA = null; pintar();
     return cargarDatos().then(function () { F.envio = TARIFA; pintar(); });
   }
@@ -333,7 +335,7 @@
   // Abre Facturas con el comprobante del pedido: si ya existe lo muestra para reenviarlo; si no, lo crea de una vez
   // con los datos del pedido (sin volver a llenar nada). Si al pedido le falta algo (nombre o productos), deja el formulario lleno para completarlo.
   function desdeWhatsapp(v) {
-    mostrar();
+    if (location.hash !== '#/facturas') { omitir = true; location.hash = '#/facturas'; }
     var hecha = deWhatsapp(v.id);
     if (hecha) { ULTIMA = hecha; F = nueva(); pintar(); return Promise.resolve(hecha); }
     ULTIMA = null; F = desdeVenta(v); pintar();
@@ -347,31 +349,5 @@
   }
   window.mfAdminFacturas = { abrir: abrir, desdeWhatsapp: desdeWhatsapp, deWhatsapp: deWhatsapp, _crearPDF: crearPDF };
 
-  function mostrar() {
-    var tabs = document.getElementById('tabs'), volver = document.getElementById('volver');
-    if (tabs) tabs.hidden = true; if (volver) volver.hidden = false;
-    var t = document.getElementById('titulo'); if (t) t.textContent = 'Facturas';
-    var ay = document.getElementById('ayuda'); if (ay) ay.hidden = true;
-    document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-facturas'); });
-    A.msg(''); window.scrollTo(0, 0);
-  }
-
-  /* Se agrega solo el botón "Facturas" al inicio del panel y su sección; no hace falta tocar otro archivo. */
-  function montar() {
-    var tabs = document.getElementById('tabs'), volver = document.getElementById('volver');
-    if (!tabs || !volver || document.getElementById('b-facturas')) return;
-    var secc = el('section', { class: 'panel', id: 'p-facturas' });
-    var ultimo = document.querySelector('.panel:last-of-type'); if (ultimo && ultimo.parentNode) ultimo.parentNode.appendChild(secc); else volver.parentNode.appendChild(secc);
-    var lista = tabs.querySelector('.lista'); // primer grupo: "Ventas y dinero"
-    var b;
-    if (lista) {
-      b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), el('span', { class: 'tx' }, [el('b', { text: 'Facturas' }), el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]), el('i', { class: 'fl', 'aria-hidden': 'true', text: '›' })]);
-      lista.appendChild(b);
-    } else {
-      b = el('button', { type: 'button', id: 'b-facturas' }, [el('span', { class: 'ic', text: '📄' }), 'Facturas', el('small', { text: 'Crea y envía comprobantes por WhatsApp' })]);
-      tabs.appendChild(b);
-    }
-    b.addEventListener('click', function () { mostrar(); abrir().catch(A.falla); });
-  }
-  montar();
+  // Desde Pedidos WhatsApp se abre Facturas por la ruta normal del panel
 })();

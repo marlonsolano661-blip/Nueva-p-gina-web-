@@ -43,18 +43,6 @@
   force = true
 
 [[redirects]]
-  from = "/frontend.e2e.js"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/seguimiento-admin-sql.test.js"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
   from = "/sugerir-color.test.js"
   to = "/404.html"
   status = 404
