@@ -27,10 +27,12 @@
     { n: 'Productos', i: I.caja, hijos: [
       { t: 'productos', n: 'Todos los productos', claves: 'crear editar precio fotos colores tallas eliminar' },
       { t: 'inventario', n: 'Inventario', claves: 'stock pares unidades agotado' },
-      { t: 'colecciones', n: 'Colecciones', claves: 'categorías tacones sandalias' } ] },
+      { t: 'colecciones', n: 'Colecciones', claves: 'categorías tacones sandalias' },
+      { t: 'perchero', n: 'Perchero', claves: 'orden catálogo acomodar subir bajar primero' } ] },
     { t: 'descuentos', n: 'Descuentos', i: I.tag, claves: 'códigos cupones porcentaje' },
     { n: 'Contenido', i: I.pagina, hijos: [
       { t: 'inicio', n: 'Diseño del inicio', claves: 'banners portada' },
+      { t: 'lookbook', n: 'Lookbook', claves: 'looks fotos editorial productos galería' },
       { t: 'vitrina', n: 'La vitrina', claves: 'riel favoritos recortes' },
       { t: 'comunidad', n: 'Comunidad', claves: 'fotos clientas comparte tus mf aprobar' },
       { t: 'contenido', n: 'Textos de la tienda', claves: 'mensajes frases' } ] },
@@ -101,7 +103,25 @@
   }
   function ir(t) { var h = '#/' + (t === 'resumen' ? '' : t); if (location.hash === h || (t === 'resumen' && (location.hash === '' || location.hash === '#/'))) { ruta(); abrirMenu(false); } else location.hash = h; }
 
+  // Inicio: botones anchos (los dos grandes primero, luego todo el panel por grupos)
+  var DESC = { lookbook: 'Looks con foto y sus productos', perchero: 'Ordena a mano todo el catálogo', pedidos: 'Pagos, guías y envíos', whatsapp: 'Anota los pedidos del chat', facturas: 'Comprobantes en PDF', finanzas: 'Ventas, gastos y ganancias',
+    productos: 'Crear, editar y subir fotos', inventario: 'Pares por talla', colecciones: 'Agrupa tus productos', descuentos: 'Códigos de descuento', inicio: 'Banners con fotos y botón', vitrina: 'El riel de fotos del inicio', comunidad: 'Aprobar fotos de clientas', contenido: 'Textos de la tienda' };
+  var GRUPOS = [['Ventas y dinero', ['pedidos', 'whatsapp', 'facturas', 'finanzas']], ['Catálogo', ['productos', 'inventario', 'colecciones', 'descuentos']], ['Tienda online', ['inicio', 'vitrina', 'comunidad', 'contenido']]];
+  function ancho(t, grande) {
+    var x = porT[t], b = document.createElement('button'); b.type = 'button'; b.className = 'wide' + (grande ? ' grande' : ''); b.setAttribute('data-t', t);
+    b.innerHTML = '<span class="tx"><b></b><small></small></span>' + svg(I.flecha, 'fl'); b.querySelector('b').textContent = x.n; b.querySelector('small').textContent = DESC[t] || ''; return b;
+  }
+  function atajos() {
+    var a = $('#atajos'), g = document.createElement('div'); g.className = 'wide-fila'; g.appendChild(ancho('lookbook', true)); g.appendChild(ancho('perchero', true)); a.appendChild(g);
+    GRUPOS.forEach(function (gr) {
+      var h = document.createElement('h2'); h.className = 'wide-h'; h.textContent = gr[0]; a.appendChild(h);
+      var l = document.createElement('div'); l.className = 'wide-lista'; gr[1].forEach(function (t) { l.appendChild(ancho(t)); }); a.appendChild(l);
+    });
+    a.addEventListener('click', function (e) { var b = e.target.closest('.wide[data-t]'); if (b) ir(b.getAttribute('data-t')); });
+  }
+
   function montar() {
+    atajos();
     var cfg = $('#cfg');
     CONFIG.forEach(function (x) { cfg.appendChild(fila(x)); });
     var ver = document.createElement('a'); ver.className = 'it'; ver.href = '/'; ver.target = '_blank'; ver.rel = 'noopener'; ver.innerHTML = '<span class="tx">Ver la tienda</span>'; cfg.appendChild(ver);
