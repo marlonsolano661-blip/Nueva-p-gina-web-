@@ -166,6 +166,16 @@ h1,.look-name{font:700 1.45rem/1.2 Figtree,Helvetica,sans-serif;letter-spacing:.
   .bar strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:700 .95rem/1.25 Figtree,Helvetica,sans-serif;text-transform:uppercase}
   .bar button{background:var(--verde);border-color:var(--verde);font:700 .78rem Figtree,Helvetica,sans-serif;letter-spacing:.08em;border-radius:0}
 }
+/* "Para combinar": tarjetas como las de "Completa el look" en la ficha del producto */
+.pieces{display:flex;flex-wrap:nowrap;gap:.7rem;overflow-x:auto;padding-bottom:.4rem;scroll-snap-type:x mandatory;scrollbar-width:none}
+.pieces::-webkit-scrollbar{display:none}
+.pieces li,.pieces li.f{flex:0 0 9.5rem;scroll-snap-align:start;display:block;padding:0;border:0;background:none;font-size:inherit}
+.pieces li>a,.pieces li>div{display:grid;gap:.35rem;align-content:start;height:100%;border:1px solid #e6e6e6;background:#fff;padding:.4rem;color:#111;text-decoration:none}
+.panel>*{min-width:0}
+.pieces li img{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;background:#f4f4f4;display:block}
+.pieces b{font:600 .82rem/1.25 Figtree,Helvetica,sans-serif}
+.pieces i{font-style:normal;font-size:.85rem}
+.pieces span{display:block;margin-top:.15rem;padding:.55rem .4rem;background:#0a0a0a;color:#fff;text-align:center;font:500 .7rem Figtree,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase}
 </style></head><body>
 <div class="ofa">Envíos a toda Colombia · Entrega estimada en 6 días</div>
 <header class="top"><a class="sq" href="index.html" aria-label="Volver a la tienda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a><a class="lg" href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="sq bolsa" href="index.html" aria-label="Ver mi bolsa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><b id="ofCnt">0</b></a></header>
@@ -393,10 +403,12 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     $("barPrice").innerHTML = (p.price != null ? "<b>" + fmt(p.price) + "</b>" : "") + (p.price != null && L.color ? " · " : "") + (L.color ? "Color " + esc(L.color) : "");
     $("barLink").href = href;
     $("pieces").parentNode.hidden = !L.piezas.length;
+    /* Prendas en tarjetas que se deslizan, igual que "Completa el look" en la ficha del producto */
     $("pieces").innerHTML = L.piezas.map(function (x) {
-      var nom = typeof x === "string" ? x : x.n, f = typeof x === "string" ? "" : x.foto, d = destino(x);
-      var txt = d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">" + esc(nom) + "</a>" : esc(nom);
-      return f ? '<li class="f"><img src="' + esc(f) + '" alt="" loading="lazy">' + txt + "</li>" : "<li>" + txt + "</li>";
+      var nom = limpio(typeof x === "string" ? x : x.n), d = destino(x), pr = d && d.prod;
+      var f = (typeof x === "string" ? "" : x.foto) || (pr && pr.img) || "", precio = pr && pr.price != null ? pr.price : (typeof x === "string" ? null : x.precio);
+      var dentro = (f ? '<img src="' + esc(f) + '" alt="" loading="lazy">' : "") + "<b>" + esc(nom) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + (d ? "<span>Comprar →</span>" : "");
+      return "<li>" + (d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">" + dentro + "</a>" : "<div>" + dentro + "</div>") + "</li>";
     }).join("");
     $("anglesWrap").hidden = L.angulos.length < 2;
     $("angles").innerHTML = L.angulos.map(function (a, i) {

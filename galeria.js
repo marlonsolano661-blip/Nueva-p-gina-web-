@@ -282,7 +282,7 @@
   var st = document.createElement('style'); st.setAttribute('data-completa', '1');
   st.textContent = [
     '.cl-look{margin:1.6rem 0 .4rem;padding-top:1.2rem;border-top:1px solid #e6e6e6}',
-    '.cl-look h3{margin:0 0 .25rem;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:#b08d57}',
+    '.cl-look h3{margin:0 0 .25rem;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:#111}',
     '.cl-look p{margin:0 0 .8rem;font-size:.85rem;color:#666}',
     '.cl-t{display:flex;gap:.7rem;overflow-x:auto;padding-bottom:.4rem;scroll-snap-type:x mandatory;scrollbar-width:none}',
     '.cl-t::-webkit-scrollbar{display:none}',
