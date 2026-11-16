@@ -104,6 +104,7 @@ def main():
         texto = texto.replace("s.src = src;", "s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src;")
         texto = texto.replace("s.src = 'outfits-boton.js';", "s.src = (window.MF_ASSETS && window.MF_ASSETS['outfits-boton.js']) || 'outfits-boton.js';")
         texto = texto.replace("'assets/", "'%s/assets/" % NETLIFY).replace('"assets/', '"%s/assets/' % NETLIFY)
+        texto = texto.replace('"vestidos.html', '"%s/vestidos.html' % NETLIFY)
         texto = texto.replace('"outfits.html', '"%s/outfits.html' % NETLIFY).replace("'outfits.html", "'%s/outfits.html" % NETLIFY)
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
