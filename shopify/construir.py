@@ -141,7 +141,7 @@ def vestidos():
         return
     base = "{%- assign vb = 'vestidos-looks.js' | asset_url | split: 'vestidos-looks.js' | first -%}"
     looks = leer('vestidos/looks.js').replace("'vestidos/", "'{{ vb }}vestidos-").replace('"vestidos/', '"{{ vb }}vestidos-')
-    escribir('snippets/mf-vestidos-looks.liquid', base + '<script>' + looks + '</script>')
+    escribir('snippets/mf-vestidos-looks.liquid', base + '<script>' + looks + '</script><script>' + leer('shopify/vestidos-ajustes.js') + '</script>')
     html = leer('vestidos.html')
     if '{{' in html or '{%' in html:
         raise SystemExit('vestidos.html tiene {{ o {%')
@@ -203,7 +203,8 @@ def vestidos():
             continue
         destino = os.path.join(SALIDA, 'assets', 'vestidos-' + nombre)
         os.makedirs(os.path.dirname(destino), exist_ok=True)
-        shutil.copyfile(os.path.join(ruta_dir, nombre), destino)
+        nuevo = os.path.join(RAIZ, 'shopify', 'vestidos-nuevos', nombre)  # videos rehechos (fondo blanco) solo para Shopify
+        shutil.copyfile(nuevo if os.path.exists(nuevo) else os.path.join(ruta_dir, nombre), destino)
 
 if __name__ == '__main__':
     main()
