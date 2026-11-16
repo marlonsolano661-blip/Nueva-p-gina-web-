@@ -6,10 +6,10 @@
    - foto: la foto de la modelo, su video y dónde empalman (medido sobre la foto original).
    - encaje: dónde cae la prenda sobre la modelo; tacon.punto: dónde cuelga la etiqueta (en píxeles de la foto). */
 window.MF_VESTIDOS=[{
-  nombre:"Noche en negro",
+  nombre:"Noche en negro",grupo:"noche-glam",color:{n:"Negro",h:"#151515"},
   prenda:{n:"Noche glam",frente:"vestidos/prenda-frente.webp",espalda:"vestidos/prenda-espalda.webp",w:776,h:1071,gancho:[388,92],
     /* el vestido en la tienda (catálogo: noche-glam) */
-    venta:{id:"noche-glam",n:"Noche glam",p:169900,colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
+    venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Negro",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
       fotos:[{u:"vestidos/prenda-frente.webp",fit:"contain"},{u:"vestidos/prenda-espalda.webp",fit:"contain"}],fotosColor:{}}},
   foto:{src:"vestidos/look-1-ini.jpg",inicio:"vestidos/look-1-ini.jpg",w:1066,h:1894,video:"vestidos/look-1.mp4",
     /* el video es el escenario: empieza en su primer cuadro (inicio) y termina quieto en el último */
@@ -24,19 +24,19 @@ window.MF_VESTIDOS=[{
     fotos:[{u:"vestidos/alessia-1.jpg",fit:"contain"},"vestidos/alessia-2.jpg","vestidos/alessia-3.jpg"],
     fotosColor:{Plata:["vestidos/alessia-plata.jpg"]}}
 },{
-  nombre:"Brisa celeste",
-  prenda:{n:"Noche glam · Celeste",frente:"vestidos/celeste-frente.webp",espalda:null,w:772,h:1069,gancho:[386,92],
+  nombre:"Brisa celeste",grupo:"noche-glam",color:{n:"Celeste",h:"#a9c8ea"},
+  prenda:{n:"Noche glam",frente:"vestidos/celeste-frente.webp",espalda:null,w:772,h:1069,gancho:[386,92],
     /* el mismo vestido del catálogo (noche-glam), abierto en color Celeste */
     venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Celeste",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
       fotos:[{u:"vestidos/celeste-frente.webp",fit:"contain"}],fotosColor:{Celeste:[{u:"vestidos/celeste-frente.webp",fit:"contain"}]}}},
-  /* sesión en video (termina en el último cuadro de cuerpo entero; el primer plano de las sandalias va en la compra del tacón) */
-  foto:{src:"vestidos/celeste-ini.jpg",inicio:"vestidos/celeste-ini.jpg",w:1080,h:1920,video:"vestidos/celeste.mp4",disparos:[0.9,2.0,3.1,4.3]},
+  /* sesión en video, en cámara lenta (0,75x): termina en la pose de frente con la mano en la cintura; el primer plano de las sandalias va en la compra del tacón */
+  foto:{src:"vestidos/celeste-ini.jpg",inicio:"vestidos/celeste-ini.jpg",w:1080,h:1920,video:"vestidos/celeste.mp4",velocidad:.75,disparos:[0.35,0.85,1.35]},
   /* la prenda colgada cae sobre el vestido del PRIMER cuadro del video (cuello y=318, ruedo y=1089) */
   encaje:{x:188,y:189,w:656},
   /* puntos sobre el ÚLTIMO cuadro del video */
-  puntoPrenda:[598,775],
+  puntoPrenda:[520,795],
   tacon:{id:"sandalia-miel-elite-mf",n:"Sandalia Miel Élite MF",p:199900,colores:["Camel","Negro"],tallas:["34","35","36","37","38","39","40"],agotadas:[],
-    punto:[690,1668],mini:"vestidos/miel-mini.jpg",desc:["Sandalia de tiras cruzadas y tacón aguja"],
+    punto:[690,1660],mini:"vestidos/miel-mini.jpg",desc:["Sandalia de tiras cruzadas y tacón aguja"],
     /* primero el video de la sesión con las sandalias de cerca; las fotos del catálogo se agregan solas detrás */
     fotos:[{v:"vestidos/celeste-tacon.mp4"},"vestidos/miel-1.jpg","vestidos/miel-2.jpg"]}
 }];

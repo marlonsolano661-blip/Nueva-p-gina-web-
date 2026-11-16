@@ -75,6 +75,13 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 #info.on{transform:none}
 #info .n{font:300 1.35rem/1.2 Jost,sans-serif;letter-spacing:.02em;text-align:center;margin-bottom:.9rem}
 .btns{display:grid;grid-template-columns:auto 1fr;gap:.5rem}
+.cols{display:flex;justify-content:center;gap:.5rem;margin:0 0 .6rem}
+.cols:empty{display:none}
+.col{display:flex;align-items:center;gap:.45rem;border:1px solid var(--l);background:#fff;border-radius:99px;padding:.3rem .85rem .3rem .35rem;font:300 .84rem Jost,sans-serif;color:var(--g)}
+.col i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.col[aria-pressed=true]{border-color:var(--k);color:var(--k)}
+.face img{transition:clip-path .55s cubic-bezier(.4,0,.2,1),opacity .22s,transform .3s cubic-bezier(.2,.8,.2,1)}
+.piece.swap .face img{opacity:0;transform:scale(.96)}
 .btn{min-height:50px;border:1px solid var(--k);background:var(--k);color:#fff;font:300 .92rem Jost,sans-serif;letter-spacing:.03em;padding:0 1.3rem;border-radius:99px;position:relative;overflow:hidden}
 .btn.o{background:#fff;color:var(--k);border-color:var(--l)}
 .btn.shine::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:brillo 2.6s ease-in-out infinite 1s}
@@ -226,6 +233,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 <div class="finger" id="finger"><i>☝︎</i> <span id="fingerT">gírala con el dedo</span></div>
 <div class="side" id="side"><button type="button" data-f="0" aria-pressed="true">Frente</button><button type="button" data-f="1" aria-pressed="false">Espalda</button></div>
 <div id="info">
+  <div class="cols" id="cols"></div>
   <p class="n" id="in"></p>
   <div class="btns"><button class="btn o" id="close" type="button">Volver</button><button class="btn shine" id="full" type="button">Ver look completo</button></div>
 </div>
@@ -269,11 +277,16 @@ function hookTop(P){return P.gancho[1]-84}
    1. LAS PRENDAS LLEGAN UNA POR UNA Y QUEDAN MECIÉNDOSE
    ========================================================= */
 var rack=$("rack"),track=$("track"),items=[],R=0,Rv=0,W=0,started=performance.now();
+/* Un mismo vestido en varios colores (mismo "grupo") cuelga en UN solo gancho, con selector de color */
+var GRUPOS=[],grupoDe=[];
+function agrupar(){GRUPOS=[];grupoDe=[];var idx={};LOOKS.forEach(function(L,i){var g=L.grupo||("_"+i);if(idx[g]==null){idx[g]=GRUPOS.length;GRUPOS.push({looks:[],sel:i})}GRUPOS[idx[g]].looks.push(i);grupoDe[i]=idx[g]})}
+function itemOf(i){return items[grupoDe[i]]}
 function buildRack(){
-  track.innerHTML="";items=[];
+  agrupar();track.innerHTML="";items=[];
   var H=rack.clientHeight-24-40,gap=Math.max(18,innerWidth*.05),x=26;
-  LOOKS.forEach(function(L,i){
-    var P=L.prenda,k=Math.min(H/(P.h-hookTop(P))*(LOOKS.length>1?.86:1),innerWidth*(LOOKS.length>1?.58:.86)/P.w),w=P.w*k,h=P.h*k,top=22-hookTop(P)*k;
+  var N=GRUPOS.length;
+  GRUPOS.forEach(function(G,i){
+    var L=LOOKS[G.sel],P=L.prenda,k=Math.min(H/(P.h-hookTop(P))*(N>1?.86:1),innerWidth*(N>1?.58:.86)/P.w),w=P.w*k,h=P.h*k,top=22-hookTop(P)*k;
     var el=document.createElement("div");el.className="hang";
     el.style.cssText="width:"+w+"px;height:"+h+"px;left:"+x+"px;top:"+top+"px";
     el.innerHTML='<div class="sw" style="width:'+w+'px;height:'+h+'px;transform-origin:'+(P.gancho[0]/P.w*100)+'% '+(hookTop(P)/P.h*100)+'%"><img src="'+P.frente+'" alt="'+P.n+'">'+hookSVG(P)+'</div>'+
@@ -297,9 +310,9 @@ function tick(now){
     var k=reduce?1:Math.min(1,(T-it.t0)/950);
     if(!it.on){it.on=true;it.el.style.opacity=1}
     var xo=(1-ease(k))*(innerWidth+160-(it.slot+R));
-    if(k>=1&&!it.arr){it.arr=true;landed++;if(!reduce)strobe();if(landed===LOOKS.length&&W>innerWidth)$("hint").classList.add("on");
+    if(k>=1&&!it.arr){it.arr=true;landed++;if(!reduce)strobe();if(landed===items.length&&W>innerWidth)$("hint").classList.add("on");
       /* sin tocar: apenas llega la primera prenda, se descuelga y se amplía sola */
-      if(landed===LOOKS.length&&!autoAbierta){autoAbierta=true;setTimeout(function(){if(!piece&&!$("lookView").classList.contains("on"))openPiece(0)},reduce?0:650)}}
+      if(landed===items.length&&!autoAbierta){autoAbierta=true;setTimeout(function(){if(!piece&&!$("lookView").classList.contains("on"))openPiece(0)},reduce?0:650)}}
     it.el.style.transform="translateX("+xo+"px)";
     /* física: la prenda se queda atrás cuando el riel acelera y luego se mece */
     var p=it.slot+R+xo;if(it.pp===null){it.pp=p;it.pv=0}
@@ -341,8 +354,8 @@ function targetRect(P){
   var h=Math.min(maxH,innerWidth*.9/a),w=h*a;
   return {x:(innerWidth-w)/2,y:top+(maxH-h)/2,w:w,h:h};
 }
-function openPiece(i){
-  if(piece||abriendo)return;abriendo=true;cur=i;var L=LOOKS[i],P=L.prenda,it=items[i];
+function openPiece(gi){
+  if(piece||abriendo)return;abriendo=true;cur=GRUPOS[gi].sel;var L=LOOKS[cur],P=L.prenda,it=items[gi];
   it.el.classList.add("lift");
   setTimeout(function(){
     var r=it.sw.getBoundingClientRect();TR=targetRect(P);
@@ -358,7 +371,7 @@ function openPiece(i){
     it.el.style.visibility="hidden";it.el.classList.remove("lift");
     $("veil").classList.add("on");
     requestAnimationFrame(function(){requestAnimationFrame(function(){piece.classList.add("fly");piece.style.transform="none"})});
-    $("in").textContent=P.n;sideUI(0);
+    $("in").textContent=P.n;sideUI(0);pintarColores();
     setTimeout(function(){
       $("info").classList.add("on");
       var f=$("finger");f.style.top=(TR.y+TR.h-34)+"px";f.classList.add("on");
@@ -373,6 +386,25 @@ function openPiece(i){
 var touching=false,abriendo=false;
 /* quita cualquier copia de la prenda que haya quedado flotando */
 function limpiarPiezas(keep){[].forEach.call(document.querySelectorAll(".piece"),function(e){if(e!==keep)e.remove()})}
+function pintarColores(){
+  var G=GRUPOS[grupoDe[cur]],c=$("cols");
+  c.innerHTML=G.looks.length>1?G.looks.map(function(i){var C=LOOKS[i].color||{n:"Color "+(i+1),h:"#ccc"};return '<button class="col" type="button" data-l="'+i+'" aria-pressed="'+(i===cur)+'"><i style="background:'+C.h+'"></i>'+C.n+'</button>'}).join(""):"";
+}
+/* Cambia el color: la prenda se desvanece un instante, cambia y vuelve; el riel también queda con ese color */
+function cambiarColor(i){
+  if(i===cur||!piece)return;cur=i;GRUPOS[grupoDe[i]].sel=i;var P=LOOKS[i].prenda,it=itemOf(i);
+  pintarColores();piece.classList.add("swap");
+  setTimeout(function(){
+    if(!piece)return;var f=piece.querySelector(".face img");f.src=P.frente;f.alt=P.n;
+    var b=piece.querySelector(".face.b");
+    if(P.espalda){if(!b){b=document.createElement("div");b.className="face b";b.innerHTML='<img alt="">'+hookSVG(P)+'<div class="sheen"></div>';tilt.appendChild(b)}b.querySelector("img").src=P.espalda}
+    else if(b)b.remove();
+    base=0;tg.ry=reduce?0:16;setTimeout(function(){if(!touching)tg.ry=0},260);sideUI(0);$("side").classList.toggle("on",!!P.espalda);
+    $("in").textContent=P.n;it.el.querySelector("img").src=P.frente;
+    requestAnimationFrame(function(){piece&&piece.classList.remove("swap")});
+  },reduce?0:220);
+}
+$("cols").addEventListener("click",function(e){var b=e.target.closest("[data-l]");if(b)cambiarColor(+b.dataset.l)});
 function sideUI(f){[].forEach.call($("side").children,function(b){b.setAttribute("aria-pressed",+b.dataset.f===f)})}
 function bindPiece(){
   var sx=0,sy=0,lastTap=0;
@@ -422,7 +454,7 @@ $("side").addEventListener("click",function(e){var b=e.target.closest("[data-f]"
   var f=+b.dataset.f;base=f?(Math.floor(base/360)*360+180):Math.round(base/360)*360;tg.ry=base;sideUI(f);$("finger").classList.remove("on")});
 function hideProbador(){$("info").classList.remove("on");$("finger").classList.remove("on");$("side").classList.remove("on")}
 $("close").addEventListener("click",function(){
-  if(!piece)return;var it=items[cur];hideProbador();$("veil").classList.remove("on");
+  if(!piece)return;var it=itemOf(cur);hideProbador();$("veil").classList.remove("on");
   tg={rx:0,ry:Math.round(base/360)*360,tx:0,ty:0,z:1};zoom=1;
   var r=it.el.getBoundingClientRect();
   setTimeout(function(){
@@ -451,7 +483,7 @@ function onPhoto(p){return {x:PH.x+p[0]*PH.k,y:PH.y+p[1]*PH.k}}
 $("full").addEventListener("click",function(){
   if(!piece)return;var L=LOOKS[cur],P=L.prenda,h=L.tacon;
   hideProbador();
-  $("lname").textContent=L.nombre;$("topChip").textContent=String(cur+1).padStart(2,"0")+" / "+String(LOOKS.length).padStart(2,"0");
+  $("lname").textContent=L.nombre;$("topChip").textContent=L.color?L.color.n:String(grupoDe[cur]+1).padStart(2,"0")+" / "+String(GRUPOS.length).padStart(2,"0");
   var ph=$("photo");ph.classList.remove("shot","vid","vidout");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
   var v=$("lvideo");v.pause();if(L.foto.video){v.poster=L.foto.inicio||"";if(v.getAttribute("src")!==L.foto.video){v.src=L.foto.video;v.load()}try{v.currentTime=0}catch(e){}}else v.removeAttribute("src");if(L.foto.inicio)$("lphoto").src=L.foto.inicio;$("lphoto").classList.remove("cam");$("lphoto").style.transform="";
   $("play").classList.remove("on");$("play").hidden=!(L.foto.video||L.foto.sesion);
@@ -511,7 +543,7 @@ function sesion(L){
   }
   vidState=1;ph.classList.remove("vidout","shot");$("vf").classList.add("on");
   disparos=(F.disparos||[]).map(function(t){return {t:t,ok:false}});
-  try{v.currentTime=0;v.playbackRate=1}catch(e){}
+  try{v.currentTime=0;v.playbackRate=F.velocidad||1}catch(e){}
   var go=function(){ph.classList.add("vid")};
   v.addEventListener("playing",go,{once:true});
   var pr=v.play();if(pr&&pr.catch)pr.catch(function(){go()});
@@ -520,7 +552,7 @@ function sesion(L){
   (function loop(){
     if(vidState!==1)return;
     var t=v.currentTime||0,fr=Math.floor(t*24)%24,ss=Math.floor(t);
-    if(!reduce&&v.duration&&!L.foto.vidFin){var rest=v.duration-t;v.playbackRate=rest<.7?Math.max(.3,.3+.7*rest/.7):1}
+    if(!reduce&&v.duration&&!L.foto.vidFin){var rest=v.duration-t,vb=L.foto.velocidad||1;v.playbackRate=rest<.7?Math.max(.3,.3+(vb-.3)*rest/.7):vb}
     $("tc").textContent="00:00:"+String(ss).padStart(2,"0")+":"+String(fr).padStart(2,"0");
     disparos.forEach(function(d){if(!d.ok&&t>=d.t){d.ok=true;n++;
       $("shotN").textContent="FOTO "+String(n).padStart(2,"0");
@@ -599,7 +631,7 @@ $("back").addEventListener("click",function(){
   limpiarPiezas();piece=null;abriendo=false;
   $("lookView").classList.remove("on");$("rackView").classList.remove("off");
   $("lvideo").pause();$("photo").classList.remove("vid");vidState=0;$("topChip").textContent="";
-  $("vf").classList.remove("on");cancelAnimationFrame(camLoop);var it=items[cur];it.el.style.visibility="";it.om-=reduce?0:110;
+  $("vf").classList.remove("on");cancelAnimationFrame(camLoop);var it=itemOf(cur);it.el.style.visibility="";it.om-=reduce?0:110;
 });
 
 /* ---------------- Hoja de compra ---------------- */
