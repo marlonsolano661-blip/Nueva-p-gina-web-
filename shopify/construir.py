@@ -27,6 +27,8 @@ PAGINAS = {
 }
 # Se quitan de la copia: el catálogo y las variantes los arma Shopify con Liquid
 QUITAR = {'DATA/catalogo_tienda.js', 'DATA/shopify-variantes.js'}
+# Scripts que la tienda carga sola después (vitrina, botón de outfits): se suben como assets y se cargan desde su URL de Shopify
+DINAMICOS = ['DATA/recortes.js', 'vitrina.js']
 
 
 def nombre_asset(ruta):
@@ -67,8 +69,10 @@ def main():
     for viejo, nuevo in PAGINAS.items():
         html = html.replace('href="%s"' % viejo, 'href="%s"' % nuevo)
 
+    mapa = ','.join("%r:'{{ %r | asset_url }}'" % (r, nombre_asset(r)) for r in DINAMICOS)
     cabeza = ('<head>{{ content_for_header }}'
-              '<script>window.MF_API_BASE=%r;window.MF_SHOPIFY={tienda:location.host,activo:true};</script>' % NETLIFY)
+              '<script>window.MF_API_BASE=%r;window.MF_SHOPIFY={tienda:location.host,activo:true};window.MF_ASSETS={%s};</script>' % (NETLIFY, mapa))
+    assets.extend(DINAMICOS)
     assert html.count('<head>') == 1 and html.count('</body>') == 1
     inicio, resto = html.split('<head>', 1)
     medio, final = resto.split('</body>', 1)
@@ -96,6 +100,10 @@ def main():
 
     for ruta in sorted(set(assets)):
         texto = leer(ruta)
+        # scripts que se cargan solos: desde su URL en Shopify; fotos de assets/: desde la tienda de Netlify
+        texto = texto.replace("s.src = src;", "s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src;")
+        texto = texto.replace("s.src = 'outfits-boton.js';", "s.src = (window.MF_ASSETS && window.MF_ASSETS['outfits-boton.js']) || 'outfits-boton.js';")
+        texto = texto.replace("'assets/", "'%s/assets/" % NETLIFY).replace('"assets/', '"%s/assets/' % NETLIFY)
         texto = texto.replace('"outfits.html', '"%s/outfits.html' % NETLIFY).replace("'outfits.html", "'%s/outfits.html" % NETLIFY)
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
