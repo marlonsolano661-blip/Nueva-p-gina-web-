@@ -10,7 +10,7 @@
   var A = window.mfAdmin;
   if (!A) return;
   var el = function () { return A.el.apply(null, arguments); };
-  var MAX_LOOKS = 24, MAX_VIDEO = 50 * 1024 * 1024, PAD_TOP = 89;
+  var MAX_LOOKS = 24, MAX_VIDEO = 500 * 1024 * 1024, PAD_TOP = 89;
   var TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
   var S = { lista: [], productos: [], sucio: false, respaldo: false };
 
@@ -142,7 +142,11 @@
         x.setRequestHeader('Content-Type', tipo);
         x.setRequestHeader('cache-control', 'max-age=31536000');
         if (barra) x.upload.onprogress = function (e) { if (e.lengthComputable) barra.style.width = Math.round(e.loaded / e.total * 100) + '%'; };
-        x.onload = function () { if (x.status >= 200 && x.status < 300) { if (barra) barra.style.width = '100%'; ok(r.url); } else mal(new Error('No se pudo subir el archivo (' + x.status + ')')); };
+        x.onload = function () {
+          if (x.status >= 200 && x.status < 300) { if (barra) barra.style.width = '100%'; return ok(r.url); }
+          if (x.status === 413 || /maximum allowed size|too large/i.test(x.responseText || '')) return mal(new Error('El almacenamiento no acepta archivos tan pesados (' + (blob.size / 1048576).toFixed(0) + ' MB). Sube el límite de tamaño de archivos en Supabase (Storage › Settings) o usa una versión más liviana del video.'));
+          mal(new Error('No se pudo subir el archivo (' + x.status + ')'));
+        };
         x.onerror = function () { mal(new Error('Se cortó la conexión al subir. Intenta de nuevo.')); };
         x.send(blob);
       });
@@ -235,12 +239,14 @@
 
   // ---------- Video: H.264 (se ve en todos los teléfonos) y cuadros del video ----------
   function revisarCodec(file) {
-    if (file.size > MAX_VIDEO) return Promise.reject(new Error('El video pesa más de 50 MB. Expórtalo más liviano (1080p, unos 10–20 s).'));
-    return file.arrayBuffer().then(function (buf) {
-      var b = new Uint8Array(buf), tiene = function (s) {
+    if (file.size > MAX_VIDEO) return Promise.reject(new Error('El video pesa más de 500 MB. Acórtalo un poco (10–20 s bastan para la sesión).'));
+    // Videos 4K: no se lee todo el archivo (pesaría mucho en el celular). El formato está en la cabecera, al inicio o al final.
+    var TROZO = 8 * 1024 * 1024;
+    var partes = file.size <= TROZO * 2 ? [file] : [file.slice(0, TROZO), file.slice(file.size - TROZO)];
+    return Promise.all(partes.map(function (p) { return p.arrayBuffer(); })).then(function (bufs) {
+      var tiene = function (s) {
         var c0 = s.charCodeAt(0), c1 = s.charCodeAt(1), c2 = s.charCodeAt(2), c3 = s.charCodeAt(3);
-        for (var i = 0; i < b.length - 3; i++) if (b[i] === c0 && b[i + 1] === c1 && b[i + 2] === c2 && b[i + 3] === c3) return true;
-        return false;
+        return bufs.some(function (buf) { var b = new Uint8Array(buf); for (var i = 0; i < b.length - 3; i++) if (b[i] === c0 && b[i + 1] === c1 && b[i + 2] === c2 && b[i + 3] === c3) return true; return false; });
       };
       if (tiene('avc1')) return;
       if (tiene('hvc1') || tiene('hev1')) throw new Error('Este video está en HEVC (formato del iPhone) y no se ve en Android ni en Chrome. Expórtalo como MP4 "más compatible" (H.264): en el iPhone, Ajustes › Cámara › Formatos › Más compatible, o pásalo por CapCut / WhatsApp.');
@@ -431,7 +437,8 @@
                 // Al cambiar de video, el encaje y los puntos se vuelven a ubicar
                 D.encaje = null; D.puntoPrenda = null; if (D.tacon) delete D.tacon.punto;
                 bV.textContent = 'Cambiar video'; t(); syncVideoUI();
-                est3.textContent = 'Video listo (' + (f.size / 1048576).toFixed(1) + ' MB, ' + v.videoWidth + '×' + v.videoHeight + '). Se sube al tocar "Aplicar".';
+                var es4k = Math.max(v.videoWidth, v.videoHeight) >= 3000;
+                est3.textContent = 'Video listo (' + (f.size / 1048576).toFixed(1) + ' MB, ' + v.videoWidth + '×' + v.videoHeight + (es4k ? ', 4K' : '') + '). Se sube al tocar "Aplicar"' + (f.size > 80 * 1048576 ? ': por su peso puede tardar unos minutos, deja esta pantalla abierta.' : '.');
                 pintarEncaje(); return prepararMedidor();
               });
             });
@@ -440,7 +447,7 @@
       });
     });
     p3.appendChild(el('h4', {}, [el('span', { class: 'vsA-n', text: '3' }), 'El video de la sesión']));
-    p3.appendChild(el('p', { class: 'vsA-ay', text: 'MP4 vertical (H.264), fondo blanco o claro, de 5 a 20 segundos. El primer cuadro se toma solo: ahí aterriza la prenda. Elige dónde termina: la modelo queda quieta en ese cuadro, con las etiquetas.' }));
+    p3.appendChild(el('p', { class: 'vsA-ay', text: 'MP4 vertical (H.264), hasta 4K y 500 MB, fondo blanco o claro, de 5 a 20 segundos. El primer cuadro se toma solo: ahí aterriza la prenda. Elige dónde termina: la modelo queda quieta en ese cuadro, con las etiquetas.' }));
     p3.appendChild(el('div', { class: 'vsA-fila' }, [bV]));
     p3.appendChild(barra);
     p3.appendChild(est3);
