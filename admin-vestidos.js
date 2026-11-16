@@ -198,12 +198,19 @@
     else if (br > 215 && bg > 215 && bb > 215) modo = 'blanco';
     else throw new Error('La foto debe tener fondo verde (o venir ya sin fondo, en PNG)');
     if (modo === 'verde') {
-      var lo = 12 / f, hi = 55 / f;
+      // Verde de fondo vs prenda: se mide cuánto verde "puro" tiene cada punto (el azul cuenta en contra), así una prenda
+      // verde esmeralda o turquesa no se borra. Los bordes se des-mezclan del verde para que no quede halo.
+      var lo = 40 / f, hi = 235 / f;
       for (i = 0; i < n; i++) {
-        var j = i * 4, r = p[j], gg = p[j + 1], b = p[j + 2], m = Math.max(r, b), s = gg - m;
+        var j = i * 4, r = p[j], gg = p[j + 1], b = p[j + 2], s = gg - Math.max(r, 1.5 * b);
         var a = s <= lo ? 1 : s >= hi ? 0 : 1 - (s - lo) / (hi - lo);
-        if (s > 0) p[j + 1] = m; // quita el reflejo verde de los bordes
-        p[j + 3] = Math.round(p[j + 3] * (a < 0.08 ? 0 : a));
+        if (a < 0.04) a = 0;
+        if (a > 0 && a < 1) {
+          p[j] = Math.max(0, Math.min(255, (r - (1 - a) * br) / a));
+          p[j + 1] = Math.max(0, Math.min(255, (gg - (1 - a) * bg) / a));
+          p[j + 2] = Math.max(0, Math.min(255, (b - (1 - a) * bb) / a));
+        }
+        p[j + 3] = Math.round(p[j + 3] * a);
       }
     } else if (modo === 'blanco') {
       var lw = 6 * f, hw = 30 * f;
