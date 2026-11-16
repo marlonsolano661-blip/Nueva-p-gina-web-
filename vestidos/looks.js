@@ -23,4 +23,16 @@ window.MF_VESTIDOS=[{
     /* fotos propias del look; las del catálogo se agregan solas detrás */
     fotos:[{u:"vestidos/alessia-1.jpg",fit:"contain"},"vestidos/alessia-2.jpg","vestidos/alessia-3.jpg"],
     fotosColor:{Plata:["vestidos/alessia-plata.jpg"]}}
+},{
+  nombre:"Brisa celeste",
+  prenda:{n:"Noche glam · Celeste",frente:"vestidos/celeste-frente.webp",espalda:null,w:772,h:1069,gancho:[386,92],
+    /* el mismo vestido del catálogo (noche-glam), abierto en color Celeste */
+    venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Celeste",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
+      fotos:[{u:"vestidos/celeste-frente.webp",fit:"contain"}],fotosColor:{Celeste:[{u:"vestidos/celeste-frente.webp",fit:"contain"}]}}},
+  /* sin video: la sesión es de fotos (primer plano, perfil y al final la foto de frente) */
+  foto:{src:"vestidos/celeste-2.jpg",w:768,h:1376,sesion:["vestidos/celeste-1.jpg","vestidos/celeste-3.jpg"]},
+  /* la prenda colgada (cuello y=135, ruedo y=960) cae sobre la modelo (cuello y=215, ruedo y=705) */
+  encaje:{x:146,y:135,w:459},
+  puntoPrenda:[375,560],
+  tacon:null /* pendiente: ¿cuál sandalia dorada MF es? */
 }];
