@@ -226,6 +226,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .cabina button img{width:100%;height:100%;object-fit:contain;border-radius:50%;display:block}
 .cabina button[aria-pressed="true"]{border-color:var(--k);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--k),0 6px 16px rgba(0,0,0,.18);transform:scale(1.06)}
 .rail{display:none}
+.piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}
+.piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}
 </style>
 </head>
 <body>
@@ -536,11 +538,11 @@ $("full").addEventListener("click",function(){
       af.classList.remove("lock");af.style.cssText="left:12%;top:10%;width:76%;height:70%";
       setTimeout(function(){var E2=L.encaje,pw=PH.k;af.style.cssText="left:"+(E2.x+E2.w*.28)*pw+"px;top:"+(E2.y+150)*pw+"px;width:"+E2.w*.44*pw+"px;height:"+E2.w*.44*pw+"px"},80*D);
       setTimeout(function(){af.classList.add("lock")},560*D);
-    },650*D);
+    },380*D);
     setTimeout(function(){
       disparo(function(){if(piece){piece.style.transition="none";piece.style.opacity=0}sesion(L)},1);
-    },1350*D);
-    setTimeout(function(){if(piece){cancelAnimationFrame(pAnim);piece.remove();piece=null}limpiarPiezas()},1500*D);
+    },720*D);
+    setTimeout(function(){if(piece){cancelAnimationFrame(pAnim);piece.remove();piece=null}limpiarPiezas()},860*D);
   });
 });
 /* Disparo: flash de estudio y un "clic" de la cámara (fuerza: 1 fuerte, .5 suave) */

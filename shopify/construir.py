@@ -166,13 +166,20 @@ def vestidos():
         ('transition:transform 1.25s cubic-bezier(.5,0,.25,1)', 'transition:transform .7s cubic-bezier(.5,0,.25,1)'),
         ('transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s', 'transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .3s'),
         ('transition:filter .9s', 'transition:filter .5s'),
+        # Paso a la modelo: el vestido vuela ya sin gancho y se funde con la modelo mientras arranca el video
+        ('},650*D);', '},380*D);'),
+        ('},1350*D);', '},720*D);'),
+        ('},1500*D);', '},860*D);'),
         ('transition:opacity .7s', 'transition:opacity .4s'),
     ]
     for viejo, nuevo in ajustes:
         if viejo not in html:
             raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo)
         html = html.replace(viejo, nuevo)
-    html = html.replace('</style>', '.rail{display:none}\n</style>', 1)
+    html = html.replace('</style>', '.rail{display:none}\n'
+                        '.piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}\n'
+                        '.piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}\n'
+                        '</style>', 1)
     html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
     html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)
