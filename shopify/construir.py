@@ -90,7 +90,10 @@ def main():
         escribir('snippets/mf-pagina-%d.liquid' % i, parte)
     renders = ''.join("{%% render 'mf-pagina-%d' %%}\n" % i for i in range(1, len(partes) + 1))
 
-    escribir('layout/mf.liquid', inicio + cabeza + '\n' + renders + '{{ content_for_layout }}</body>' + final)
+    # Pasarela de looks en el inicio (solo Shopify): usa los looks de Vestidos (snippet mf-vestidos-looks)
+    pasarela = "{% render 'mf-vestidos-looks' %}<script src=\"{{ 'pasarela.js' | asset_url }}\" defer></script>\n"
+    escribir('assets/pasarela.js', leer('shopify/pasarela.js'))
+    escribir('layout/mf.liquid', inicio + cabeza + '\n' + renders + pasarela + '{{ content_for_layout }}</body>' + final)
     escribir('sections/mf-vacio.liquid',
              '{% comment %}La página la dibuja layout/mf.liquid{% endcomment %}\n'
              '{% schema %}{"name":"MF Netlify","settings":[]}{% endschema %}\n')
