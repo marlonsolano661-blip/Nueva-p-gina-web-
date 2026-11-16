@@ -4,6 +4,7 @@
   - Descripción corta, colores con su tono, colección y "destacado": del metacampo mfcol.tienda (copiado de Supabase).
 {%- endcomment -%}
 <script>
+window.MF_SHOPIFY_CONTENIDO = {{ shop.metafields.mfcol.contenido.value | json }};
 window.MF_SHOPIFY_ENVIO = 17500;
 window.MF_SHOPIFY_VARIANTES = {};
 window.MF_SHOPIFY_CATALOGO = [

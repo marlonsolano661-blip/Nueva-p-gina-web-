@@ -81,14 +81,15 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', usarCopia); else usarCopia();
 
   // En la copia de la tienda dentro de Shopify, los productos, precios y tallas salen de Shopify (MF_SHOPIFY_CATALOGO).
-  // Del servidor de Netlify solo se toma el contenido (banners, vitrina, comunidad); si no responde, la tienda abre igual.
+  // Del servidor de Netlify solo se toma el contenido (banners, vitrina, comunidad); si no responde, se usa la copia
+  // guardada en Shopify (MF_SHOPIFY_CONTENIDO: portadas, banners y textos), así la tienda abre igual.
 
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (d) {
       if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
-      if (SH) { d.productos = SH; d.envio = { tarifa: window.MF_SHOPIFY_ENVIO }; aplicar(d); return; }
+      if (SH) { d.productos = SH; d.envio = { tarifa: window.MF_SHOPIFY_ENVIO }; if (!d.contenido || !Object.keys(d.contenido).length) d.contenido = window.MF_SHOPIFY_CONTENIDO || {}; aplicar(d); return; }
       var txt = JSON.stringify(d);
       if (txt === textoGuardado) { clearTimeout(t); return; } // igual a lo que ya se mostró: no se redibuja nada
       guardarCopia(txt);
@@ -96,7 +97,7 @@
       aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out');
     })
     .catch(function (e) {
-      if (SH) { try { aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: {} }); return; } catch (err) { /* sigue abajo */ } }
+      if (SH) { try { aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: window.MF_SHOPIFY_CONTENIDO || {} }); return; } catch (err) { /* sigue abajo */ } }
       if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
       window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre
       if (typeof draw === 'function') draw();
