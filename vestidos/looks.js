@@ -34,6 +34,6 @@ window.MF_VESTIDOS=[{
   /* la prenda colgada cae sobre el vestido del PRIMER cuadro del video (cuello y=318, ruedo y=1089) */
   encaje:{x:188,y:189,w:656},
   /* puntos sobre el ÚLTIMO cuadro del video */
-  puntoPrenda:[580,790],
+  puntoPrenda:[598,775],
   tacon:null /* pendiente: ¿cuál sandalia dorada MF es? */
 }];
