@@ -136,5 +136,7 @@
   }
   /* En el pago o con un código aplicado, se esconden el aviso y la pestaña */
   setInterval(function () { if (enPago() || S.codigo) { if (tab) quitarTab(); } else if (!tab && !fl && P && ses(CERRADO)) ponerTab(); }, 1500);
+  /* Para la franja del inicio (tira.js): abre la ventana del descuento de bienvenida */
+  window.mfAbrirBienvenida = function () { if (P) mostrar(P.pct, P.foto, true); };
   esperar(0);
 })();
