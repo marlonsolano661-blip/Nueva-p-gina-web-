@@ -457,13 +457,14 @@
   }
 
   // ---------- Contenido ----------
-  var ETQ = { hero_kicker: 'Inicio · texto pequeño sobre el título', hero_titulo: 'Inicio · título principal', boton_coleccion: 'Texto de los botones "Ver colección"', band_titulo: 'Banda · título', band_texto: 'Banda · texto', band_boton: 'Banda · texto del botón' };
+  // Solo los textos que la tienda usa hoy. La portada nueva ya no tiene la "banda" ni los "3 valores": esos campos se quitaron porque no cambiaban nada.
+  var ETQ = { hero_kicker: 'Inicio · texto pequeño sobre el título (se ve si no hay banners publicados)', hero_titulo: 'Inicio · título principal (se ve si no hay banners publicados)', boton_coleccion: 'Texto de los botones "Ver colección" del inicio' };
   function cargarContenido() {
     return api('admin-tienda?recurso=contenido').then(function (d) {
       CONT = d.contenido || {}; var t = CONT.textos || {}, s = CONT.secciones || {};
       var c = $('#p-contenido'); c.textContent = '';
       var campos = Object.keys(ETQ).map(function (k) { return campo(ETQ[k], el('input', { 'data-x': k, value: t[k] || '', maxlength: '200', placeholder: 'Vacío = texto original de la tienda' })); });
-      var secs = [['band', 'Mostrar la banda "Pocas unidades por modelo"'], ['comunidad', 'Mostrar Comunidad Marlon'], ['valores', 'Mostrar los 3 valores (Alta calidad…)']].map(function (x) { return chk(x[1], 's-' + x[0], s[x[0]] !== false); });
+      var secs = [['comunidad', 'Mostrar Comunidad Marlon']].map(function (x) { return chk(x[1], 's-' + x[0], s[x[0]] !== false); });
       var heroBox = el('div', { class: 'ancho' });
       function pintarHero() {
         heroBox.textContent = '';
@@ -494,7 +495,7 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var textos = {}; form.querySelectorAll('[data-x]').forEach(function (i) { if (i.value.trim()) textos[i.getAttribute('data-x')] = i.value.trim(); });
-        var secciones = { band: $('#s-band').checked, comunidad: $('#s-comunidad').checked, valores: $('#s-valores').checked };
+        var secciones = { band: s.band !== false, comunidad: $('#s-comunidad').checked, valores: s.valores !== false };
         var colecciones = CONT.colecciones || [];
         msg('Guardando…');
         api('admin-tienda', { method: 'POST', body: { recurso: 'contenido', contenido: { textos: textos, secciones: secciones, colecciones: colecciones, hero_foto: CONT.hero_foto || '' } } })

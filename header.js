@@ -146,18 +146,23 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
 
-/* Encabezado estilo Wild Diva: franja negra con el nombre de la tienda, barra negra con MENÚ, buscar y MI BOLSA, y el logo MF en el centro de la barra. */
+/* Encabezado con botones cuadrados: menú y tacón a la izquierda, logo MF en el centro, lupa y bolsa negra a la derecha. */
 (function () {
   'use strict';
   function armar() {
     var bar = document.querySelector('header.bar'); if (!bar || bar.classList.contains('wd')) return;
-    var ann = document.querySelector('.hd-ann'); if (ann) ann.textContent = 'Marlon Footwear Colombia';
+    /* Botones cuadrados: a la izquierda menú y tacón (abre el catálogo), a la derecha lupa y bolsa negra con el número */
     var mb = bar.querySelector('.mb'), bag = bar.querySelector('.bag'), logo = bar.querySelector('.logo'), wm = bar.querySelector('.wm'), sp = bar.querySelector('.sp');
-    if (mb && !mb.querySelector('.wd-t')) { var t = document.createElement('span'); t.className = 'wd-t'; t.textContent = 'Menú'; mb.appendChild(t); }
     if (mb) bar.insertBefore(mb, bar.firstChild);
-    var bus = bar.querySelector('.hd-s'); if (bus && mb) mb.insertAdjacentElement('afterend', bus);
-    if (sp && bus) bus.insertAdjacentElement('afterend', sp);
-    if (bag && !bag.querySelector('.wd-t')) { var b = document.createElement('span'); b.className = 'wd-t'; b.textContent = 'Mi bolsa'; bag.insertBefore(b, bag.firstChild); bar.appendChild(bag); }
+    var tac = bar.querySelector('.wd-tacon');
+    if (!tac) {
+      tac = document.createElement('button'); tac.type = 'button'; tac.className = 'wd-tacon'; tac.setAttribute('data-hd-col', ''); tac.setAttribute('aria-label', 'Ver todos los zapatos');
+      tac.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3c2 2.2 4 5.2 7 6.6l5 1.3c1.4.4 2 1.2 2 2.2v.4h-7c-3 0-6-4.4-8.5-6.5L4 10z"/><path d="M4.8 10.4V19"/></svg>';
+    }
+    if (mb) mb.insertAdjacentElement('afterend', tac); else bar.insertBefore(tac, bar.firstChild);
+    if (sp) tac.insertAdjacentElement('afterend', sp);
+    var bus = bar.querySelector('.hd-s'); if (bus) bar.appendChild(bus);
+    if (bag) bar.appendChild(bag);
     if (wm) wm.remove(); // solo el logo MF, centrado dentro de la barra negra
     if (logo) { logo.classList.add('wd-logo'); bar.appendChild(logo); }
     bar.classList.add('wd'); document.body.classList.add('wd-on');
