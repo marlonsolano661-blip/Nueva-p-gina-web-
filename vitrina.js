@@ -115,11 +115,10 @@
     });
   }
 
-  // Lista elegida en el panel (Vitrina) si existe; si no, la de DATA/recortes.js (MF_VITRINA).
+  // Lista elegida en el panel (Vitrina). Ya no hay lista fija vieja: si el panel no trae ninguna, la vitrina elige sola.
   function listaFija() {
     var c = window.MF_CONTENIDO && window.MF_CONTENIDO.vitrina;
-    if (Array.isArray(c) && c.length) return c.map(String);
-    return Array.isArray(window.MF_VITRINA) ? window.MF_VITRINA.map(String) : [];
+    return Array.isArray(c) && c.length ? c.map(String) : [];
   }
   // Arma la lista. Si el panel (o DATA/recortes.js) trae una lista, salen exactamente esos productos en ese orden
   // (de cada uno se usa el recorte sin fondo o su primera foto con fondo blanco; si no tiene, su primera foto).
