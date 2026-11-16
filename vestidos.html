@@ -54,14 +54,16 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .piece .tilt{width:100%;height:100%;transform-style:preserve-3d;will-change:transform;position:relative}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .face.b{transform:rotateY(180deg)}
-.face img{width:100%;height:100%;display:block;filter:drop-shadow(0 20px 28px rgba(0,0,0,.12))}
+.face img{width:100%;height:100%;display:block}
+.piece::before{content:"";position:absolute;left:14%;right:14%;bottom:-2.5%;height:5%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.13),rgba(0,0,0,0));pointer-events:none;transition:opacity .4s}
+.piece.dress::before{opacity:0}
 .piece .hook{transition:opacity .4s}
 .piece.dress .hook,.piece.dress .hanger-hide{opacity:0}
 /* al posarse sobre la modelo, el gancho de madera se oculta: solo queda la prenda */
 .face img{clip-path:inset(0 0 0 0);transition:clip-path .55s cubic-bezier(.4,0,.2,1)}
 .piece.dress .face img{clip-path:inset(14% 0 0 0)}
-.sheen{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .3s;
-  background:radial-gradient(circle at var(--sx,50%) var(--sy,40%),rgba(255,255,255,.28),rgba(255,255,255,0) 42%)}
+.sheen{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at var(--sx,50%) var(--sy,40%),rgba(255,255,255,.18),rgba(255,255,255,0) 40%);-webkit-mask-image:var(--m);mask-image:var(--m);-webkit-mask-size:100% 100%;mask-size:100% 100%}
 .piece.touch .sheen{opacity:1}
 .finger{position:fixed;z-index:23;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.92);color:var(--g);border:1px solid var(--l);padding:.4rem .9rem;border-radius:99px;font:300 .78rem Jost,sans-serif;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
 .finger.on{opacity:1}
@@ -366,8 +368,8 @@ function openPiece(gi){
     limpiarPiezas();abriendo=false;
     piece=document.createElement("div");piece.className="piece";
     piece.style.cssText="left:"+TR.x+"px;top:"+TR.y+"px;width:"+TR.w+"px;height:"+TR.h+"px";
-    piece.innerHTML='<div class="tilt"><div class="face"><img src="'+P.frente+'" alt="'+P.n+' de frente">'+hookSVG(P)+'<div class="sheen"></div></div>'+
-      (P.espalda?'<div class="face b"><img src="'+P.espalda+'" alt="'+P.n+' de espalda">'+hookSVG(P)+'<div class="sheen"></div></div>':'')+'</div>';
+    piece.innerHTML='<div class="tilt"><div class="face"><img src="'+P.frente+'" alt="'+P.n+' de frente">'+hookSVG(P)+'<div class="sheen" style="--m:url('+P.frente+')"></div></div>'+
+      (P.espalda?'<div class="face b"><img src="'+P.espalda+'" alt="'+P.n+' de espalda">'+hookSVG(P)+'<div class="sheen" style="--m:url('+P.espalda+')"></div></div>':'')+'</div>';
     tilt=piece.firstChild;base=0;st={rx:0,ry:0,tx:0,ty:0,z:1};tg={rx:0,ry:0,tx:0,ty:0,z:1};zoom=1;
     piece.style.transform="translate("+(rr.left-TR.x)+"px,"+(rr.top-18-TR.y)+"px) scale("+(rr.width/TR.w)+")";
     document.body.appendChild(piece);
@@ -398,9 +400,9 @@ function cambiarColor(i){
   if(i===cur||!piece)return;cur=i;GRUPOS[grupoDe[i]].sel=i;var P=LOOKS[i].prenda,it=itemOf(i);
   pintarColores();piece.classList.add("swap");
   setTimeout(function(){
-    if(!piece)return;var f=piece.querySelector(".face img");f.src=P.frente;f.alt=P.n;
+    if(!piece)return;var f=piece.querySelector(".face img");f.src=P.frente;f.alt=P.n;piece.querySelector(".face .sheen").style.setProperty("--m","url("+P.frente+")");
     var b=piece.querySelector(".face.b");
-    if(P.espalda){if(!b){b=document.createElement("div");b.className="face b";b.innerHTML='<img alt="">'+hookSVG(P)+'<div class="sheen"></div>';tilt.appendChild(b)}b.querySelector("img").src=P.espalda}
+    if(P.espalda){if(!b){b=document.createElement("div");b.className="face b";b.innerHTML='<img alt="">'+hookSVG(P)+'<div class="sheen"></div>';tilt.appendChild(b)}b.querySelector("img").src=P.espalda;b.querySelector(".sheen").style.setProperty("--m","url("+P.espalda+")")}
     else if(b)b.remove();
     base=0;tg.ry=reduce?0:16;setTimeout(function(){if(!touching)tg.ry=0},260);sideUI(0);$("side").classList.toggle("on",!!P.espalda);
     $("in").textContent=P.n;it.el.querySelector("img").src=P.frente;
