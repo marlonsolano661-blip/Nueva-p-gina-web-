@@ -1,0 +1,61 @@
+{%- comment -%}
+  Catálogo de la tienda armado con los productos de Shopify, en el mismo formato que /api/catalogo.
+  - Precio, fotos y tallas disponibles: de Shopify (el inventario de Shopify manda).
+  - Descripción corta, colores con su tono, colección y "destacado": del metacampo mf.tienda (copiado de Supabase).
+{%- endcomment -%}
+<script>
+window.MF_SHOPIFY_ENVIO = 17500;
+window.MF_SHOPIFY_VARIANTES = {};
+window.MF_SHOPIFY_CATALOGO = [
+{%- paginate collections.all.products by 250 -%}
+{%- for p in collections.all.products -%}
+  {%- assign ti = 0 -%}{%- assign ci = -1 -%}
+  {%- for o in p.options -%}
+    {%- if o == 'Talla' -%}{%- assign ti = forloop.index0 -%}{%- endif -%}
+    {%- if o == 'Color' -%}{%- assign ci = forloop.index0 -%}{%- endif -%}
+  {%- endfor -%}
+  {%- assign extra = p.metafields.mf.tienda.value -%}
+  {
+    "id": {{ p.handle | json }},
+    "name": {{ p.title | json }},
+    "price": {{ p.price | divided_by: 100 }},
+    "desc": {% if extra.desc %}{{ extra.desc | json }}{% else %}{{ p.description | strip_html | strip | json }}{% endif %},
+    "img": {{ p.featured_image | image_url: width: 1400 | prepend: 'https:' | json }},
+    "imgs": [{%- for im in p.images -%}{{ im | image_url: width: 1400 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
+    "colors": {% if extra.colors %}{{ extra.colors | json }}{% else %}[]{% endif %},
+    "coleccion": {{ extra.coleccion | default: p.collections.first.handle | default: '' | json }},
+    "destacado": {% if extra.destacado or p.tags contains 'Destacado' %}true{% else %}false{% endif %},
+    "stock": {
+      {%- assign vistas = '' -%}{%- assign primero = true -%}
+      {%- for v in p.variants -%}
+        {%- assign t = v.options[ti] -%}
+        {%- assign marca = '|' | append: t | append: '|' -%}
+        {%- unless vistas contains marca -%}
+          {%- assign total = 0 -%}
+          {%- for w in p.variants -%}{%- if w.options[ti] == t and w.available -%}{%- if w.inventory_management -%}{%- assign total = total | plus: w.inventory_quantity -%}{%- else -%}{%- assign total = total | plus: 99 -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+          {%- unless primero -%},{%- endunless -%}{{ t | json }}: {{ total }}
+          {%- assign primero = false -%}{%- assign vistas = vistas | append: marca -%}
+        {%- endunless -%}
+      {%- endfor -%}
+    }
+  }{% unless forloop.last %},{% endunless %}
+{%- endfor -%}
+{%- endpaginate -%}
+];
+(function () {
+  var V = window.MF_SHOPIFY_VARIANTES, R = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
+  {%- paginate collections.all.products by 250 -%}
+  {%- for p in collections.all.products -%}
+    {%- assign ti = 0 -%}{%- assign ci = -1 -%}
+    {%- for o in p.options -%}{%- if o == 'Talla' -%}{%- assign ti = forloop.index0 -%}{%- endif -%}{%- if o == 'Color' -%}{%- assign ci = forloop.index0 -%}{%- endif -%}{%- endfor -%}
+  V[{{ p.handle | json }}] = { {%- for v in p.variants -%}[{{ v.options[ti] | json }}{% if ci >= 0 %} + '|' + {{ v.options[ci] | json }}{% endif %}]: {{ v.id }}{% unless forloop.last %}, {% endunless %}{%- endfor -%} };
+  {%- endfor -%}
+  {%- endpaginate -%}
+  window.MF_SHOPIFY_CATALOGO.forEach(function (p) {
+    var ks = Object.keys(p.stock);
+    p.tallas = ks.filter(function (t) { return p.stock[t] > 0; });
+    p.tipo = ks.some(function (t) { return R.indexOf(t) > -1; }) ? 'ropa' : 'calzado';
+  });
+  window.MF_CATALOGO_PRODUCTOS = window.MF_SHOPIFY_CATALOGO;
+})();
+</script>

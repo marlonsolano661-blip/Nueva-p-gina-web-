@@ -4,6 +4,7 @@
 (function () {
   'use strict';
   var API = window.MF_API_BASE || '';
+  var SH = Array.isArray(window.MF_SHOPIFY_CATALOGO) ? window.MF_SHOPIFY_CATALOGO : null; // copia dentro de Shopify (ver más abajo)
 
   // Botones de colección (solo si el administrador creó colecciones visibles)
   window.mfChips = function () {
@@ -74,16 +75,20 @@
     if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) copia = g;
   } catch (e) { /* copia dañada: se ignora */ }
   function usarCopia() {
-    if (!copia || window.MF_API_OK) return;
+    if (!copia || window.MF_API_OK || SH) return;
     try { aplicar(JSON.parse(copia.d), false, true); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', usarCopia); else usarCopia();
+
+  // En la copia de la tienda dentro de Shopify, los productos, precios y tallas salen de Shopify (MF_SHOPIFY_CATALOGO).
+  // Del servidor de Netlify solo se toma el contenido (banners, vitrina, comunidad); si no responde, la tienda abre igual.
 
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (d) {
       if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
+      if (SH) { d.productos = SH; d.envio = { tarifa: window.MF_SHOPIFY_ENVIO }; aplicar(d); return; }
       var txt = JSON.stringify(d);
       if (txt === textoGuardado) { clearTimeout(t); return; } // igual a lo que ya se mostró: no se redibuja nada
       guardarCopia(txt);
@@ -91,6 +96,7 @@
       aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out');
     })
     .catch(function (e) {
+      if (SH) { try { aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: {} }); return; } catch (err) { /* sigue abajo */ } }
       if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
       window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre
       if (typeof draw === 'function') draw();
