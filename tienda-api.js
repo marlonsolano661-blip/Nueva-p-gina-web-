@@ -75,7 +75,12 @@
     if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) copia = g;
   } catch (e) { /* copia dañada: se ignora */ }
   function usarCopia() {
-    if (!copia || window.MF_API_OK || SH) return;
+    if (SH) { // copia en Shopify: se dibuja de una vez con lo guardado en Shopify (sin mostrar antes la portada vieja)
+      if (window.MF_API_OK) return;
+      try { var c0 = window.MF_SHOPIFY_CONTENIDO || {}; textoGuardado = JSON.stringify(c0); aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: c0 }, false, true); yaMostrado = true; } catch (e) { /* sigue con el servidor */ }
+      return;
+    }
+    if (!copia || window.MF_API_OK) return;
     try { aplicar(JSON.parse(copia.d), false, true); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', usarCopia); else usarCopia();
@@ -89,7 +94,13 @@
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (d) {
       if (!d || !Array.isArray(d.productos)) throw new Error('Respuesta inesperada');
-      if (SH) { d.productos = SH; d.envio = { tarifa: window.MF_SHOPIFY_ENVIO }; if (!d.contenido || !Object.keys(d.contenido).length) d.contenido = window.MF_SHOPIFY_CONTENIDO || {}; aplicar(d); return; }
+      if (SH) {
+        d.productos = SH; d.envio = { tarifa: window.MF_SHOPIFY_ENVIO };
+        if (!d.contenido || !Object.keys(d.contenido).length) d.contenido = window.MF_SHOPIFY_CONTENIDO || {};
+        var c1 = JSON.stringify(d.contenido);
+        if (yaMostrado && c1 === textoGuardado) return; // lo mismo que ya se ve: no se redibuja (sin parpadeo)
+        textoGuardado = c1; aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out'); return;
+      }
       var txt = JSON.stringify(d);
       if (txt === textoGuardado) { clearTimeout(t); return; } // igual a lo que ya se mostró: no se redibuja nada
       guardarCopia(txt);
@@ -97,7 +108,7 @@
       aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out');
     })
     .catch(function (e) {
-      if (SH) { try { aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: window.MF_SHOPIFY_CONTENIDO || {} }); return; } catch (err) { /* sigue abajo */ } }
+      if (SH) { if (yaMostrado) return; try { aplicar({ productos: SH, envio: { tarifa: window.MF_SHOPIFY_ENVIO }, contenido: window.MF_SHOPIFY_CONTENIDO || {} }); return; } catch (err) { /* sigue abajo */ } }
       if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
       window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre
       if (typeof draw === 'function') draw();
