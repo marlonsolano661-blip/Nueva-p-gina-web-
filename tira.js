@@ -30,6 +30,8 @@
   }
   function revisar() {
     var enInicio = false; try { enInicio = pg === 'home'; } catch (e) { enInicio = false; }
+    /* Espera a tener los datos del panel (copia guardada o servidor): así no cambia de texto frente a la clienta */
+    if (!window.MF_CONTENIDO) enInicio = false;
     t.hidden = !enInicio;
     if (enInicio) { textos(); foto(); }
   }

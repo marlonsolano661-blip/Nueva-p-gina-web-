@@ -196,3 +196,13 @@ html:root body .com .ctr .btn{border-radius:0;background:#0a0a0a;color:#fff;bord
 html:root body .ft3 .ft3-f input{border-radius:0!important}
 html:root body .ft3 .ft3-f button{border-radius:0!important;font:500 .76rem Jost,Helvetica,Arial,sans-serif!important;letter-spacing:.22em!important;text-transform:uppercase!important}
 html:root body .rbtn{font:500 .76rem Jost,Helvetica,Arial,sans-serif;letter-spacing:.22em}
+
+/* Sin parpadeo del encabezado viejo: la página trae el encabezado antiguo escrito y header.js lo convierte en el nuevo.
+   Mientras tanto se ocultan sus botones (el espacio se mantiene, nada salta). Si header.js no carga, a los 1,2 s se muestran igual. */
+@keyframes mfMostrarHd{to{visibility:visible}}
+html body header.bar:not(.wd)>*{visibility:hidden;animation:mfMostrarHd 0s 1.2s forwards}
+/* La franja de la foto aparece suave cuando ya tiene sus datos */
+@keyframes mfTiraIn{from{opacity:0}to{opacity:1}}
+.mf-tira{animation:mfTiraIn .35s ease-out}
+.mf-tira-bg{opacity:0;transition:opacity .4s ease-out}
+.mf-tira-bg[data-src]{opacity:1}
