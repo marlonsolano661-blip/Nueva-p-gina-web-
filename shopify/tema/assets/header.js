@@ -33,7 +33,7 @@
       '<li><button type="button" data-hd="col" class="hd-sub">Colección</button></li>' +
       '<li><button type="button" data-mn="home">Inicio</button></li>' +
       '<li><button type="button" data-mn="com">Comunidad Marlon</button></li>' +
-      '<li><button type="button" data-hd-ir="https://tienda.mfcol.com/vestidos.html">Vestidos</button></li>' +
+      '<li><button type="button" data-hd-ir="/pages/vestidos">Vestidos</button></li>' +
       '</ul><ul class="hd-l2">' +
       '<li><button type="button" data-hd="favs">Mis favoritos' + (favN() ? ' (' + favN() + ')' : '') + '</button></li>' +
       '<li><button type="button" data-mn="bag">Mi bolsa</button></li>' +

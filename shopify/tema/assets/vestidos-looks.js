@@ -1,0 +1,1 @@
+/* referencia para la URL de los assets de Vestidos */

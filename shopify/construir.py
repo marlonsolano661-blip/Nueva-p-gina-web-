@@ -104,14 +104,55 @@ def main():
         texto = texto.replace("s.src = src;", "s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src;")
         texto = texto.replace("s.src = 'outfits-boton.js';", "s.src = (window.MF_ASSETS && window.MF_ASSETS['outfits-boton.js']) || 'outfits-boton.js';")
         texto = texto.replace("'assets/", "'%s/assets/" % NETLIFY).replace('"assets/', '"%s/assets/' % NETLIFY)
-        texto = texto.replace('"vestidos.html', '"%s/vestidos.html' % NETLIFY)
+        if ruta == 'vitrina.js':  # la vitrina se arma cuando ya están el catálogo y la lista del panel (si no, sale vacía)
+            texto = texto.replace("    if (!LISTA) {\n", "    if (!LISTA) {\n      if (!window.MF_API_OK) return;\n", 1)
+        texto = texto.replace('"vestidos.html', '"/pages/vestidos')
         texto = texto.replace('"outfits.html', '"%s/outfits.html' % NETLIFY).replace("'outfits.html", "'%s/outfits.html" % NETLIFY)
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
         escribir('assets/' + nombre_asset(ruta), texto)
 
+    vestidos()
+
     print('Listo:', len(set(assets)), 'archivos de estilo y código en', os.path.relpath(SALIDA, RAIZ))
 
+
+
+def vestidos():
+    """Página Vestidos (el perchero) dentro de Shopify: /pages/vestidos con su propio layout.
+    Fotos y videos van como assets (vestidos-<archivo>); el catálogo sale de Shopify, la bolsa es la misma."""
+    ruta_dir = os.path.join(RAIZ, 'vestidos')
+    if not os.path.isdir(ruta_dir):
+        return
+    base = "{%- assign vb = 'vestidos-looks.js' | asset_url | split: 'vestidos-looks.js' | first -%}"
+    looks = leer('vestidos/looks.js').replace("'vestidos/", "'{{ vb }}vestidos-").replace('"vestidos/', '"{{ vb }}vestidos-')
+    escribir('snippets/mf-vestidos-looks.liquid', base + '<script>' + looks + '</script>')
+    html = leer('vestidos.html')
+    if '{{' in html or '{%' in html:
+        raise SystemExit('vestidos.html tiene {{ o {%')
+    cambios = [
+        ('<script src="vestidos/looks.js"></script>', "{% render 'mf-catalogo' %}{% render 'mf-vestidos-looks' %}"),
+        ('fetch(API+"/api/catalogo").then(function(r){return r.ok?r.json():null})',
+         'Promise.resolve({productos:window.MF_SHOPIFY_CATALOGO||[]})'),
+        ('fetch(API+"/api/vestidos").then(function(r){return r.ok?r.json():null})', 'Promise.resolve(null)'),
+        ('href="index.html"', 'href="/"'),
+    ]
+    for viejo, nuevo in cambios:
+        if viejo not in html:
+            raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo[:60])
+        html = html.replace(viejo, nuevo)
+    html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
+    html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
+    escribir('layout/mf-vestidos.liquid', html)
+    escribir('templates/page.vestidos.json',
+             '{"layout":"mf-vestidos","sections":{"mf":{"type":"mf-vacio","settings":{}}},"order":["mf"]}\n')
+    for nombre in sorted(os.listdir(ruta_dir)):
+        if nombre == 'looks.js':
+            escribir('assets/vestidos-looks.js', '/* referencia para la URL de los assets de Vestidos */\n')
+            continue
+        destino = os.path.join(SALIDA, 'assets', 'vestidos-' + nombre)
+        os.makedirs(os.path.dirname(destino), exist_ok=True)
+        shutil.copyfile(os.path.join(ruta_dir, nombre), destino)
 
 if __name__ == '__main__':
     main()

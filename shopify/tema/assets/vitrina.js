@@ -236,6 +236,7 @@
     var home = app.querySelector('[data-rnew="home"]');
     if (!home || home.querySelector('.vt')) return;
     if (!LISTA) {
+      if (!window.MF_API_OK) return;
       if (armando) return; armando = true;
       elegir().then(function (L) { LISTA = L; armando = false; montar(); }, function () { armando = false; LISTA = []; });
       return;
