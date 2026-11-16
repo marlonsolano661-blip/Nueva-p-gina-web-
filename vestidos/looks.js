@@ -39,4 +39,20 @@ window.MF_VESTIDOS=[{
     punto:[690,1660],mini:"vestidos/miel-mini.jpg",desc:["Sandalia de tiras cruzadas y tacón aguja"],
     /* primero el video de la sesión con las sandalias de cerca; las fotos del catálogo se agregan solas detrás */
     fotos:[{v:"vestidos/celeste-tacon.mp4"},"vestidos/miel-1.jpg","vestidos/miel-2.jpg"]}
+},{
+  nombre:"Arena beige",grupo:"noche-glam",color:{n:"Beige",h:"#e9dfcf"},
+  /* la prenda en gancho es la misma del celeste, teñida al tono beige de la foto */
+  prenda:{n:"Noche glam",frente:"vestidos/beige-frente.webp",espalda:"vestidos/beige-espalda.webp",w:772,h:1069,gancho:[386,92],
+    venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Beige",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
+      fotos:[{u:"vestidos/beige-frente.webp",fit:"contain"},{u:"vestidos/beige-espalda.webp",fit:"contain"}],fotosColor:{Beige:[{u:"vestidos/beige-frente.webp",fit:"contain"},{u:"vestidos/beige-espalda.webp",fit:"contain"}]}}},
+  /* video 720p con fondo gris claro: los bordes se funden con el blanco de la página (fondo:"gris") */
+  foto:{src:"vestidos/beige-ini.jpg",inicio:"vestidos/beige-ini.jpg",w:720,h:1280,video:"vestidos/beige.mp4",fondo:"gris",disparos:[1.6,3.4,5.2,7.0,8.6]},
+  /* la prenda colgada cae sobre el vestido del PRIMER cuadro (cuello y=388, ruedo y=1170) */
+  encaje:{x:12,y:257,w:666},
+  /* puntos sobre el ÚLTIMO cuadro (sonriendo, de frente) */
+  puntoPrenda:[350,575],
+  /* en el video calza sandalias negras de tira al tobillo: por ahora Alessia Noir (confirmar) */
+  tacon:{id:"tacones-alessia-noir",n:"Tacones Alessia Noir",p:210000,colores:["Negro","Plata"],tallas:["34","35","36","37","38","39","40"],agotadas:[],punto:[420,1105],mini:"vestidos/alessia-mini.jpg",
+    desc:["Aguja negra de tiras delgadas con pulsera al tobillo","Tacón 11 cm"],
+    fotos:[{u:"vestidos/alessia-1.jpg",fit:"contain"},"vestidos/alessia-2.jpg","vestidos/alessia-3.jpg"],fotosColor:{Plata:["vestidos/alessia-plata.jpg"]}}
 }];

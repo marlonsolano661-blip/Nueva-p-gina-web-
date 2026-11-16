@@ -98,6 +98,9 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .photo img.cam{transition:transform 1.25s cubic-bezier(.5,0,.25,1)}
 .photo video{position:absolute;display:block;object-fit:fill}
 .photo img{opacity:0;transition:opacity .25s}
+/* videos con fondo gris: los bordes se funden con el blanco de la página */
+.photo.suave{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 11%,#000 89%,transparent 100%),linear-gradient(180deg,transparent 0,#000 7%,#000 97%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(90deg,transparent 0,#000 11%,#000 89%,transparent 100%),linear-gradient(180deg,transparent 0,#000 7%,#000 97%,transparent 100%);mask-composite:intersect}
 .photo.shot img{opacity:1}
 .photo.click{animation:click .32s ease-out}
 @keyframes click{0%{transform:scale(1)}30%{transform:scale(.985)}100%{transform:scale(1)}}
@@ -484,7 +487,7 @@ $("full").addEventListener("click",function(){
   if(!piece)return;var L=LOOKS[cur],P=L.prenda,h=L.tacon;
   hideProbador();
   $("lname").textContent=L.nombre;$("topChip").textContent=L.color?L.color.n:String(grupoDe[cur]+1).padStart(2,"0")+" / "+String(GRUPOS.length).padStart(2,"0");
-  var ph=$("photo");ph.classList.remove("shot","vid","vidout");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
+  var ph=$("photo");ph.classList.remove("shot","vid","vidout");ph.classList.toggle("suave",L.foto.fondo==="gris");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
   var v=$("lvideo");v.pause();if(L.foto.video){v.poster=L.foto.inicio||"";if(v.getAttribute("src")!==L.foto.video){v.src=L.foto.video;v.load()}try{v.currentTime=0}catch(e){}}else v.removeAttribute("src");if(L.foto.inicio)$("lphoto").src=L.foto.inicio;$("lphoto").classList.remove("cam");$("lphoto").style.transform="";
   $("play").classList.remove("on");$("play").hidden=!(L.foto.video||L.foto.sesion);
   marcas(false);creditos(L,false,false);
