@@ -78,7 +78,9 @@
     if (!row || !bar || !('IntersectionObserver' in window)) return;
     document.body.classList.add('pdp-io');
     ioBar = new IntersectionObserver(function (es) {
-      bar.classList.toggle('on', !es[0].isIntersecting);
+      // Solo cuando la clienta ya pasó el botón de compra (quedó arriba). Al abrir el producto el botón está más abajo
+      // y la barra no debe tapar el nombre y el precio: eso se veía como un parpadeo entre dos diseños.
+      var e = es[0]; bar.classList.toggle('on', !e.isIntersecting && e.boundingClientRect.top < 0);
     }, { threshold: 0.2 });
     ioBar.observe(row);
   }
@@ -91,7 +93,7 @@
     var key = h1 ? h1.textContent : '', src = img ? img.getAttribute('src') : '';
     if (key !== last.key) {
       if (!reduce) pd.classList.add('fresh');
-      countUp(pd);
+      // Sin el conteo del precio: mostraba cifras sueltas ($157.486…) antes del precio real.
     } else if (src !== last.src && !reduce) {
       pd.classList.add('swap');
     }
