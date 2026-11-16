@@ -263,7 +263,6 @@
       conAyuda(guardar, 'Publica tus looks en la tienda. Sin esto no se ve nada.'),
       conAyuda(deshacer, 'Borra lo que cambiaste y no has guardado.')
     ]));
-    sec.appendChild(el('p', { class: 'nota' }, ['Ver la página: ', el('a', { href: 'outfits.html', target: '_blank', rel: 'noopener', text: 'Ideas de outfits' })]));
     window.scrollTo(0, y);
   }
 
