@@ -390,6 +390,8 @@ function openPiece(gi){
     setTimeout(function(){
       $("info").classList.add("on");
       var f=$("finger");f.style.top=(TR.y+TR.h-34)+"px";f.classList.add("on");
+      var pc=matchMedia("(hover: hover) and (pointer: fine)").matches;
+      $("fingerT").textContent=P.espalda?(pc?"clic para ver la espalda · arrastra para girarla":"toca para ver la espalda · desliza para girarla"):(pc?"arrastra para moverla":"desliza para moverla");
       var s=$("side");s.style.top=(TR.y-6)+"px";s.classList.toggle("on",!!P.espalda);
       /* pequeño giro de muestra: enseña que tiene espalda */
       if(!reduce){tg.ry=P.espalda?-38:-22;setTimeout(function(){if(!touching)tg.ry=0},650)}
