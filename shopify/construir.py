@@ -167,12 +167,13 @@ def vestidos():
         ('transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s', 'transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .3s'),
         ('transition:filter .9s', 'transition:filter .5s'),
         # Paso a la modelo: el vestido vuela ya sin gancho y se funde con la modelo mientras arranca el video
-        ('},650*D);', '},520*D);'),
-        ('},1350*D);', '},860*D);'),
-        ('},1500*D);', '},1000*D);'),
-        # Flash de cámara fuerte justo cuando el vestido llega a la modelo; después aparece la modelo con el video
-        ('if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");',
-         'if(window.mfFlash)mfFlash();if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");'),
+        # "Ver look completo": en vez del vestido volando con el gancho, un flash de cámara fuerte
+        # ilumina toda la pantalla y de la luz sale la modelo con el video ya en marcha.
+        ('piece.classList.add("fly","dress");', 'if(window.mfFlash)mfFlash();piece.style.transition="none";piece.style.opacity=0;'),
+        ('},180*D);', '},10*D);'),
+        ('},650*D);', '},90*D);'),
+        ('},1350*D);', '},380*D);'),
+        ('},1500*D);', '},420*D);'),
         ('transition:opacity .7s', 'transition:opacity .4s'),
     ]
     for viejo, nuevo in ajustes:
@@ -182,11 +183,15 @@ def vestidos():
     html = html.replace('</style>', '.rail{display:none}\n'
                         '.piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}\n'
                         '.piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}\n'
-                        '.mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;background:#fff;animation:mfFlash .7s ease-out forwards}\n'
-                        '@keyframes mfFlash{0%{opacity:0}6%{opacity:1}34%{opacity:1}100%{opacity:0}}\n'
+                        '.mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;'
+                        'background:radial-gradient(circle at 50% 42%,#fff 0,#fff 55%,#fffaf0 80%,#f3efe6 100%);'
+                        'animation:mfFlash 1.25s cubic-bezier(.2,.7,.3,1) forwards}\n'
+                        '@keyframes mfFlash{0%{opacity:0}3%{opacity:1}28%{opacity:1}100%{opacity:0}}\n'
+                        '#photo{transition:filter 1.1s cubic-bezier(.2,.7,.3,1)}#photo.mf-sobre{filter:brightness(2.4) saturate(.5) contrast(.85);transition:none}\n'
                         '</style><script>window.mfFlash=function(){var f=document.createElement("div");f.className="mf-flash";'
-                        'document.body.appendChild(f);setTimeout(function(){[].forEach.call(document.querySelectorAll(".piece"),'
-                        'function(p){p.style.transition="none";p.style.opacity=0})},60);setTimeout(function(){f.remove()},800)};</script>', 1)
+                        'document.body.appendChild(f);var ph=document.getElementById("photo");'
+                        'if(ph){ph.classList.add("mf-sobre");setTimeout(function(){ph.classList.remove("mf-sobre")},330)}'
+                        'setTimeout(function(){f.remove()},1350)};</script>', 1)
     html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
     html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)

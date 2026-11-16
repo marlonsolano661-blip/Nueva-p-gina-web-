@@ -228,9 +228,10 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .rail{display:none}
 .piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}
 .piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}
-.mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;background:#fff;animation:mfFlash .7s ease-out forwards}
-@keyframes mfFlash{0%{opacity:0}6%{opacity:1}34%{opacity:1}100%{opacity:0}}
-</style><script>window.mfFlash=function(){var f=document.createElement("div");f.className="mf-flash";document.body.appendChild(f);setTimeout(function(){[].forEach.call(document.querySelectorAll(".piece"),function(p){p.style.transition="none";p.style.opacity=0})},60);setTimeout(function(){f.remove()},800)};</script>
+.mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 42%,#fff 0,#fff 55%,#fffaf0 80%,#f3efe6 100%);animation:mfFlash 1.25s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes mfFlash{0%{opacity:0}3%{opacity:1}28%{opacity:1}100%{opacity:0}}
+#photo{transition:filter 1.1s cubic-bezier(.2,.7,.3,1)}#photo.mf-sobre{filter:brightness(2.4) saturate(.5) contrast(.85);transition:none}
+</style><script>window.mfFlash=function(){var f=document.createElement("div");f.className="mf-flash";document.body.appendChild(f);var ph=document.getElementById("photo");if(ph){ph.classList.add("mf-sobre");setTimeout(function(){ph.classList.remove("mf-sobre")},330)}setTimeout(function(){f.remove()},1350)};</script>
 </head>
 <body>
 <div class="flash" id="flash"></div>
@@ -530,21 +531,21 @@ $("full").addEventListener("click",function(){
     var E=L.encaje,k=E.w/P.w,T={x:S.left+m.x+E.x*m.k,y:S.top+m.y+E.y*m.k,w:E.w*m.k,h:P.h*k*m.k};
     var D=reduce?0:1;
     setTimeout(function(){
-      piece.classList.add("fly","dress");
+      if(window.mfFlash)mfFlash();piece.style.transition="none";piece.style.opacity=0;
       piece.style.transform="translate("+(T.x-TR.x)+"px,"+(T.y-TR.y)+"px) scale("+(T.w/TR.w)+")";
-    },180*D);
+    },10*D);
     /* visor: aparece, el cuadro de enfoque busca la prenda y fija; flash y arranca la sesión en video */
     setTimeout(function(){
-      if(window.mfFlash)mfFlash();if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");
+      if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");
       var vf=$("vf"),af=$("af");vf.classList.add("on");$("tc").textContent="00:00:00";$("shotN").textContent="FOTO 00";
       af.classList.remove("lock");af.style.cssText="left:12%;top:10%;width:76%;height:70%";
       setTimeout(function(){var E2=L.encaje,pw=PH.k;af.style.cssText="left:"+(E2.x+E2.w*.28)*pw+"px;top:"+(E2.y+150)*pw+"px;width:"+E2.w*.44*pw+"px;height:"+E2.w*.44*pw+"px"},80*D);
       setTimeout(function(){af.classList.add("lock")},560*D);
-    },520*D);
+    },90*D);
     setTimeout(function(){
       disparo(function(){if(piece){piece.style.transition="none";piece.style.opacity=0}sesion(L)},1);
-    },860*D);
-    setTimeout(function(){if(piece){cancelAnimationFrame(pAnim);piece.remove();piece=null}limpiarPiezas()},1000*D);
+    },380*D);
+    setTimeout(function(){if(piece){cancelAnimationFrame(pAnim);piece.remove();piece=null}limpiarPiezas()},420*D);
   });
 });
 /* Disparo: flash de estudio y un "clic" de la cámara (fuerza: 1 fuerte, .5 suave) */
