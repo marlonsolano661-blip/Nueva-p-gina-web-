@@ -157,6 +157,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .sgal::-webkit-scrollbar{display:none}
 .sgal img{flex:0 0 86%;height:min(46vh,360px);object-fit:cover;border-radius:14px;scroll-snap-align:center;background:#fff;border:1px solid #f1f1f1}
 .sgal img:only-child{flex-basis:100%}
+.sgal video{flex:0 0 86%;height:min(46vh,360px);object-fit:cover;border-radius:14px;scroll-snap-align:center;background:#f6f6f6;border:1px solid #f1f1f1}
 .sdesc{list-style:none;padding:0;margin:-.4rem 0 1rem;color:#6f6f6f;font-size:.88rem}
 .sdesc li{padding:.15rem 0}
 #sheet .n{font:300 1.25rem/1.2 Jost,sans-serif;padding-right:2rem}
@@ -617,11 +618,16 @@ function openSheet(mode){
   $("snote").textContent="";
   $("sheetVeil").classList.add("on");$("sheet").classList.add("on");
 }
-function fotosTacon(h,c){var extra=(h.fotosColor&&h.fotosColor[c])||[];return extra.concat(h.fotos||[])}
+function fotosTacon(h,c){var extra=(h.fotosColor&&h.fotosColor[c])||[],F=h.fotos||[];
+  /* el video del producto va primero; luego la foto del color elegido y el resto */
+  return F.filter(function(f){return f&&f.v}).concat(extra,F.filter(function(f){return !(f&&f.v)}))}
 function galeria(L2){
-  $("sgal").innerHTML=L2.map(function(f){var u=typeof f==="string"?f:f.u,fit=typeof f==="string"?"cover":f.fit;return '<img src="'+u+'" alt="" draggable="false" style="object-fit:'+fit+'">'}).join("");$("sgal").scrollLeft=0;
+  $("sgal").innerHTML=L2.map(function(f){
+    if(f&&f.v)return '<video src="'+f.v+'" muted loop playsinline autoplay preload="metadata"></video>'; /* video del producto */
+    var u=typeof f==="string"?f:f.u,fit=typeof f==="string"?"cover":f.fit;return '<img src="'+u+'" alt="" draggable="false" style="object-fit:'+fit+'">'}).join("");$("sgal").scrollLeft=0;
+  [].forEach.call($("sgal").querySelectorAll("video"),function(v){var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})});
 }
-function closeSheet(){$("sheetVeil").classList.remove("on");$("sheet").classList.remove("on")}
+function closeSheet(){$("sheetVeil").classList.remove("on");$("sheet").classList.remove("on");[].forEach.call($("sgal").querySelectorAll("video"),function(v){v.pause()})}
 $("sx").addEventListener("click",closeSheet);$("sheetVeil").addEventListener("click",closeSheet);
 $("scolors").addEventListener("click",function(e){var b=e.target.closest("[data-c]");if(!b)return;color=b.dataset.c;galeria(fotosTacon(item,color));[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
 $("ssizes").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b||b.disabled)return;size=b.dataset.s;[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});

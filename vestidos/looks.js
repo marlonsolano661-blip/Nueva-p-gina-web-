@@ -35,5 +35,8 @@ window.MF_VESTIDOS=[{
   encaje:{x:188,y:189,w:656},
   /* puntos sobre el ÚLTIMO cuadro del video */
   puntoPrenda:[598,775],
-  tacon:null /* pendiente: ¿cuál sandalia dorada MF es? */
+  tacon:{id:"sandalia-miel-elite-mf",n:"Sandalia Miel Élite MF",p:199900,colores:["Camel","Negro"],tallas:["34","35","36","37","38","39","40"],agotadas:[],
+    punto:[690,1668],mini:"vestidos/miel-mini.jpg",desc:["Sandalia de tiras cruzadas y tacón aguja"],
+    /* primero el video de la sesión con las sandalias de cerca; las fotos del catálogo se agregan solas detrás */
+    fotos:[{v:"vestidos/celeste-tacon.mp4"},"vestidos/miel-1.jpg","vestidos/miel-2.jpg"]}
 }];
