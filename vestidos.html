@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vestidos · Marlon Footwear</title>
+<meta name="description" content="Vestidos Marlon Footwear: mira cada prenda de cerca, la sesión de fotos completa y los tacones MF que la acompañan.">
+<meta property="og:title" content="Vestidos · Marlon Footwear"><meta property="og:type" content="website">
+<link rel="icon" href="assets/brand/avatar-negro-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+:root{--k:#1a1a1a;--g:#9b9b9b;--l:#ececec}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#fff;color:var(--k);font:300 1rem/1.5 Jost,Helvetica,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+[hidden]{display:none!important}
+img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:40}
+.flash.on{animation:flash .34s ease-out}
+@keyframes flash{0%{opacity:0}15%{opacity:calc(.9*var(--f,1))}100%{opacity:0}}
+.top{position:fixed;left:0;right:0;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:calc(.9rem + env(safe-area-inset-top)) 1.2rem .9rem;pointer-events:none}
+.top a{pointer-events:auto;color:inherit;text-decoration:none}
+.tienda{font:300 .78rem Jost,sans-serif;color:var(--g)}
+.mf{font:400 1.2rem/1 Jost,sans-serif;letter-spacing:.2em}
+.chip{font:300 .78rem Jost,sans-serif;color:var(--g);position:absolute;left:50%;transform:translateX(-50%)}
+
+/* ---------- Pantalla 1: prendas colgadas ---------- */
+#rackView{position:fixed;inset:0;display:flex;flex-direction:column;z-index:2;transition:opacity .5s}
+#rackView.off{opacity:0;pointer-events:none}
+.intro{padding:3.5rem 1.3rem 0}
+.h1{font:200 clamp(1.7rem,7vw,2.4rem)/1.1 Jost,sans-serif;letter-spacing:.02em}
+.h1 span{display:inline-block;opacity:0;transform:translateY(.4em);animation:sube .9s cubic-bezier(.2,.8,.2,1) .15s forwards}
+@keyframes sube{to{opacity:1;transform:none}}
+.sub{color:var(--g);font-size:.85rem;opacity:0;animation:sube .9s cubic-bezier(.2,.8,.2,1) .35s forwards}
+#rack{position:relative;flex:1;min-height:0;margin-top:.8rem;touch-action:none}
+.rail{position:absolute;left:0;right:0;top:20px;height:5px;border-radius:3px;z-index:5;background:linear-gradient(#fff,#e2e2e2 40%,#bdbdbd 60%,#ededed);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+#track{position:absolute;left:0;top:0;height:100%;will-change:transform}
+.hang{position:absolute;opacity:0}
+.hang .sw{position:relative;will-change:transform;transition:translate .2s ease-out}
+.hang.lift .sw{translate:0 -18px}
+.hang img{display:block;width:100%;height:100%;filter:drop-shadow(0 14px 18px rgba(0,0,0,.09))}
+.hook{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.hang .shadow{position:absolute;left:18%;width:64%;height:16px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.12),rgba(0,0,0,0) 70%)}
+.hint{text-align:center;font:300 .78rem Jost,sans-serif;color:#b5b5b5;padding:.4rem 0 calc(1rem + env(safe-area-inset-bottom));opacity:0;transition:opacity .6s}
+.hint.on{opacity:1}
+
+/* ---------- Prenda ampliada: se mueve y gira con el dedo ---------- */
+#veil{position:fixed;inset:0;z-index:20;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .45s}
+#veil.on{opacity:1;pointer-events:auto}
+.piece{position:fixed;z-index:22;transform-origin:0 0;perspective:1100px;touch-action:none}
+.piece.fly{transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s}
+.piece .tilt{width:100%;height:100%;transform-style:preserve-3d;will-change:transform;position:relative}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face.b{transform:rotateY(180deg)}
+.face img{width:100%;height:100%;display:block;filter:drop-shadow(0 20px 28px rgba(0,0,0,.12))}
+.piece .hook{transition:opacity .4s}
+.piece.dress .hook,.piece.dress .hanger-hide{opacity:0}
+.sheen{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at var(--sx,50%) var(--sy,40%),rgba(255,255,255,.28),rgba(255,255,255,0) 42%)}
+.piece.touch .sheen{opacity:1}
+.finger{position:fixed;z-index:23;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.92);color:var(--g);border:1px solid var(--l);padding:.4rem .9rem;border-radius:99px;font:300 .78rem Jost,sans-serif;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+.finger.on{opacity:1}
+.finger i{font-style:normal;display:inline-block;animation:dedo 1.4s ease-in-out infinite}
+@keyframes dedo{0%,100%{transform:translateX(-5px) rotate(-8deg)}50%{transform:translateX(5px) rotate(8deg)}}
+.side{position:fixed;z-index:23;left:50%;transform:translateX(-50%);display:flex;gap:.3rem;opacity:0;transition:opacity .4s}
+.side.on{opacity:1}
+.side button{border:1px solid var(--l);background:#fff;border-radius:99px;padding:.25rem .8rem;font-size:.78rem;color:var(--g)}
+.side button[aria-pressed=true]{border-color:var(--k);color:var(--k)}
+#info{position:fixed;left:0;right:0;bottom:0;z-index:24;padding:1rem 1.2rem calc(1.1rem + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+#info.on{transform:none}
+#info .n{font:300 1.35rem/1.2 Jost,sans-serif;letter-spacing:.02em;text-align:center;margin-bottom:.9rem}
+.btns{display:grid;grid-template-columns:auto 1fr;gap:.5rem}
+.btn{min-height:50px;border:1px solid var(--k);background:var(--k);color:#fff;font:300 .92rem Jost,sans-serif;letter-spacing:.03em;padding:0 1.3rem;border-radius:99px;position:relative;overflow:hidden}
+.btn.o{background:#fff;color:var(--k);border-color:var(--l)}
+.btn.shine::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:brillo 2.6s ease-in-out infinite 1s}
+@keyframes brillo{0%{left:-60%}55%,100%{left:130%}}
+
+/* ---------- Look completo ---------- */
+#lookView{position:fixed;inset:0;z-index:10;opacity:0;pointer-events:none;transition:opacity .5s;display:flex;flex-direction:column}
+#lookView.on{opacity:1;pointer-events:auto}
+.lhead{padding:3.4rem 1.3rem 0;text-align:center}
+.lhead .h2{font:200 1.6rem/1.1 Jost,sans-serif;letter-spacing:.02em}
+#lstage{position:relative;flex:1;min-height:0;margin-top:.4rem}
+.photo{position:absolute;overflow:hidden}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform-origin:0 0}
+.photo img.cam{transition:transform 1.25s cubic-bezier(.5,0,.25,1)}
+.photo video{position:absolute;display:block;object-fit:fill}
+.photo img{opacity:0;transition:opacity .25s}
+.photo.shot img{opacity:1}
+.photo.click{animation:click .32s ease-out}
+@keyframes click{0%{transform:scale(1)}30%{transform:scale(.985)}100%{transform:scale(1)}}
+/* Visor de cámara: esquinas, cuadro de enfoque y datos de toma */
+.vf{position:absolute;pointer-events:none;z-index:6;opacity:0;transition:opacity .35s}
+.vf.on{opacity:1}
+.vf b{position:absolute;width:22px;height:22px;border:0 solid rgba(26,26,26,.55)}
+.vf b:nth-child(1){left:8px;top:8px;border-width:1.5px 0 0 1.5px}.vf b:nth-child(2){right:8px;top:8px;border-width:1.5px 1.5px 0 0}
+.vf b:nth-child(3){left:8px;bottom:8px;border-width:0 0 1.5px 1.5px}.vf b:nth-child(4){right:8px;bottom:8px;border-width:0 1.5px 1.5px 0}
+.vf .af{position:absolute;border:1px solid rgba(26,26,26,.5);transition:all .45s cubic-bezier(.3,1.4,.5,1)}
+.vf .af.lock{border-color:#1a1a1a;box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+.vf .af.lock::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#1a1a1a}
+.vf .meta{position:absolute;left:38px;right:38px;bottom:12px;display:flex;justify-content:space-between;font:300 .62rem Jost,sans-serif;letter-spacing:.08em;color:rgba(26,26,26,.6)}
+.vf .rec{position:absolute;right:38px;top:12px;font:300 .62rem Jost,sans-serif;letter-spacing:.08em;color:rgba(26,26,26,.6)}
+.vf .rec::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#d23b3b;margin-right:.35rem;vertical-align:1px;animation:parp 1s steps(2) infinite}
+@keyframes parp{50%{opacity:0}}
+/* Hoja de contactos: las fotos de la sesión */
+.strip{display:flex;gap:6px;margin-bottom:.6rem;height:65px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.strip::-webkit-scrollbar{display:none}
+.strip button{flex:1 0 46px;max-width:64px;height:62px;padding:0;border:0;background:#f6f6f6;position:relative;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s}
+.strip.on button{opacity:.5;transform:none}
+.strip.on button[aria-current=true]{opacity:1}
+.strip button[aria-current=true]::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:1.5px;background:#1a1a1a}
+.strip img{width:100%;height:100%;object-fit:cover;object-position:50% 15%;display:block;filter:grayscale(1) brightness(1.4);transition:filter .9s}
+.strip.on img{filter:none}
+.strip small{position:absolute;left:3px;top:2px;font:300 .55rem Jost,sans-serif;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.5)}
+.photo video{opacity:0;transition:opacity .35s;z-index:2}
+.photo.vidout video{transition:opacity .7s}
+.photo.vid video{opacity:1}
+.beam{position:absolute;left:-10%;right:-10%;height:2px;top:0;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#e4e4e4,#fff,#e4e4e4,transparent);box-shadow:0 0 24px 8px rgba(255,255,255,.95),0 0 2px rgba(0,0,0,.06)}
+.beam.go{animation:beam 1.2s cubic-bezier(.5,0,.3,1) forwards}
+@keyframes beam{0%{opacity:1;transform:translateY(0)}90%{opacity:1}100%{opacity:0;transform:translateY(var(--y1))}}
+.play{position:absolute;z-index:5;right:.9rem;top:.2rem;border:1px solid var(--l);background:rgba(255,255,255,.92);border-radius:99px;padding:.3rem .85rem;font-size:.78rem;color:var(--k);opacity:0;transition:opacity .4s}
+.play.on{opacity:1}
+.ring{position:absolute;width:44px;height:44px;margin:-22px;border-radius:50%;border:1px solid rgba(26,26,26,.25);pointer-events:none;opacity:0}
+.ring.go{animation:ring 1.1s ease-out forwards}
+@keyframes ring{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(2)}}
+#thread{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:3}
+.tg{position:absolute;width:118px;transform-origin:50% -46px;opacity:0;z-index:4;border:0;background:none;padding:0;text-align:left;transition:opacity .45s}
+.tg.v{z-index:5}
+.tg.v .card{box-shadow:0 10px 26px rgba(0,0,0,.14)}
+.tg .card{display:block;position:relative;background:#fff;padding:.55rem .7rem .5rem 1.5rem;border-radius:4px 10px 10px 4px;box-shadow:0 8px 22px rgba(0,0,0,.1);clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%)}
+.tg .card::before{content:"";position:absolute;left:8px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:#efefef}
+.tg img{display:block;width:100%;height:64px;object-fit:contain;background:#fff;margin:-.1rem 0 .3rem}
+.tg b{display:block;font:300 .82rem/1.2 Jost,sans-serif;color:var(--k)}
+.tg .p{display:block;font-weight:400;font-size:.8rem;font-variant-numeric:tabular-nums;margin-top:.1rem}
+.tg .c{display:block;font:300 .7rem Jost,sans-serif;color:var(--g);margin-bottom:.1rem}
+.dot{position:absolute;width:30px;height:30px;margin:-15px;border:0;background:none;padding:0;z-index:4;opacity:0;transition:opacity .4s}
+.dot.on{opacity:1}
+.dot::before{content:"";position:absolute;inset:3px;border-radius:50%;background:rgba(255,255,255,.85);animation:latido 1.9s ease-out infinite}
+.dot::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.2),0 2px 8px rgba(0,0,0,.3)}
+@keyframes latido{0%{transform:scale(.45);opacity:.95}70%,100%{transform:scale(1.4);opacity:0}}
+.lfoot{padding:.6rem 1.2rem calc(1rem + env(safe-area-inset-bottom))}
+
+/* ---------- Hoja de compra ---------- */
+#sheetVeil{position:fixed;inset:0;z-index:50;background:rgba(255,255,255,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
+#sheetVeil.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:#fff;border-radius:18px 18px 0 0;padding:1.2rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 30px rgba(0,0,0,.08)}
+#sheet.on{transform:none}
+#sheet{max-height:94vh;overflow-y:auto}
+#sheet .x{position:absolute;right:.9rem;top:.9rem;z-index:3;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.9);font-size:1.3rem;color:var(--k)}
+.sgal{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:-.4rem -1.2rem 1rem;padding:0 1.2rem;scrollbar-width:none}
+.sgal::-webkit-scrollbar{display:none}
+.sgal img{flex:0 0 86%;height:min(46vh,360px);object-fit:cover;border-radius:14px;scroll-snap-align:center;background:#fff;border:1px solid #f1f1f1}
+.sgal img:only-child{flex-basis:100%}
+.sdesc{list-style:none;padding:0;margin:-.4rem 0 1rem;color:#6f6f6f;font-size:.88rem}
+.sdesc li{padding:.15rem 0}
+#sheet .n{font:300 1.25rem/1.2 Jost,sans-serif;padding-right:2rem}
+#sheet .p{font-weight:400;margin:.2rem 0 .9rem;font-variant-numeric:tabular-nums}
+.lbl{font:300 .8rem Jost,sans-serif;color:var(--g);margin-bottom:.45rem}
+.row{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:1rem}
+.opt{min-width:40px;height:40px;border:1px solid var(--l);border-radius:99px;background:#fff;padding:0 .55rem;font-weight:300;font-variant-numeric:tabular-nums}
+.opt[aria-pressed=true]{background:var(--k);color:#fff;border-color:var(--k)}
+.opt:disabled{opacity:.35;text-decoration:line-through}
+#sheet .btn{width:100%}
+.note{font-size:.75rem;color:var(--g);margin-top:.6rem;text-align:center}
+.toast a{color:var(--k);font-weight:400;margin-left:.4rem;pointer-events:auto}
+.toast{position:fixed;left:50%;bottom:calc(1.4rem + env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,20px);opacity:0;background:#fff;color:var(--k);border:1px solid var(--l);border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:.65rem 1.1rem;font-size:.88rem;transition:.3s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+/* Puntos de compra sobre la foto: punto + línea fina + pastilla con nombre y precio */
+.hs{position:absolute;z-index:5;width:0;height:0}
+.hs .pt{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:0;background:none;padding:0}
+.hs .pt::before{content:"";position:absolute;inset:4px;border-radius:50%;background:rgba(255,255,255,.75);animation:latido 2.2s ease-out infinite}
+.hs .pt::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(26,26,26,.55),0 2px 6px rgba(0,0,0,.25)}
+.hs .ln{position:absolute;top:-.5px;height:1px;width:26px;background:rgba(26,26,26,.45);transform:scaleX(0);transition:transform .45s cubic-bezier(.2,.8,.2,1) .1s}
+.hs .pl{position:absolute;top:-15px;height:30px;display:flex;overflow:hidden;text-overflow:ellipsis;align-items:center;gap:.4rem;white-space:nowrap;padding:0 .8rem;border-radius:99px;border:1px solid rgba(26,26,26,.1);
+  background:rgba(255,255,255,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font:300 .76rem Jost,sans-serif;color:var(--k);box-shadow:0 4px 14px rgba(0,0,0,.06);
+  opacity:0;transform:translateX(var(--dx,8px));transition:opacity .4s .3s,transform .5s cubic-bezier(.2,.8,.2,1) .3s}
+.hs .pl b{font-weight:400;font-variant-numeric:tabular-nums}
+.hs .pl i{font-style:normal;color:var(--g)}
+.hs.der .ln{left:12px;transform-origin:0 50%}.hs.der .pl{left:38px}
+.hs.izq .ln{right:12px;transform-origin:100% 50%}.hs.izq .pl{right:38px;--dx:-8px}
+.hs.on .ln{transform:none}.hs.on .pl{opacity:1;transform:none}
+.hs{opacity:0;transition:opacity .35s}.hs.on{opacity:1}
+/* "En este look": créditos de la sesión, como en una revista */
+.creditos{display:grid;grid-template-columns:1fr 1fr;gap:8px;height:64px;margin-bottom:.55rem}
+.cr{display:grid;grid-template-columns:46px minmax(0,1fr);gap:.55rem;align-items:center;text-align:left;border:1px solid #ececec;border-radius:12px;background:#fff;padding:6px 8px 6px 6px;
+  opacity:0;transform:translateY(12px);transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.cr.on{opacity:1;transform:none}
+.cr img{width:46px;height:50px;object-fit:contain;background:#fafafa;border-radius:8px;display:block}
+.cr small{display:block;font:300 .64rem Jost,sans-serif;letter-spacing:.06em;color:var(--g);text-transform:uppercase}
+.cr b{display:block;font:300 .8rem/1.15 Jost,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr span{display:block;font-size:.76rem;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="flash" id="flash"></div>
+<header class="top"><a class="mf" href="index.html" aria-label="Marlon Footwear, ir a la tienda">MF</a><span class="chip" id="topChip"></span><a class="tienda" href="index.html">← Tienda</a></header>
+
+<section id="rackView" aria-label="Prendas">
+  <div class="intro"><h1 class="h1"><span>Vestidos</span></h1></div>
+  <div id="rack"><div class="rail"></div><div id="track"></div></div>
+  <p class="hint" id="hint">desliza</p>
+</section>
+
+<section id="lookView" aria-label="Look completo">
+  <div class="lhead"><p class="h2" id="lname"></p></div>
+  <div id="lstage">
+    <div class="photo" id="photo"><video id="lvideo" muted playsinline preload="auto"></video><img id="lphoto" alt=""></div>
+    <div class="vf" id="vf"><b></b><b></b><b></b><b></b><div class="af" id="af"></div><span class="rec">REC</span><div class="meta"><span id="tc">00:00:00</span><span>ISO 100 · f/8</span><span id="shotN">FOTO 00</span></div></div>
+    <button class="play" id="play" type="button">▶ En movimiento</button>
+    <div class="ring" id="ring"></div>
+    <div class="hs der" id="hsV"><button class="pt" type="button" aria-label="Ver el vestido"></button><span class="ln"></span><button class="pl" type="button" id="plV"></button></div>
+    <div class="hs der" id="hsT"><button class="pt" type="button" aria-label="Ver los tacones"></button><span class="ln"></span><button class="pl" type="button" id="plT"></button></div>
+  </div>
+  <div class="lfoot"><div class="creditos" id="creditos"><button class="cr" type="button" id="crV"></button><button class="cr" type="button" id="crT"></button></div><div class="btns"><button class="btn o" id="back" type="button">Volver</button><button class="btn shine" id="buy" type="button">Comprar vestido</button></div></div>
+</section>
+
+<div id="veil"></div>
+<div class="finger" id="finger"><i>☝︎</i> gírala con el dedo</div>
+<div class="side" id="side"><button type="button" data-f="0" aria-pressed="true">Frente</button><button type="button" data-f="1" aria-pressed="false">Espalda</button></div>
+<div id="info">
+  <p class="n" id="in"></p>
+  <div class="btns"><button class="btn o" id="close" type="button">Volver</button><button class="btn shine" id="full" type="button">Ver look completo</button></div>
+</div>
+
+<div id="sheetVeil"></div>
+<div id="sheet" role="dialog" aria-label="Comprar">
+  <button class="x" id="sx" type="button" aria-label="Cerrar">×</button>
+  <div class="sgal" id="sgal"></div><p class="n" id="sn"></p><p class="p" id="sp"></p><ul class="sdesc" id="sdesc"></ul>
+  <div id="scol"><p class="lbl">Color</p><div class="row" id="scolors"></div></div>
+  <div id="ssz"><p class="lbl">Talla</p><div class="row" id="ssizes"></div></div>
+  <button class="btn" id="sadd" type="button">Agregar a la bolsa</button>
+  <p class="note" id="snote"></p>
+</div>
+<div class="toast" id="toast"><span id="toastT"></span> <a href="index.html" id="toastA" hidden>Ver bolsa</a></div>
+
+<script src="vestidos/looks.js"></script>
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i)};
+var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+var fmt=function(n){return "$"+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,".")};
+
+/* =========================================================
+   LOOKS. Cada uno: la prenda colgada (frente y espalda, sin fondo),
+   la foto de la modelo, su video, dónde cae la prenda sobre la modelo
+   y el tacón MF con su punto en la foto.
+   Medidas en píxeles de cada foto original.
+   ========================================================= */
+var LOOKS=(window.MF_VESTIDOS||[]).slice();
+
+/* Gancho cromado (las fotos traen el gancho de madera; el alambre se dibuja) */
+function hookSVG(P){
+  var x=P.gancho[0],y=P.gancho[1];
+  return '<svg class="hook" viewBox="0 0 '+P.w+' '+P.h+'" preserveAspectRatio="none"><defs><linearGradient id="chr" x1="0" x2="1"><stop offset="0" stop-color="#8d8d8d"/><stop offset=".5" stop-color="#f4f4f4"/><stop offset="1" stop-color="#8d8d8d"/></linearGradient></defs>'+
+    '<path d="M'+x+' '+(y+6)+' L'+x+' '+(y-20)+' C'+x+' '+(y-40)+' '+(x+24)+' '+(y-44)+' '+(x+24)+' '+(y-62)+' C'+(x+24)+' '+(y-80)+' '+(x+4)+' '+(y-86)+' '+(x-10)+' '+(y-72)+'" fill="none" stroke="url(#chr)" stroke-width="7" stroke-linecap="round"/></svg>';
+}
+function hookTop(P){return P.gancho[1]-84}
+
+/* =========================================================
+   1. LAS PRENDAS LLEGAN UNA POR UNA Y QUEDAN MECIÉNDOSE
+   ========================================================= */
+var rack=$("rack"),track=$("track"),items=[],R=0,Rv=0,W=0,started=performance.now();
+function buildRack(){
+  track.innerHTML="";items=[];
+  var H=rack.clientHeight-24-40,gap=Math.max(18,innerWidth*.05),x=26;
+  LOOKS.forEach(function(L,i){
+    var P=L.prenda,k=Math.min(H/(P.h-hookTop(P)),innerWidth*.86/P.w),w=P.w*k,h=P.h*k,top=22-hookTop(P)*k;
+    var el=document.createElement("div");el.className="hang";
+    el.style.cssText="width:"+w+"px;height:"+h+"px;left:"+x+"px;top:"+top+"px";
+    el.innerHTML='<div class="sw" style="width:'+w+'px;height:'+h+'px;transform-origin:'+(P.gancho[0]/P.w*100)+'% '+(hookTop(P)/P.h*100)+'%"><img src="'+P.frente+'" alt="'+P.n+'">'+hookSVG(P)+'</div>'+
+      '<div class="shadow" style="top:'+(h+10)+'px"></div>';
+    el.dataset.i=i;track.appendChild(el);
+    items.push({el:el,sw:el.firstChild,sh:el.children[1],slot:x,w:w,h:h,th:0,om:0,pv:null,pp:null,t0:reduce?0:500+i*720,arr:false,on:false});
+    x+=w+gap;
+  });
+  W=x-gap+26;R=clampR(R);
+}
+function clampR(r){return W<=innerWidth?(innerWidth-W)/2:Math.min(0,Math.max(innerWidth-W,r))}
+var ease=function(t){return 1-Math.pow(1-t,3)},last=performance.now(),landed=0,autoAbierta=false;
+function strobe(){var f=$("flash");f.classList.remove("on");void f.offsetWidth;f.classList.add("on")}
+function tick(now){
+  var dt=Math.min(.05,(now-last)/1000);last=now;
+  if(!drag){Rv*=Math.pow(.04,dt);R+=Rv*dt;var c=clampR(R);if(c!==R){R+=(c-R)*Math.min(1,dt*10);Rv*=.8}}
+  track.style.transform="translateX("+R+"px)";
+  var T=now-started;
+  items.forEach(function(it,i){
+    if(T<it.t0)return;
+    var k=reduce?1:Math.min(1,(T-it.t0)/950);
+    if(!it.on){it.on=true;it.el.style.opacity=1}
+    var xo=(1-ease(k))*(innerWidth+160-(it.slot+R));
+    if(k>=1&&!it.arr){it.arr=true;landed++;if(!reduce)strobe();if(landed===LOOKS.length&&W>innerWidth)$("hint").classList.add("on");
+      /* sin tocar: apenas llega la primera prenda, se descuelga y se amplía sola */
+      if(i===0&&!autoAbierta){autoAbierta=true;setTimeout(function(){if(!piece&&!$("lookView").classList.contains("on"))openPiece(0)},reduce?0:650)}}
+    it.el.style.transform="translateX("+xo+"px)";
+    /* física: la prenda se queda atrás cuando el riel acelera y luego se mece */
+    var p=it.slot+R+xo;if(it.pp===null){it.pp=p;it.pv=0}
+    var v=(p-it.pp)/Math.max(dt,.001),a=(v-it.pv)/Math.max(dt,.001);it.pp=p;it.pv=v;
+    a=Math.max(-5000,Math.min(5000,a));
+    var breeze=reduce?0:Math.sin(now/900+i*1.7)*1.1;
+    it.om+=(-40*it.th-2*it.om-a*.006+breeze)*dt;
+    it.th=Math.max(-28,Math.min(28,it.th+it.om*dt));
+    it.sw.style.transform="rotate("+it.th.toFixed(2)+"deg)";
+    it.sh.style.transform="translateX("+(Math.sin(it.th*Math.PI/180)*it.h*.9).toFixed(1)+"px) scaleX("+(1-Math.abs(it.th)/90).toFixed(3)+")";
+  });
+  requestAnimationFrame(tick);
+}
+var drag=false,pt=0,moved=0,downEl=null,lastX=0,lastT=0;
+rack.addEventListener("pointerdown",function(e){
+  drag=true;moved=0;lastX=e.clientX;pt=lastT=performance.now();Rv=0;
+  downEl=e.target.closest(".hang");try{rack.setPointerCapture(e.pointerId)}catch(er){}
+});
+rack.addEventListener("pointermove",function(e){
+  if(!drag)return;var dx=e.clientX-lastX,now=performance.now();moved+=Math.abs(dx);
+  var c=clampR(R+dx);R=c===R+dx?R+dx:R+dx*.35;
+  /* aunque no haya más prendas, el dedo empuja la prenda y la hace mecer */
+  if(W<=innerWidth&&downEl){var it=items[+downEl.dataset.i];it.om+=dx*.9}
+  Rv=dx/Math.max(1,now-lastT)*1000;lastX=e.clientX;lastT=now;
+});
+function up(){
+  if(!drag)return;drag=false;
+  if(moved<8&&performance.now()-pt<450&&downEl&&!piece&&!abriendo){var it=items[+downEl.dataset.i];if(it&&it.arr)openPiece(+downEl.dataset.i)}
+  downEl=null;
+}
+rack.addEventListener("pointerup",up);rack.addEventListener("pointercancel",up);
+
+/* =========================================================
+   2. LA PRENDA SE DESCUELGA, SE AMPLÍA Y GIRA CON EL DEDO (frente ↔ espalda)
+   ========================================================= */
+var cur=-1,piece=null,tilt=null,TR=null,zoom=1,st={rx:0,ry:0,tx:0,ty:0,z:1},tg={rx:0,ry:0,tx:0,ty:0,z:1},base=0,pAnim=0;
+function targetRect(P){
+  var top=58,bottomSpace=200,maxH=innerHeight-top-bottomSpace,a=P.w/P.h;
+  var h=Math.min(maxH,innerWidth*.9/a),w=h*a;
+  return {x:(innerWidth-w)/2,y:top+(maxH-h)/2,w:w,h:h};
+}
+function openPiece(i){
+  if(piece||abriendo)return;abriendo=true;cur=i;var L=LOOKS[i],P=L.prenda,it=items[i];
+  it.el.classList.add("lift");
+  setTimeout(function(){
+    var r=it.sw.getBoundingClientRect();TR=targetRect(P);
+    var rr=it.el.getBoundingClientRect();
+    limpiarPiezas();abriendo=false;
+    piece=document.createElement("div");piece.className="piece";
+    piece.style.cssText="left:"+TR.x+"px;top:"+TR.y+"px;width:"+TR.w+"px;height:"+TR.h+"px";
+    piece.innerHTML='<div class="tilt"><div class="face"><img src="'+P.frente+'" alt="'+P.n+' de frente">'+hookSVG(P)+'<div class="sheen"></div></div>'+
+      '<div class="face b"><img src="'+P.espalda+'" alt="'+P.n+' de espalda">'+hookSVG(P)+'<div class="sheen"></div></div></div>';
+    tilt=piece.firstChild;base=0;st={rx:0,ry:0,tx:0,ty:0,z:1};tg={rx:0,ry:0,tx:0,ty:0,z:1};zoom=1;
+    piece.style.transform="translate("+(rr.left-TR.x)+"px,"+(rr.top-18-TR.y)+"px) scale("+(rr.width/TR.w)+")";
+    document.body.appendChild(piece);
+    it.el.style.visibility="hidden";it.el.classList.remove("lift");
+    $("veil").classList.add("on");
+    requestAnimationFrame(function(){requestAnimationFrame(function(){piece.classList.add("fly");piece.style.transform="none"})});
+    $("in").textContent=P.n;sideUI(0);
+    setTimeout(function(){
+      $("info").classList.add("on");
+      var f=$("finger");f.style.top=(TR.y+TR.h-34)+"px";f.classList.add("on");
+      var s=$("side");s.style.top=(TR.y-6)+"px";s.classList.add("on");
+      /* pequeño giro de muestra: enseña que tiene espalda */
+      if(!reduce){tg.ry=-38;setTimeout(function(){if(!touching)tg.ry=0},650)}
+    },reduce?0:450);
+    setTimeout(function(){piece&&piece.classList.remove("fly")},reduce?0:820);
+    bindPiece();
+  },reduce?0:200);
+}
+var touching=false,abriendo=false;
+/* quita cualquier copia de la prenda que haya quedado flotando */
+function limpiarPiezas(keep){[].forEach.call(document.querySelectorAll(".piece"),function(e){if(e!==keep)e.remove()})}
+function sideUI(f){[].forEach.call($("side").children,function(b){b.setAttribute("aria-pressed",+b.dataset.f===f)})}
+function bindPiece(){
+  var sx=0,sy=0,lastTap=0;
+  piece.addEventListener("pointerdown",function(e){
+    touching=true;sx=e.clientX;sy=e.clientY;piece.classList.add("touch");$("finger").classList.remove("on");
+    try{piece.setPointerCapture(e.pointerId)}catch(er){}
+    var now=performance.now();if(now-lastTap<300){zoom=zoom>1?1:1.8;tg.z=zoom;if(zoom===1){tg.tx=tg.ty=0}}lastTap=now;
+    move(e);
+  });
+  function move(e){
+    if(!touching)return;var r=piece.getBoundingClientRect(),dx=e.clientX-sx,dy=e.clientY-sy;
+    if(zoom>1){tg.tx=dx;tg.ty=dy;tg.ry=base+dx*.08;tg.rx=-dy*.05}
+    else{tg.ry=base+dx*.55;tg.rx=Math.max(-22,Math.min(22,-dy*.2));tg.tx=dx*.12;tg.ty=dy*.25}
+    tilt.style.setProperty("--sx",((e.clientX-r.left)/r.width*100)+"%");tilt.style.setProperty("--sy",((e.clientY-r.top)/r.height*100)+"%");
+  }
+  piece.addEventListener("pointermove",move);
+  var rel=function(){
+    if(!touching)return;touching=false;piece&&piece.classList.remove("touch");
+    /* al soltar queda de frente o de espalda, la que esté más cerca */
+    base=Math.round(tg.ry/180)*180;tg.ry=base;tg.rx=0;if(zoom===1){tg.tx=tg.ty=0}
+    sideUI(Math.abs(Math.round(base/180))%2);
+  };
+  piece.addEventListener("pointerup",rel);piece.addEventListener("pointercancel",rel);
+  cancelAnimationFrame(pAnim);
+  (function loop(){
+    if(!piece)return;var t=performance.now()/1000;
+    ["rx","ry","tx","ty","z"].forEach(function(k){st[k]+=(tg[k]-st[k])*.13});
+    var idle=touching||reduce?0:Math.sin(t*1.2)*2.5;
+    tilt.style.transform="translate("+st.tx.toFixed(1)+"px,"+(st.ty+(reduce||zoom>1?0:Math.sin(t*1.5)*3)).toFixed(1)+"px) rotateX("+st.rx.toFixed(2)+"deg) rotateY("+(st.ry+idle).toFixed(2)+"deg) scale("+st.z.toFixed(3)+")";
+    pAnim=requestAnimationFrame(loop);
+  })();
+}
+$("side").addEventListener("click",function(e){var b=e.target.closest("[data-f]");if(!b||!piece)return;
+  var f=+b.dataset.f;base=f?(Math.floor(base/360)*360+180):Math.round(base/360)*360;tg.ry=base;sideUI(f);$("finger").classList.remove("on")});
+function hideProbador(){$("info").classList.remove("on");$("finger").classList.remove("on");$("side").classList.remove("on")}
+$("close").addEventListener("click",function(){
+  if(!piece)return;var it=items[cur];hideProbador();$("veil").classList.remove("on");
+  tg={rx:0,ry:Math.round(base/360)*360,tx:0,ty:0,z:1};zoom=1;
+  var r=it.el.getBoundingClientRect();
+  setTimeout(function(){
+    piece.classList.add("fly");piece.style.transform="translate("+(r.left-TR.x)+"px,"+(r.top-TR.y)+"px) scale("+(r.width/TR.w)+")";
+    setTimeout(function(){cancelAnimationFrame(pAnim);piece.remove();piece=null;it.el.style.visibility="";it.om+=reduce?0:-80},reduce?0:820);
+  },reduce?0:250);
+});
+
+/* =========================================================
+   3. LOOK COMPLETO: la prenda vuela y se "pone" sobre la modelo,
+      una luz revela la foto y cuelga la etiqueta 🏷️ del tacón MF
+   ========================================================= */
+var PH=null,tagAnim=0;
+function layoutPhoto(L){
+  var S=$("lstage"),w=S.clientWidth,h=S.clientHeight,F=L.foto;
+  var ph=Math.min(h,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo");
+  el.style.cssText="left:"+(w-pw)/2+"px;top:"+(h-ph)/2+"px;width:"+pw+"px;height:"+ph+"px";
+  PH={x:(w-pw)/2,y:(h-ph)/2,k:pw/F.w};
+  $("vf").style.cssText="left:"+PH.x+"px;top:"+PH.y+"px;width:"+pw+"px;height:"+ph+"px";
+  if(F.video){var k=PH.k,vf=F.vidFin,vh=vf.w*F.vidH/F.vidW,v=$("lvideo");
+    v.style.cssText="left:"+(vf.c[0]-vf.w/2)*k+"px;top:"+(vf.c[1]-vh/2)*k+"px;width:"+vf.w*k+"px;height:"+vh*k+"px"}
+  return PH;
+}
+function onPhoto(p){return {x:PH.x+p[0]*PH.k,y:PH.y+p[1]*PH.k}}
+$("full").addEventListener("click",function(){
+  if(!piece)return;var L=LOOKS[cur],P=L.prenda,h=L.tacon;
+  hideProbador();
+  $("lname").textContent=L.nombre;$("topChip").textContent=String(cur+1).padStart(2,"0")+" / "+String(LOOKS.length).padStart(2,"0");
+  var ph=$("photo");ph.classList.remove("shot","vid","vidout");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
+  var v=$("lvideo");v.pause();if(L.foto.video){if(v.getAttribute("src")!==L.foto.video)v.src=L.foto.video}else v.removeAttribute("src");$("lphoto").classList.remove("cam");$("lphoto").style.transform="";
+  $("play").classList.remove("on");$("play").hidden=!L.foto.video;
+  marcas(false);creditos(L,false,false);
+  $("lookView").classList.add("on");$("rackView").classList.add("off");$("veil").classList.remove("on");
+  /* primero vuelve de frente */
+  tg={rx:0,ry:Math.round(base/360)*360,tx:0,ty:0,z:1};zoom=1;
+  requestAnimationFrame(function(){
+    var m=layoutPhoto(L),S=$("lstage").getBoundingClientRect();
+    var E=L.encaje,k=E.w/P.w,T={x:S.left+m.x+E.x*m.k,y:S.top+m.y+E.y*m.k,w:E.w*m.k,h:P.h*k*m.k};
+    var D=reduce?0:1;
+    setTimeout(function(){
+      piece.classList.add("fly","dress");
+      piece.style.transform="translate("+(T.x-TR.x)+"px,"+(T.y-TR.y)+"px) scale("+(T.w/TR.w)+")";
+    },180*D);
+    /* visor: aparece, el cuadro de enfoque busca la prenda y fija; flash y arranca la sesión en video */
+    setTimeout(function(){
+      var vf=$("vf"),af=$("af");vf.classList.add("on");$("tc").textContent="00:00:00";$("shotN").textContent="FOTO 00";
+      af.classList.remove("lock");af.style.cssText="left:12%;top:10%;width:76%;height:70%";
+      setTimeout(function(){var E2=L.encaje,pw=PH.k;af.style.cssText="left:"+(E2.x+E2.w*.28)*pw+"px;top:"+(E2.y+150)*pw+"px;width:"+E2.w*.44*pw+"px;height:"+E2.w*.44*pw+"px"},80*D);
+      setTimeout(function(){af.classList.add("lock")},560*D);
+    },650*D);
+    setTimeout(function(){
+      disparo(function(){if(piece){piece.style.transition="none";piece.style.opacity=0}sesion(L)},1);
+    },1350*D);
+    setTimeout(function(){if(piece){cancelAnimationFrame(pAnim);piece.remove();piece=null}limpiarPiezas()},1500*D);
+  });
+});
+/* Disparo: flash de estudio y un "clic" de la cámara (fuerza: 1 fuerte, .5 suave) */
+function disparo(fn,fuerza){
+  var f=$("flash");f.style.setProperty("--f",fuerza||1);f.classList.remove("on");void f.offsetWidth;f.classList.add("on");
+  var ph=$("photo");ph.classList.remove("click");void ph.offsetWidth;ph.classList.add("click");
+  if(fn)setTimeout(fn,reduce?0:60);
+}
+/* =========================================================
+   SESIÓN EN VIDEO: el video corre dentro del visor de la cámara (REC, tiempo,
+   enfoque) y el fotógrafo dispara con flash en los mejores momentos.
+   Al terminar, el último cuadro empalma con la foto y aparece la etiqueta 🏷️.
+   ========================================================= */
+var vidState=0,camLoop=0,disparos=[];
+function sesion(L){
+  var v=$("lvideo"),ph=$("photo"),F=L.foto;
+  showMarks(false);$("play").classList.remove("on");
+  if(!F.video){ph.classList.add("shot");finSesion(L);return}
+  vidState=1;ph.classList.remove("vidout","shot");$("vf").classList.add("on");
+  disparos=(F.disparos||[]).map(function(t){return {t:t,ok:false}});
+  try{v.currentTime=0}catch(e){}
+  var go=function(){ph.classList.add("vid")};
+  v.addEventListener("playing",go,{once:true});
+  var pr=v.play();if(pr&&pr.catch)pr.catch(function(){go()});
+  cancelAnimationFrame(camLoop);
+  var n=0;
+  (function loop(){
+    if(vidState!==1)return;
+    var t=v.currentTime||0,fr=Math.floor(t*24)%24,ss=Math.floor(t);
+    $("tc").textContent="00:00:"+String(ss).padStart(2,"0")+":"+String(fr).padStart(2,"0");
+    disparos.forEach(function(d){if(!d.ok&&t>=d.t){d.ok=true;n++;
+      $("shotN").textContent="FOTO "+String(n).padStart(2,"0");
+      var af=$("af");af.classList.remove("lock");void af.offsetWidth;setTimeout(function(){af.classList.add("lock")},120);
+      if(!reduce)disparo(null,.55);
+      if(n===1)creditos(LOOKS[cur],true,false)}});
+    camLoop=requestAnimationFrame(loop);
+  })();
+}
+function finSesion(L){
+  vidState=0;cancelAnimationFrame(camLoop);
+  var ph=$("photo");ph.classList.add("shot"); /* la foto queda debajo: es igual al último cuadro */
+  requestAnimationFrame(function(){ph.classList.add("vidout");ph.classList.remove("vid")});
+  setTimeout(function(){disparo(null,1);$("shotN").textContent="LISTO"},reduce?0:350);
+  setTimeout(function(){$("vf").classList.remove("on")},reduce?0:1000);
+  setTimeout(function(){focoTacon(L);var b=$("play");b.textContent="↻ Ver la sesión";b.classList.toggle("on",!!L.foto.video)},reduce?0:1200);
+}
+$("lvideo").addEventListener("ended",function(){if(vidState===1)finSesion(LOOKS[cur])});
+$("play").addEventListener("click",function(){
+  var L=LOOKS[cur];
+  if(vidState===1){$("lvideo").pause();finSesion(L);return}
+  showMarks(false);this.classList.remove("on");var vf=$("vf");vf.classList.add("on");$("shotN").textContent="FOTO 00";
+  setTimeout(function(){disparo(function(){sesion(L)},1)},reduce?0:450);
+});
+/* ---------- Puntos de compra y créditos "En este look" ----------
+   Primero el vestido (durante el video aparece su tarjeta abajo); al final, sobre la foto,
+   el punto del vestido y después el de los tacones MF. */
+/* Pone la pastilla hacia el lado donde cabe completa; si no cabe en ninguno, la acorta */
+function pastilla(id,item,punto){
+  var el=$(id),pl=el.querySelector(".pl"),S=$("lstage").clientWidth,m=10;
+  pl.style.maxWidth="";
+  pl.innerHTML=item.n+(item.p?' <i>·</i> <b>'+fmt(item.p)+'</b>':'')+' <i>→</i>';
+  var w=pl.offsetWidth,der=S-punto.x-38-m,izq=punto.x-38-m;
+  var lado=w<=der?"der":w<=izq?"izq":(der>=izq?"der":"izq");
+  if(w>Math.max(der,izq)){pl.innerHTML=item.n+' <i>→</i>';w=pl.offsetWidth;if(w>Math.max(der,izq))pl.style.maxWidth=Math.max(der,izq)+"px"}
+  el.className="hs "+lado;return el;
+}
+function ubicar(el,punto){el.style.left=punto.x+"px";el.style.top=punto.y+"px"}
+function marcas(on){["hsV","hsT"].forEach(function(id){$(id).classList.toggle("on",!!on&&$(id).dataset.listo==="1")})}
+function creditos(L,vestido,tacon){
+  var V=L.prenda.venta||{n:L.prenda.n},T=L.tacon;
+  $("crV").innerHTML='<img src="'+L.prenda.frente+'" alt=""><span><small>Viste</small><b>'+V.n+'</b><span>'+(V.p?fmt(V.p):"")+'</span></span>';
+  $("crT").innerHTML='<img src="'+(T.mini||"")+'" alt=""><span><small>Calza</small><b>'+T.n+'</b><span>'+fmt(T.p)+'</span></span>';
+  $("crV").classList.toggle("on",!!vestido);$("crT").classList.toggle("on",!!tacon);
+}
+function focoTacon(L){
+  var S=$("lstage").clientWidth,V=L.prenda.venta||{n:L.prenda.n},T=L.tacon;
+  creditos(L,true,false);
+  /* 1) el vestido: punto en la prenda, pastilla hacia el lado con más espacio */
+  var d=onPhoto(L.puntoPrenda);ubicar($("hsV"),d);var hv=pastilla("hsV",V,d);hv.dataset.listo="1";
+  requestAnimationFrame(function(){hv.classList.add("on")});
+  /* 2) un momento después, el complemento: los tacones MF */
+  setTimeout(function(){
+    if(!$("lookView").classList.contains("on"))return;
+    var p=onPhoto(T.punto),r=$("ring");
+    r.style.left=p.x+"px";r.style.top=p.y+"px";r.classList.remove("go");void r.offsetWidth;r.classList.add("go");
+    ubicar($("hsT"),p);var ht=pastilla("hsT",T,p);ht.dataset.listo="1";ht.classList.add("on");
+    creditos(L,true,true);
+  },reduce?0:1300);
+  if(L.foto.video)$("play").classList.add("on");
+}
+function showMarks(on){if(!on){$("hsV").dataset.listo=$("hsT").dataset.listo="0"}marcas(on)}
+
+$("buy").addEventListener("click",function(){openSheet("garment")});
+$("hsV").addEventListener("click",function(){openSheet("garment")});
+$("hsT").addEventListener("click",function(){openSheet("heel")});
+$("crV").addEventListener("click",function(){openSheet("garment")});
+$("crT").addEventListener("click",function(){openSheet("heel")});
+$("back").addEventListener("click",function(){
+  limpiarPiezas();piece=null;abriendo=false;
+  $("lookView").classList.remove("on");$("rackView").classList.remove("off");
+  $("lvideo").pause();$("photo").classList.remove("vid");vidState=0;$("topChip").textContent="";
+  $("vf").classList.remove("on");cancelAnimationFrame(camLoop);var it=items[cur];it.el.style.visibility="";it.om-=reduce?0:110;
+});
+
+/* ---------------- Hoja de compra ---------------- */
+var size=null,color=null;
+var item=null;
+function openSheet(mode){
+  var L=LOOKS[cur];size=null;
+  item=mode==="heel"?L.tacon:(L.prenda.venta||null);
+  if(!item){toast("Pronto disponible");return}
+  $("sn").textContent=item.n;$("sp").hidden=false;$("sp").textContent=fmt(item.p);
+  color=item.colores[0];galeria(fotosTacon(item,color));
+  $("sdesc").innerHTML=(item.desc||[]).map(function(t){return "<li>"+t+"</li>"}).join("");
+  $("scol").hidden=item.colores.length<2;
+  $("scolors").innerHTML=item.colores.map(function(c){return '<button class="opt" type="button" data-c="'+c+'" aria-pressed="'+(c===color)+'">'+c+'</button>'}).join("");
+  $("ssizes").innerHTML=item.tallas.map(function(t){return '<button class="opt" type="button" data-s="'+t+'" aria-pressed="false"'+(item.agotadas.indexOf(t)>-1?" disabled":"")+'>'+t+'</button>'}).join("");
+  $("snote").textContent="";
+  $("sheetVeil").classList.add("on");$("sheet").classList.add("on");
+}
+function fotosTacon(h,c){var extra=(h.fotosColor&&h.fotosColor[c])||[];return extra.concat(h.fotos||[])}
+function galeria(L2){
+  $("sgal").innerHTML=L2.map(function(f){var u=typeof f==="string"?f:f.u,fit=typeof f==="string"?"cover":f.fit;return '<img src="'+u+'" alt="" draggable="false" style="object-fit:'+fit+'">'}).join("");$("sgal").scrollLeft=0;
+}
+function closeSheet(){$("sheetVeil").classList.remove("on");$("sheet").classList.remove("on")}
+$("sx").addEventListener("click",closeSheet);$("sheetVeil").addEventListener("click",closeSheet);
+$("scolors").addEventListener("click",function(e){var b=e.target.closest("[data-c]");if(!b)return;color=b.dataset.c;galeria(fotosTacon(item,color));[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
+$("ssizes").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b||b.disabled)return;size=b.dataset.s;[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
+/* Agrega a la misma bolsa de la tienda (mf_cart). El servidor recalcula el precio al pagar. */
+$("sadd").addEventListener("click",function(){
+  if(!size){toast("Elige tu talla");return}
+  var it=item,cart=[];
+  try{cart=JSON.parse(localStorage.getItem("mf_cart"))||[]}catch(e){}
+  var col=(it.catColors||[]).filter(function(c){return String(c.n).toLowerCase()===String(color).toLowerCase()})[0]||{};
+  var l=cart.filter(function(x){return String(x.id)===String(it.id)&&x.talla===size&&(x.color||"")===(color||"")})[0];
+  if(l)l.q++;else cart.push({id:it.id,name:it.n,price:it.p,img:col.img||it.catImg||"",talla:size,color:color||"",q:1});
+  try{localStorage.setItem("mf_cart",JSON.stringify(cart))}catch(e){}
+  closeSheet();toast("Añadido a la bolsa",true);
+});
+function toast(t,bolsa){var e=$("toast");$("toastT").textContent=t;$("toastA").hidden=!bolsa;e.style.pointerEvents=bolsa?"auto":"none";e.classList.add("on");clearTimeout(e._h);e._h=setTimeout(function(){e.classList.remove("on")},bolsa?4200:2600)}
+
+/* ---------------- Catálogo en vivo: nombre, precio, tallas, colores y fotos ---------------- */
+var TODAS={calzado:["34","35","36","37","38","39","40"],ropa:["XS","S","M","L","XL"]};
+function sincronizar(it,P){
+  if(!it||!P)return;
+  it.n=P.name||it.n;if(P.price>0)it.p=P.price;
+  var todas=TODAS[P.tipo]||it.tallas;it.tallas=todas.slice();
+  it.agotadas=todas.filter(function(t){return (P.tallas||[]).indexOf(t)<0});
+  if(P.colors&&P.colors.length){
+    it.catColors=P.colors;it.colores=P.colors.map(function(c){return c.n});
+    it.fotosColor=it.fotosColor||{};
+    P.colors.forEach(function(c){if(c.img&&!it.fotosColor[c.n])it.fotosColor[c.n]=[c.img]});
+  }
+  it.catImg=P.img||"";
+  /* primero las fotos curadas del look y después las del catálogo, sin repetir */
+  var ya={};(it.fotos||[]).forEach(function(f){ya[typeof f==="string"?f:f.u]=1});
+  (P.imgs||[]).forEach(function(u){if(!ya[u]){ya[u]=1;(it.fotos=it.fotos||[]).push(u)}});
+  if(P.desc&&!it.desc)it.desc=String(P.desc).split(/\n+/).filter(Boolean);
+}
+(function(){
+  var API=window.MF_API_BASE||"";
+  fetch(API+"/api/catalogo").then(function(r){return r.ok?r.json():null}).then(function(d){
+    if(!d||!Array.isArray(d.productos))return;var C={};d.productos.forEach(function(p){C[p.id]=p});
+    LOOKS.forEach(function(L){sincronizar(L.tacon,C[L.tacon&&L.tacon.id]);if(L.prenda.venta)sincronizar(L.prenda.venta,C[L.prenda.venta.id]);
+      if(cur>-1&&$("lookView").classList.contains("on")&&L===LOOKS[cur]){creditos(L,$("crV").classList.contains("on"),$("crT").classList.contains("on"))}});
+  }).catch(function(){});
+})();
+
+/* ---------------- Arranque ---------------- */
+LOOKS.forEach(function(L){[L.prenda.frente,L.prenda.espalda,L.foto.src].forEach(function(s){var i=new Image();i.src=s})});
+if(!LOOKS.length){$("rackView").querySelector(".h1").textContent="Muy pronto";}
+buildRack();requestAnimationFrame(tick);
+var rz;addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(function(){if(!piece){buildRack();items.forEach(function(it){it.on=it.arr=true;it.el.style.opacity=1});started=-1e9}
+  if($("lookView").classList.contains("on"))layoutPhoto(LOOKS[cur])},150)});
+})();
+</script>
+</body>
+</html>
