@@ -117,7 +117,7 @@
       var f = k.portada ? { src: k.portada, cover: true } : (function () { var d = ps.filter(function (p) { return foto(p); }); var q = d.filter(function (p) { return p.destacado; })[0] || d[0]; return q ? { src: foto(q), cover: false } : null; })();
       return '<section class="rcov" data-k="' + E(k.id) + '" id="c-' + E(k.id) + '"><div class="rcov-ph">' + (f ? img(f.src, k.nombre, f.cover) : '') + '</div>' +
         '<div class="rcov-tx"><div class="rey">Colección</div><h2>' + E(k.nombre) + '</h2><p>' + E(frase(k, n)) + '</p>' +
-        '<button class="rbtn" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">Ver colección</button></div></section>';
+        '<button class="rbtn" data-ver="' + E(k.id) + '" aria-label="Ver colección ' + E(k.nombre) + '">' + E(TX('boton_coleccion', 'Ver colección')) + '</button></div></section>';
     }).join('') + '</div><div class="rall"><button data-ver="">Ver todos los modelos</button></div>';
   }
 
