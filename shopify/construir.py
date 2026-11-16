@@ -65,6 +65,12 @@ def main():
 
     html = re.sub(r'(src|href)="((?:DATA/)?[\w\-]+\.(?:js|css))"', cambiar, html)
     html = html.replace('<script src="DATA/catalogo_tienda.js"></script>', "{% render 'mf-catalogo' %}")
+    # Sin parpadeo del diseño viejo: la página se muestra cuando ya está dibujada con lo actual (no a los 2,5 s fijos).
+    # En un celular lento los scripts tardan más de 2,5 s y se alcanzaba a ver el inicio antiguo. Queda un respaldo de 12 s.
+    viejo = "setTimeout(function(){document.documentElement.classList.remove('mf-espera')},2500)"
+    if viejo not in html:
+        raise SystemExit('index.html cambió: no encuentro el tiempo de espera de la portada')
+    html = html.replace(viejo, viejo.replace('2500', '12000'))
     html = html.replace('<script src="DATA/shopify-variantes.js"></script>', '')
     for viejo, nuevo in PAGINAS.items():
         html = html.replace('href="%s"' % viejo, 'href="%s"' % nuevo)
