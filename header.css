@@ -154,3 +154,16 @@ html body header.bar.wd .bag #cnt::before{content:"("}
 html body header.bar.wd .bag #cnt::after{content:")"}
 html body header.bar.wd svg{stroke:#000}
 @media (max-width:380px){html body header.bar.wd .wd-t{font-size:.74rem;letter-spacing:.22em}}
+
+/* Encabezado con botones cuadrados (opción A): sin la franja de texto, sin las palabras MENÚ y MI BOLSA */
+html body .hd-ann{display:none!important}
+html body header.bar.wd{gap:.5rem;padding:.7rem 1rem;padding-top:calc(.7rem + env(safe-area-inset-top,0px))}
+html body header.bar.wd .wd-t{display:none}
+html body header.bar.wd .mb,html body header.bar.wd .hd-s,html body header.bar.wd .wd-tacon{display:grid;place-items:center;width:2.5rem;height:2.5rem;padding:0;border:1px solid #111;border-radius:6px;background:#fff;color:#111;cursor:pointer;position:relative;flex:none}
+html body header.bar.wd .mb svg,html body header.bar.wd .hd-s svg,html body header.bar.wd .wd-tacon svg{width:1.3rem;height:1.3rem;fill:none;stroke:#111;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+html body header.bar.wd .bag{display:flex;align-items:center;gap:.4rem;height:2.5rem;padding:0 .8rem;border:1px solid #111;border-radius:6px;background:#111;color:#fff;flex:none}
+html body header.bar.wd .bag svg{width:1.15rem;height:1.15rem;stroke:#fff;stroke-width:1.7}
+html body header.bar.wd .bag #cnt{margin:0;font:500 .85rem Jost,Helvetica,Arial,sans-serif;letter-spacing:.02em;color:#fff}
+html body header.bar.wd .bag #cnt::before,html body header.bar.wd .bag #cnt::after{content:none}
+html body header.bar.wd .mb:active,html body header.bar.wd .hd-s:active,html body header.bar.wd .wd-tacon:active,html body header.bar.wd .bag:active{transform:scale(.95)}
+html body header.bar.wd .wd-logo svg{height:1.75rem}
