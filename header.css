@@ -206,3 +206,11 @@ html body header.bar:not(.wd)>*{visibility:hidden;animation:mfMostrarHd 0s 1.2s 
 .mf-tira{animation:mfTiraIn .35s ease-out}
 .mf-tira-bg{opacity:0;transition:opacity .4s ease-out}
 .mf-tira-bg[data-src]{opacity:1}
+
+/* Fondo de la tienda en el gris piedra de la foto principal (pared y piso), en vez del blanco puro,
+   para que la imagen del inicio y toda la tienda se vean como un mismo ambiente. Los campos para escribir siguen blancos. */
+:root{--mf-fondo:#F1F0ED;--mf-fondo-2:#E8E6E2}
+html:root,html:root body{background:var(--mf-fondo)!important}
+html:root body header.bar,html:root body header.bar.wd,html:root body #mn.mn,html:root body #lista.rcp,html:root body .ft3-tr,
+html:root body #dr.dr,html:root body #dr .drb,html:root body #app .stk.eg-stk,html:root body .dr .drf{background:var(--mf-fondo)!important}
+html:root body .ft3-tr a{border-color:var(--mf-fondo-2)!important}
