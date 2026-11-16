@@ -6,7 +6,7 @@
 (function () {
   'use strict';
   var ID = '1092821839891082';
-  var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'];
+  var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com', 'npckie-04.myshopify.com'];
   var COMPRA = true; // Purchase se envía solo tras APPROVED; en Preview el Pixel requiere ?mfpixel=1.
 
   var host = String(location.hostname || '').toLowerCase();

@@ -110,6 +110,9 @@ def main():
         texto = texto.replace("s.src = src;", "s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src;")
         texto = texto.replace("s.src = 'outfits-boton.js';", "s.src = (window.MF_ASSETS && window.MF_ASSETS['outfits-boton.js']) || 'outfits-boton.js';")
         texto = texto.replace("'assets/", "'%s/assets/" % NETLIFY).replace('"assets/', '"%s/assets/' % NETLIFY)
+        if ruta == 'meta-pixel.js':  # en la copia de Shopify el píxel también se activa en el dominio de Shopify
+            texto = texto.replace("var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'];",
+                                  "var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com', 'npckie-04.myshopify.com'];")
         if ruta == 'vitrina.js':  # la vitrina se arma cuando ya están el catálogo y la lista del panel (si no, sale vacía)
             texto = texto.replace("    if (!LISTA) {\n", "    if (!LISTA) {\n      if (!window.MF_API_OK) return;\n", 1)
         texto = texto.replace('"vestidos.html', '"/pages/vestidos')
