@@ -5,6 +5,14 @@
 {%- endcomment -%}
 <script>
 window.MF_SHOPIFY_CONTENIDO = {{ shop.metafields.mfcol.contenido.value | json }};
+{%- comment -%} Panel propio de Shopify: la vitrina es la colección "Vitrina" (en su orden) y la portada de cada colección es su imagen en Shopify {%- endcomment -%}
+window.MF_SHOPIFY_VITRINA = [{%- for p in collections['vitrina'].products limit: 40 -%}{{ p.handle | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}];
+window.MF_SHOPIFY_PORTADAS = { {%- for c in collections -%}{%- if c.image -%}{{ c.handle | json }}: {{ c.image | image_url: width: 1600 | prepend: 'https:' | json }},{%- endif -%}{%- endfor -%} };
+(function () {
+  var C = window.MF_SHOPIFY_CONTENIDO = window.MF_SHOPIFY_CONTENIDO || {};
+  if (window.MF_SHOPIFY_VITRINA.length) C.vitrina = window.MF_SHOPIFY_VITRINA;
+  (C.colecciones || []).forEach(function (k) { var u = window.MF_SHOPIFY_PORTADAS[k.id]; if (u) k.portada = u; });
+})();
 window.MF_SHOPIFY_ENVIO = 17500;
 window.MF_SHOPIFY_VARIANTES = {};
 window.MF_SHOPIFY_CATALOGO = [
@@ -16,6 +24,7 @@ window.MF_SHOPIFY_CATALOGO = [
     {%- if o == 'Color' -%}{%- assign ci = forloop.index0 -%}{%- endif -%}
   {%- endfor -%}
   {%- assign extra = p.metafields.mfcol.tienda.value -%}
+  {%- assign colh = '' -%}{%- for c in p.collections -%}{%- if colh == '' and c.handle != 'vitrina' and c.handle != 'frontpage' -%}{%- assign colh = c.handle -%}{%- endif -%}{%- endfor -%}
   {
     "id": {{ p.handle | json }},
     "name": {{ p.title | json }},
@@ -24,7 +33,7 @@ window.MF_SHOPIFY_CATALOGO = [
     "img": {{ p.featured_image | image_url: width: 1400 | prepend: 'https:' | json }},
     "imgs": [{%- for im in p.images -%}{{ im | image_url: width: 1400 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
     "colors": [{%- for c in extra.colors -%}{"h": {{ c.h | json }}, "n": {{ c.n | json }}{% if c.i != nil and p.images[c.i] %}, "img": {{ p.images[c.i] | image_url: width: 1400 | prepend: 'https:' | json }}{% endif %}}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
-    "coleccion": {{ extra.coleccion | default: p.collections.first.handle | default: '' | json }},
+    "coleccion": {{ extra.coleccion | default: colh | json }},
     "destacado": {% if extra.destacado or p.tags contains 'Destacado' %}true{% else %}false{% endif %},
     "stock": {
       {%- assign vistas = '' -%}{%- assign primero = true -%}

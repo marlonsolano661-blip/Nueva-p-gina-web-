@@ -89,6 +89,8 @@
   // Del servidor de Netlify solo se toma el contenido (banners, vitrina, comunidad); si no responde, se usa la copia
   // guardada en Shopify (MF_SHOPIFY_CONTENIDO: portadas, banners y textos), así la tienda abre igual.
 
+  // En Shopify la tienda es independiente: no le pide nada al panel de Netlify (todo sale de Shopify)
+  if (SH) return;
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API + '/api/catalogo', { signal: ctl.signal, headers: { Accept: 'application/json' } })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
