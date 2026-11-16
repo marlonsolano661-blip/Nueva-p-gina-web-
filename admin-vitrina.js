@@ -1,13 +1,13 @@
 /* Panel · Vitrina: eliges qué zapatos salen en "La vitrina" del inicio y en qué orden.
    Se guarda en el servidor (recurso 'vitrina') y la tienda lo usa en menos de un minuto.
    Si la lista guardada queda vacía, la tienda usa la lista por defecto de DATA/recortes.js.
-   Se carga desde admin-comunidad.js; si falla, el resto del panel funciona igual. */
+   Se carga desde admin-tienda.html; si falla, el resto del panel funciona igual. */
 (function () {
   'use strict';
   if (window.__mfAdminVitrina) return; window.__mfAdminVitrina = 1;
   var A = window.mfAdmin;
-  var tabs = document.getElementById('tabs');
-  if (!A || !tabs) return;
+  var sec = document.getElementById('p-vitrina');
+  if (!A || !sec) return;
   var el = function () { return A.el.apply(null, arguments); };
   var MAX = 24;
   var S = { lista: [], productos: [], guardada: [], filtro: '' };
@@ -30,25 +30,12 @@
   ].join('\n');
   document.head.appendChild(css);
 
-  // Botón en el inicio del panel ("Diseño de la tienda") y su sección
-  var btn = el('button', { type: 'button', 'data-vt': '1' });
-  btn.innerHTML = '<span class="ic">🛍️</span><span class="tx"><b>Vitrina</b><small>Zapatos de la vitrina del inicio y su orden</small></span><i class="fl" aria-hidden="true">›</i>';
-  var ref = tabs.querySelector('button[data-t="inicio"]');
-  if (ref && ref.parentNode) ref.parentNode.insertBefore(btn, ref.nextSibling); else tabs.appendChild(btn);
-  var sec = el('section', { class: 'panel', id: 'p-vitrina' });
-  var ult = document.querySelectorAll('.panel'); ult = ult[ult.length - 1];
-  if (ult && ult.parentNode) ult.parentNode.insertBefore(sec, ult.nextSibling); else document.getElementById('app').appendChild(sec);
-
+  // Sección "Vitrina": el menú del panel (admin-tienda.js) la abre con window.mfAdminVitrina.abrir()
   function abrir() {
-    tabs.hidden = true;
-    var v = document.getElementById('volver'), t = document.getElementById('titulo'), ay = document.getElementById('ayuda');
-    if (v) v.hidden = false; if (t) t.textContent = 'Vitrina'; if (ay) ay.hidden = true;
-    document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p === sec); });
-    A.msg(''); window.scrollTo(0, 0);
     sec.textContent = ''; sec.appendChild(el('p', { class: 'nota', text: 'Cargando…' }));
-    cargar().catch(A.falla);
+    return cargar();
   }
-  btn.addEventListener('click', abrir);
+  window.mfAdminVitrina = { abrir: abrir };
 
   function foto(p) { var L = Array.isArray(p.imagenes) && p.imagenes.length ? p.imagenes : (p.imagen ? [p.imagen] : []); var u = p.imagen || L[0] || ''; return /cdn\.shopify\.com/.test(u) ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'width=200' : u; }
   function porId(id) { return S.productos.filter(function (p) { return String(p.id) === String(id); })[0] || null; }

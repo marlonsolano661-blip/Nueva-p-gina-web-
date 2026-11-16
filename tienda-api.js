@@ -1,5 +1,6 @@
 /* Conecta la tienda con el servidor: catálogo, tarifa de envío y contenido administrables.
-   Fuente única: /api/catalogo (Supabase). Si no responde, la tienda sigue con el catálogo estático de DATA/.
+   Fuente única: /api/catalogo (Supabase). No hay catálogo estático: si el servidor no responde se usa la última copia guardada
+   en el navegador o se muestra un aviso con botón «Reintentar».
    Se carga en index.html después del script principal (usa su función draw()). */
 (function () {
   'use strict';
@@ -62,17 +63,18 @@
     } catch (e) { enlaceUsado = true; /* enlace inválido: se queda en la portada */ }
   }
 
-  // Copia del último catálogo en el navegador: en las visitas siguientes la tienda se pinta al instante con esa copia
-  // y se actualiza en segundo plano con lo que responda el servidor (nunca se inventan datos: es lo último que mandó el servidor).
-  var CLAVE = 'mf_cat_v1', VIDA = 7 * 24 * 3600 * 1000, textoGuardado = '', yaMostrado = false;
+  // Copia del último catálogo en el navegador. Para que NUNCA se vea contenido viejo y luego el nuevo:
+  //  · solo se pinta primero si la copia es de hace menos de 15 segundos (recargar la página o volver del pago);
+  //  · si es más vieja, se muestra el esqueleto unos instantes y se pinta una sola vez con lo que responda el servidor;
+  //  · la copia más vieja (hasta 7 días) solo sirve cuando el servidor no responde.
+  var CLAVE = 'mf_cat_v1', FRESCA = 15 * 1000, MAX_VIDA = 7 * 24 * 3600 * 1000, textoGuardado = '', yaMostrado = false;
   function guardarCopia(txt) { try { localStorage.setItem(CLAVE, JSON.stringify({ t: Date.now(), d: txt })); } catch (e) { /* sin espacio o sin almacenamiento */ } }
-  // Se aplica cuando TODOS los scripts de la página ya cargaron (categoria.js, banners.js, producto.js… cambian cómo se dibuja la portada);
-  // si se dibujara antes, saldría el diseño viejo hasta tocar el logo.
-  var copia = null;
+  var guardada = null, copia = null;
   try {
     var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
-    if (g && typeof g.d === 'string' && Date.now() - g.t < VIDA) copia = g;
+    if (g && typeof g.d === 'string' && Date.now() - g.t < MAX_VIDA) { guardada = g; if (Date.now() - g.t < FRESCA) copia = g; }
   } catch (e) { /* copia dañada: se ignora */ }
+  // Se aplica cuando TODOS los scripts de la página ya cargaron (categoria.js, banners.js, producto.js… cambian cómo se dibuja la portada).
   function usarCopia() {
     if (!copia || window.MF_API_OK) return;
     try { aplicar(JSON.parse(copia.d), false, true); textoGuardado = copia.d; yaMostrado = true; } catch (e) { /* copia dañada */ }
@@ -91,9 +93,11 @@
       aplicar(d, yaMostrado && typeof pg !== 'undefined' && pg === 'out');
     })
     .catch(function (e) {
-      if (window.console) console.warn('[tienda] catálogo del servidor no disponible; se usa el estático', e && e.message);
-      window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera'); // sin servidor: se muestra la portada de siempre
-      if (typeof draw === 'function') draw();
+      if (window.console) console.warn('[tienda] catálogo del servidor no disponible', e && e.message);
+      if (window.MF_API_OK) return; // ya se mostró una copia reciente: se deja tal cual
+      if (guardada) { try { aplicar(JSON.parse(guardada.d), false, true); return; } catch (x) { /* copia dañada */ } }
+      window.MF_API_ERR = true; window.MF_API_FIN = true; document.documentElement.classList.remove('mf-espera');
+      if (typeof draw === 'function') draw(); // muestra «No pudimos cargar el catálogo» con botón Reintentar
     })
     .then(function () { clearTimeout(t); });
 })();

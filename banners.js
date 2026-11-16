@@ -33,6 +33,8 @@
       var al = k.alinea === 'left' || k.alinea === 'right' ? k.alinea : 'center';
       return '<p class="' + cl + '" data-capa="' + i + '" style="--x:' + N(k.x, 0, 100, 50) + '%;--y:' + N(k.y, 0, 100, 50) + '%;--s:' + N(k.tam, 2, 16, 6) + ';--w:' + N(k.ancho, 20, 100, 80) + '%;--c:' + (HEX.test(k.color || '') ? k.color : '#ffffff') + ';--a:' + al + ';--i:' + i + '">' + E(k.t) + '</p>';
     }).join('');
+    /* Tarjeta de cristal: los textos y el botón van juntos, abajo a la izquierda, sobre un vidrio esmerilado y una sombra suave */
+    if (b.vidrio === true) return '<div class="bnw"><div class="mfb vid" style="--bg:' + bg + ';--ov:' + (N(b.oscuro, 0, 70, 25) / 100) + '">' + foto + '<div class="bn-ov"></div><div class="bn-sombra"></div><div class="bn-vid">' + capas + (opts.sinBoton ? '' : boton(b, 6)) + '</div></div></div>';
     return '<div class="bnw"><div class="mfb" style="--bg:' + bg + ';--ov:' + (N(b.oscuro, 0, 70, 25) / 100) + '">' + foto + '<div class="bn-ov"></div>' + capas + (opts.sinBoton ? '' : boton(b, 6)) + '</div></div>';
   }
 

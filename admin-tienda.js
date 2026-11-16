@@ -274,7 +274,13 @@
       selectorColores(p.colores, IMGS),
       el('div', { class: 'ancho' }, [el('p', { class: 'nota', text: 'Inventario por talla (unidades disponibles de cada una)' }), tallas]),
       chk('Publicado (visible en la tienda)', 'f-vis', p.visible !== false), chk('Destacado en el inicio', 'f-dest', p.destacado),
-      el('div', { class: 'ancho barra' }, [el('button', { type: 'submit', text: nuevo ? 'Crear producto' : 'Guardar cambios' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } })]),
+      el('div', { class: 'ancho barra' }, [el('button', { type: 'submit', text: nuevo ? 'Crear producto' : 'Guardar cambios' }), el('button', { type: 'button', class: 'claro', text: 'Cancelar', onclick: function () { f.textContent = ''; } }),
+        nuevo ? null : el('button', { type: 'button', class: 'peligro', text: 'Mover a la papelera', onclick: function () {
+          if (!confirm('¿Mover «' + p.nombre + '» a la papelera? Sale de la tienda y puedes restaurarlo desde Papelera.')) return;
+          msg('Moviendo…');
+          api('admin-tienda', { method: 'POST', body: { recurso: 'producto', accion: 'eliminar', id: p.id } })
+            .then(function () { msg('Producto movido a la papelera ✓'); return cargarProductos(); }).catch(falla);
+        } })]),
     ]);
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -589,14 +595,16 @@
   }
 
   // ---------- Sesión ----------
+  var modulo = function (n, txt) { return window[n] ? window[n].abrir() : Promise.reject(new Error(txt + ' no cargó: recarga la página')); };
   var cargarInicio = function () { return window.mfAdminInicio ? window.mfAdminInicio.abrir() : Promise.reject(new Error('El diseñador de inicio no cargó: revisa que admin-banners.js esté subido')); };
   var cargarDescuentos = function () { return window.mfAdminDescuentos ? window.mfAdminDescuentos.abrir() : Promise.reject(new Error('Descuentos no cargó: revisa que admin-descuentos.js esté subido')); };
   window.mfAdmin = { api: api, el: el, msg: msg, falla: falla, subirFoto: subirFoto };
   var cargarComunidad = function () { return window.mfAdminComunidad ? window.mfAdminComunidad.abrir() : Promise.reject(new Error('Comunidad no cargó: revisa que admin-comunidad.js esté subido')); };
   var cargarWhatsapp = function () { return window.mfAdminVentas ? window.mfAdminVentas.abrir() : Promise.reject(new Error('Pedidos WhatsApp no cargó: revisa que admin-ventas.js esté subido')); };
   var cargarFinanzas = function () { return window.mfAdminFinanzas ? window.mfAdminFinanzas.abrir() : Promise.reject(new Error('Finanzas no cargó: revisa que admin-ventas.js esté subido')); };
-  var CARGA = { whatsapp: cargarWhatsapp, finanzas: cargarFinanzas, comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro };
-  var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro' };
+  var CARGA = { whatsapp: cargarWhatsapp, finanzas: cargarFinanzas, comunidad: cargarComunidad, descuentos: cargarDescuentos, inicio: cargarInicio, productos: cargarProductos, colecciones: cargarColecciones, inventario: cargarInventario, envio: cargarEnvio, contenido: cargarContenido, pedidos: cargarPedidos, registro: cargarRegistro,
+    vitrina: function () { return modulo('mfAdminVitrina', 'La vitrina'); }, facturas: function () { return modulo('mfAdminFacturas', 'Facturas'); }, papelera: function () { return modulo('mfAdminPapelera', 'La papelera'); } };
+  var TITULOS = { whatsapp: 'Pedidos WhatsApp', finanzas: 'Finanzas', comunidad: 'Comunidad', descuentos: 'Descuentos', inicio: 'Diseñador de inicio', productos: 'Productos', colecciones: 'Colecciones', inventario: 'Inventario', envio: 'Envío', contenido: 'Contenido', pedidos: 'Pedidos', registro: 'Registro', vitrina: 'La vitrina', facturas: 'Facturas', papelera: 'Papelera' };
   // ---------- Ayuda de cada sección: qué es, cómo se usa y qué cuidar ----------
   var AYUDA = {
     pedidos: { sirve: 'Aquí ves las compras hechas en la tienda online (con su pago) y registras el despacho de cada una.',
@@ -631,6 +639,12 @@
     envio: { sirve: 'La tarifa de envío que se suma al total de cada compra.',
       pasos: ['Escribe la tarifa en pesos.', 'Pulsa «Guardar tarifa».'],
       ojo: 'Total a pagar = subtotal de productos + esta tarifa. Cambiarla no altera los pedidos que ya se crearon.' },
+    vitrina: { sirve: 'Elige qué productos salen en «La vitrina» (el riel de fotos de la tienda) y en qué orden.',
+      pasos: ['Marca los productos que quieres mostrar y ordénalos.', 'Pulsa guardar.'], ojo: 'Si la lista queda vacía, la tienda usa la lista por defecto.' },
+    facturas: { sirve: 'Crea comprobantes de venta en PDF y envíalos por WhatsApp.',
+      pasos: ['Llena los datos de la clienta y agrega los productos.', 'Pulsa para generar el comprobante y envíalo.'], ojo: 'El historial de facturas se guarda en este dispositivo.' },
+    papelera: { sirve: 'Aquí queda la versión anterior de todo lo que cambias o eliminas. Lo nuevo reemplaza a lo viejo; lo viejo se guarda aquí por si lo necesitas.',
+      pasos: ['Busca lo que quieres recuperar (más reciente arriba).', 'Pulsa «Restaurar»: vuelve a la tienda y lo que estaba activo pasa a la papelera.', '«Eliminar» lo borra para siempre.'], ojo: 'Se guardan las últimas 60 versiones; las más antiguas se van borrando solas.' },
     registro: { sirve: 'El historial de lo que ha pasado en la tienda: pagos, despachos y cambios.',
       pasos: ['Úsalo para revisar qué ocurrió con un pedido o si un pago llegó.'] },
   };
@@ -646,37 +660,42 @@
     if (a.ojo) c.appendChild(el('p', { class: 'ay-ojo', text: 'Ojo: ' + a.ojo }));
     d.appendChild(c);
   }
-  function inicio() {
-    $('#tabs').hidden = false; $('#volver').hidden = true; $('#ayuda').hidden = true;
-    if (window.mfAdminResumen) window.mfAdminResumen.cargar();
-    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
-    msg(''); window.scrollTo(0, 0);
-  }
-  function abrir(t) {
-    $('#tabs').hidden = true; $('#volver').hidden = false; $('#titulo').textContent = TITULOS[t] || '';
+  // ---------- Pantallas, sesión y arranque (el menú y las rutas viven en panel-menu.js) ----------
+  var actual = '';
+  function mostrar(t) { // t = 'resumen' o una sección; devuelve false si no existe
+    if (t !== 'resumen' && !CARGA[t]) return false;
+    actual = t;
     document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p.id === 'p-' + t); });
+    msg(''); window.scrollTo(0, 0);
+    if (t === 'resumen') { $('#ayuda').hidden = true; if (window.mfAdminResumen) window.mfAdminResumen.cargar(); return true; }
     pintarAyuda(t);
-    msg(''); window.scrollTo(0, 0); CARGA[t]().catch(falla);
+    var p = $('#p-' + t); p.classList.add('cargando');
+    CARGA[t]().catch(falla).then(function () { p.classList.remove('cargando'); });
+    return true;
   }
-  function entrar() {
+  function pantalla(que) { // 'verificando' | 'clave' | 'app': una sola a la vez, sin parpadeos
+    document.documentElement.classList.toggle('verificando', que === 'verificando');
+    $('#cargando').hidden = que !== 'verificando'; $('#entrada').hidden = que !== 'clave'; $('#app').hidden = que !== 'app';
+  }
+  function entrar(auto) {
     token = $('#token').value.trim() || token;
-    if (!token) return msg('Escribe la clave del panel', true);
-    msg('Verificando…');
+    if (!token) { $('#aviso').textContent = 'Escribe la clave del panel'; return; }
+    $('#aviso').textContent = ''; $('#entrar').disabled = true;
     api('admin-tienda?recurso=contenido').then(function (d) {
       CONT = d.contenido || {};
       try { sessionStorage.setItem('mf_admin_token', token); } catch (e) {}
-      $('#app').hidden = false; $('#salir').hidden = false; $('#entrar').hidden = true; $('#token').hidden = true; $('#token').value = '';
-      inicio();
-    }).catch(falla);
+      $('#token').value = ''; pantalla('app');
+      if (window.mfPanel.alEntrar) window.mfPanel.alEntrar();
+    }).catch(function (e) {
+      if (token) { token = ''; try { sessionStorage.removeItem('mf_admin_token'); } catch (x) {} }
+      pantalla('clave'); $('#aviso').textContent = auto ? '' : (e.message || 'Error de conexión');
+    }).then(function () { $('#entrar').disabled = false; });
   }
   function salir() {
     token = ''; try { sessionStorage.removeItem('mf_admin_token'); } catch (e) {}
-    $('#app').hidden = true; $('#salir').hidden = true; $('#entrar').hidden = false; $('#token').hidden = false;
+    pantalla('clave');
   }
-  $('#entrar').addEventListener('click', entrar);
-  $('#token').addEventListener('keydown', function (e) { if (e.key === 'Enter') entrar(); });
-  $('#salir').addEventListener('click', function () { salir(); msg('Sesión cerrada'); });
-  $('#inicio').addEventListener('click', inicio);
-  $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (b) abrir(b.getAttribute('data-t')); });
-  if (token) entrar();
+  window.mfPanel = { CARGA: CARGA, TITULOS: TITULOS, mostrar: mostrar, salir: salir, actual: function () { return actual; }, alEntrar: null };
+  $('#form-entrada').addEventListener('submit', function (e) { e.preventDefault(); entrar(false); });
+  if (token) { pantalla('verificando'); entrar(true); } else pantalla('clave');
 })();

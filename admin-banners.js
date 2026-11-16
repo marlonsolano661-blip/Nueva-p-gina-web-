@@ -188,6 +188,8 @@
       c.push(slider('Foto: izquierda ↔ derecha', 0, 100, 1, b.fx, function (n) { b.fx = n; var i = $('.bn-ph img', sc); if (i) i.style.objectPosition = b.fx + '% ' + b.fy + '%'; }));
       c.push(slider('Foto: arriba ↕ abajo', 0, 100, 1, b.fy, function (n) { b.fy = n; var i = $('.bn-ph img', sc); if (i) i.style.objectPosition = b.fx + '% ' + b.fy + '%'; }));
     }
+    c.push(el('div', { class: 'ancho ib-fila' }, [tog('Textos en tarjeta de cristal (abajo a la izquierda)', b.vidrio === true, function (v) { if (v) b.vidrio = true; else delete b.vidrio; })]));
+    if (b.vidrio === true) c.push(el('p', { class: 'ib-ayuda ancho', text: 'Con la tarjeta de cristal los textos y el botón van juntos abajo a la izquierda; la posición de cada uno no se usa.' }));
     c.push(slider('Oscurecer la foto', 0, 70, 1, b.oscuro, function (n) { b.oscuro = n; var o = $('.mfb', sc); if (o) o.style.setProperty('--ov', n / 100); }));
     if (!b.foto) c.push(el('label', {}, ['Color de fondo', colorCtl(b.fondo, function (v) { b.fondo = v; var o = $('.mfb', sc); if (o) o.style.setProperty('--bg', v); })]));
     c.push(el('div', { class: 'ancho ib-fila' }, [
