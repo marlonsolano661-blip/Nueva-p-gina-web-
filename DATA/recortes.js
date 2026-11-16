@@ -1,17 +1,5 @@
-/* LA VITRINA del inicio: qué zapatos salen y en qué orden (id del producto, el que sale en el enlace ?producto=<id>).
-   Para cambiarla, edita esta lista. Si queda vacía, la vitrina elige sola los productos con foto de fondo blanco. */
-window.MF_VITRINA = window.MF_VITRINA || [
-  'sandalia-crystal-heel',              // Sandalia Crystal Heel
-  'naked',                              // Naked
-  'altissima',                          // ALTISSIMA
-  'black-soul',                         // BLACK SOUL
-  'aura',                               // Aura
-  'sandalia-reina-plateada',            // Sandalia Reina plateada
-  'tacon-transparente-y-cuna-acrilica', // tacón transparente y cuña acrílica
-  'product',                            // Transparencia Elegante
-  'sandalia-plataforma-ebano',          // Sandalia Plataforma Ébano
-  'diva-shine-casual'                   // Diva Shine Casual
-];
+/* LA VITRINA del inicio ya no tiene lista fija: los zapatos y su orden se eligen en el panel (Vitrina). */
+window.MF_VITRINA = window.MF_VITRINA || [];
 
 /* Fotos SIN FONDO para "La vitrina" del inicio.
    Formato:  'id-del-producto': 'assets/recortes/archivo.webp'
