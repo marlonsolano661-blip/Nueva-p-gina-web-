@@ -167,9 +167,12 @@ def vestidos():
         ('transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s', 'transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .3s'),
         ('transition:filter .9s', 'transition:filter .5s'),
         # Paso a la modelo: el vestido vuela ya sin gancho y se funde con la modelo mientras arranca el video
-        ('},650*D);', '},380*D);'),
-        ('},1350*D);', '},720*D);'),
-        ('},1500*D);', '},860*D);'),
+        ('},650*D);', '},520*D);'),
+        ('},1350*D);', '},860*D);'),
+        ('},1500*D);', '},1000*D);'),
+        # Flash de cámara fuerte justo cuando el vestido llega a la modelo; después aparece la modelo con el video
+        ('if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");',
+         'if(window.mfFlash)mfFlash();if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");'),
         ('transition:opacity .7s', 'transition:opacity .4s'),
     ]
     for viejo, nuevo in ajustes:
@@ -179,7 +182,11 @@ def vestidos():
     html = html.replace('</style>', '.rail{display:none}\n'
                         '.piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}\n'
                         '.piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}\n'
-                        '</style>', 1)
+                        '.mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;background:#fff;animation:mfFlash .7s ease-out forwards}\n'
+                        '@keyframes mfFlash{0%{opacity:0}6%{opacity:1}34%{opacity:1}100%{opacity:0}}\n'
+                        '</style><script>window.mfFlash=function(){var f=document.createElement("div");f.className="mf-flash";'
+                        'document.body.appendChild(f);setTimeout(function(){[].forEach.call(document.querySelectorAll(".piece"),'
+                        'function(p){p.style.transition="none";p.style.opacity=0})},60);setTimeout(function(){f.remove()},800)};</script>', 1)
     html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
     html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)
