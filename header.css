@@ -214,3 +214,10 @@ html:root,html:root body{background:var(--mf-fondo)!important}
 html:root body header.bar,html:root body header.bar.wd,html:root body #mn.mn,html:root body #lista.rcp,html:root body .ft3-tr,
 html:root body #dr.dr,html:root body #dr .drb,html:root body #app .stk.eg-stk,html:root body .dr .drf{background:var(--mf-fondo)!important}
 html:root body .ft3-tr a{border-color:var(--mf-fondo-2)!important}
+/* El mismo fondo piedra en todas las secciones (vitrina, comunidad, catálogo, ficha) y las fotos de producto sin cuadro blanco:
+   con "multiply" el blanco de la foto toma el tono del fondo y solo se ve el zapato */
+html:root body .vt,html:root body .com::before,html:root body #app .pd,html:root body #app .gal,html:root body #app .pi,html:root body .ft3-tr{background:var(--mf-fondo)!important}
+html:root body #gr .pc .im,html:root body #app .gal .th button,html:root body .dr .dli .im,html:root body .dr .ci .im{background:var(--mf-fondo)!important;border-color:var(--mf-fondo-2)!important}
+html:root body #gr .pc .im img,html:root body #app .gal img,html:root body #app .pd .sl img,html:root body .dr img,html:root body .cl-c img{mix-blend-mode:multiply}
+html:root body .pc,html:root body .pc .im,html:root body .im.sm{background:var(--mf-fondo)!important;border-color:var(--mf-fondo-2)!important}
+html:root body .pc .im img,html:root body .im.sm img{mix-blend-mode:multiply}
