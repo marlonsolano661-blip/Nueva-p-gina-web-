@@ -70,11 +70,28 @@ def main():
     cabeza = ('<head>{{ content_for_header }}'
               '<script>window.MF_API_BASE=%r;window.MF_SHOPIFY={tienda:location.host,activo:true};</script>' % NETLIFY)
     assert html.count('<head>') == 1 and html.count('</body>') == 1
-    html = html.replace('<head>', cabeza, 1)
-    html = html.replace('</body>', '{{ content_for_layout }}</body>', 1)
+    inicio, resto = html.split('<head>', 1)
+    medio, final = resto.split('</body>', 1)
 
-    escribir('layout/mf.liquid', html)
-    escribir('templates/index.liquid', "{% layout 'mf' %}\n")
+    # Shopify no acepta archivos Liquid de más de 256 KB: el contenido de la
+    # página se reparte en varios snippets y el layout solo los une.
+    partes, actual = [], ''
+    for linea in medio.splitlines(keepends=True):
+        if actual and len((actual + linea).encode('utf-8')) > 200000:
+            partes.append(actual)
+            actual = ''
+        actual += linea
+    partes.append(actual)
+    for i, parte in enumerate(partes, 1):
+        escribir('snippets/mf-pagina-%d.liquid' % i, parte)
+    renders = ''.join("{%% render 'mf-pagina-%d' %%}\n" % i for i in range(1, len(partes) + 1))
+
+    escribir('layout/mf.liquid', inicio + cabeza + '\n' + renders + '{{ content_for_layout }}</body>' + final)
+    escribir('sections/mf-vacio.liquid',
+             '{% comment %}La página la dibuja layout/mf.liquid{% endcomment %}\n'
+             '{% schema %}{"name":"MF Netlify","settings":[]}{% endschema %}\n')
+    escribir('templates/index.json',
+             '{"layout":"mf","sections":{"mf":{"type":"mf-vacio","settings":{}}},"order":["mf"]}\n')
     escribir('snippets/mf-catalogo.liquid', leer('shopify/catalogo.liquid'))
 
     for ruta in sorted(set(assets)):
