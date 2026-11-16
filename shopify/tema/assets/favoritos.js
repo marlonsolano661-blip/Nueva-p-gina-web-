@@ -33,5 +33,5 @@
    Se cargan en orden y sin bloquear la página. Si no cargan, la tienda funciona igual. */
 (function () {
   if (window.__mfVitrinaCarga || !document.getElementById('app')) return; window.__mfVitrinaCarga = 1;
-  ['DATA/recortes.js', 'vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = src; s.async = false; document.body.appendChild(s); });
+  ['DATA/recortes.js', 'vitrina.js'].forEach(function (src) { var s = document.createElement('script'); s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src; s.async = false; document.body.appendChild(s); });
 })();
