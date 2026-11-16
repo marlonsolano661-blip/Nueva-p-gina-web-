@@ -57,11 +57,12 @@ window.MF_VESTIDOS=[{
     fotos:[{u:"vestidos/alessia-1.jpg",fit:"contain"},"vestidos/alessia-2.jpg","vestidos/alessia-3.jpg"],fotosColor:{Plata:["vestidos/alessia-plata.jpg"]}}
 },{
   nombre:"Esmeralda",grupo:"esmeralda",color:{n:"Verde esmeralda",h:"#0f4d3a"},
-  /* vestido de lentejuelas, un hombro, con abertura en la cintura (la foto en gancho no trae espalda) */
-  prenda:{n:"Vestido Esmeralda",frente:"vestidos/verde-frente.webp",w:684,h:1067,gancho:[342,92],
+  /* vestido de lentejuelas, un hombro, con abertura en la cintura. La espalda en gancho se armó desde el frente
+     (espejo, falda lisa y ruedo recto como en la foto de la modelo de espalda): cámbiala si llega la foto real */
+  prenda:{n:"Vestido Esmeralda",frente:"vestidos/verde-frente.webp",espalda:"vestidos/verde-espalda.webp",w:684,h:1067,gancho:[342,92],
     /* PENDIENTE: crear el producto en la tienda (id vestido-esmeralda) con su precio y tallas */
     venta:{id:"vestido-esmeralda",n:"Vestido Esmeralda",color:"Verde esmeralda",colores:["Verde esmeralda"],tallas:["XS","S","M","L","XL"],agotadas:[],
-      fotos:[{u:"vestidos/verde-frente.webp",fit:"contain"},"vestidos/verde-modelo-frente.jpg","vestidos/verde-modelo-espalda.jpg"],fotosColor:{}}},
+      fotos:[{u:"vestidos/verde-frente.webp",fit:"contain"},{u:"vestidos/verde-espalda.webp",fit:"contain"},"vestidos/verde-modelo-frente.jpg","vestidos/verde-modelo-espalda.jpg"],fotosColor:{}}},
   /* video 4K recortado a 1080 de ancho (bordes negros fuera): termina con la mano en el pelo y la otra en la cintura */
   foto:{src:"vestidos/verde-ini.jpg",inicio:"vestidos/verde-ini.jpg",w:1080,h:1938,video:"vestidos/verde.mp4",disparos:[1.0,2.4,3.8,5.4,6.8]},
   /* la prenda colgada cae sobre el vestido del PRIMER cuadro (ruedo y=1127, cadera 333–719) */
