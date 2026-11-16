@@ -155,8 +155,8 @@ html body header.bar.wd .bag #cnt::after{content:")"}
 html body header.bar.wd svg{stroke:#000}
 @media (max-width:380px){html body header.bar.wd .wd-t{font-size:.74rem;letter-spacing:.22em}}
 
-/* Encabezado con botones cuadrados (opción A): sin la franja de texto, sin las palabras MENÚ y MI BOLSA */
-html body .hd-ann{display:none!important}
+/* Encabezado con botones cuadrados (opción A): franja negra de envíos arriba, sin las palabras MENÚ y MI BOLSA */
+html body .hd-ann{display:block!important;background:#111;color:#fff;text-align:center;font:500 .68rem/1.4 Jost,Helvetica,Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:.6rem 1rem;border:0}
 html body header.bar.wd{gap:.5rem;padding:.7rem 1rem;padding-top:calc(.7rem + env(safe-area-inset-top,0px))}
 html body header.bar.wd .wd-t{display:none}
 html body header.bar.wd .mb,html body header.bar.wd .hd-s,html body header.bar.wd .wd-tacon{display:grid;place-items:center;width:2.5rem;height:2.5rem;padding:0;border:1px solid #111;border-radius:6px;background:#fff;color:#111;cursor:pointer;position:relative;flex:none}
