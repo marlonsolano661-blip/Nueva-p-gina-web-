@@ -50,6 +50,11 @@
     '.vsA-gal button{font-size:.75rem;padding:.3rem}',
     '.vsA-marca{background:#0a0a0a;color:#fff;border-color:#0a0a0a;font-weight:700}',
     '.vsA-marca.esperando{background:#b08d57;border-color:#b08d57}',
+    '.vsA-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.4rem,1fr));gap:.45rem}',
+    '.vsA-chip{display:grid;gap:.25rem;padding:.3rem;border:2px solid #e3e3e3;border-radius:.6rem;background:#fff;font:inherit;font-size:.72rem;line-height:1.2;text-align:center;cursor:pointer;color:#0a0a0a}',
+    '.vsA-chip img{width:100%;aspect-ratio:1;object-fit:contain;border-radius:.35rem;background:#f6f6f6}',
+    '.vsA-chip[aria-pressed="true"]{border-color:#0a0a0a;box-shadow:0 0 0 1px #0a0a0a}',
+    '.vsA-gal small{font-size:.72rem;line-height:1.2}',
   ].join('\n');
   document.head.appendChild(css);
 
@@ -257,6 +262,7 @@
     return new Promise(function (ok, mal) {
       var v = document.createElement('video');
       v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
+      if (/^https?:/.test(src) && src.indexOf(location.origin) !== 0) v.crossOrigin = 'anonymous'; // para poder leer sus cuadros
       v.onloadeddata = function () { ok(v); };
       v.onerror = function () { mal(new Error('Este navegador no pudo abrir el video')); };
       v.src = src; v.load();
@@ -435,7 +441,7 @@
                 D.foto = { video: 'pendiente', inicio: vidLocal.iniUrl, src: vidLocal.iniUrl, w: v.videoWidth, h: v.videoHeight, velocidad: Number(vel.value) || 1, disparos: disparos(fin) };
                 if (gris.checked) D.foto.fondo = 'gris';
                 // Al cambiar de video, el encaje y los puntos se vuelven a ubicar
-                D.encaje = null; D.puntoPrenda = null; if (D.tacon) delete D.tacon.punto;
+                D.encaje = null; D.puntoPrenda = null; if (D.tacon) delete D.tacon.punto; D.pruebas = []; if (typeof pintarRes7 === 'function') pintarRes7();
                 bV.textContent = 'Cambiar video'; t(); syncVideoUI();
                 var es4k = Math.max(v.videoWidth, v.videoHeight) >= 3000;
                 est3.textContent = 'Video listo (' + (f.size / 1048576).toFixed(1) + ' MB, ' + v.videoWidth + '×' + v.videoHeight + (es4k ? ', 4K' : '') + '). Se sube al tocar "Aplicar"' + (f.size > 80 * 1048576 ? ': por su peso puede tardar unos minutos, deja esta pantalla abierta.' : '.');
@@ -521,7 +527,7 @@
     selT.addEventListener('change', function () {
       if (!selT.value) D.tacon = null;
       else { var punto = D.tacon && D.tacon.punto, fotos = (D.tacon && D.tacon.fotos) || []; D.tacon = { id: selT.value, fotos: fotos }; if (punto) D.tacon.punto = punto; }
-      t(); pintarColTac(); pintarGal(); pintarPuntos();
+      t(); pintarColTac(); pintarGal(); pintarPuntos(); pintarChips();
     });
     selTC.addEventListener('change', function () { if (D.tacon) { if (selTC.value) D.tacon.color = selTC.value; else delete D.tacon.color; t(); } });
     var gal = el('div', { class: 'vsA-gal' });
@@ -590,6 +596,123 @@
     p6.appendChild(el('div', { class: 'vsA-fila' }, [bPV, bPT]));
     p6.appendChild(esc6);
     ed.appendChild(p6);
+
+
+    // Paso 7 · Cabina: la modelo se prueba otros tacones MF (IA en Google Cloud, sobre el cuadro final)
+    var p7 = el('div', { class: 'vsA-paso' });
+    var elegidos = {}, chips7 = el('div', { class: 'vsA-chips' }), res7 = el('div', { class: 'vsA-gal' }), est7 = el('p', { class: 'vsA-ay' });
+    var bIA = el('button', { type: 'button', class: 'vsA-marca', text: '✨ Crear pruebas con IA' });
+    D.pruebas = D.pruebas || [];
+    function pintarChips() {
+      chips7.textContent = '';
+      calz.filter(function (p) { return fotoDe(p) && (!D.tacon || p.id !== D.tacon.id); }).forEach(function (p) {
+        var ya = D.pruebas.some(function (x) { return x.id === p.id; });
+        var b = el('button', { type: 'button', class: 'vsA-chip', 'aria-pressed': elegidos[p.id] ? 'true' : 'false' }, [el('img', { src: fotoDe(p), alt: '', loading: 'lazy' }), el('span', { text: p.nombre + (ya ? ' ✓' : '') })]);
+        b.addEventListener('click', function () {
+          if (!elegidos[p.id] && Object.keys(elegidos).length >= 8) return A.msg('Máximo 8 tacones por tanda', true);
+          if (elegidos[p.id]) delete elegidos[p.id]; else elegidos[p.id] = 1; pintarChips();
+        });
+        chips7.appendChild(b);
+      });
+      var n = Object.keys(elegidos).length;
+      bIA.textContent = n ? '✨ Crear ' + n + (n === 1 ? ' prueba' : ' pruebas') + ' con IA' : '✨ Crear pruebas con IA';
+      bIA.disabled = !n;
+    }
+    function pintarRes7() {
+      res7.textContent = '';
+      D.pruebas.forEach(function (x, i) {
+        var q = el('button', { type: 'button', class: 'claro', text: 'Quitar' });
+        q.addEventListener('click', function () { D.pruebas.splice(i, 1); t(); pintarRes7(); pintarChips(); });
+        res7.appendChild(el('figure', {}, [el('img', { src: x.img, alt: '' }), el('small', { text: x.n || x.id }), q]));
+      });
+      p7.classList.toggle('ok', D.pruebas.length > 0);
+    }
+    // El recorte de piernas y pies (3:4) alrededor del punto del tacón
+    function recorteDe(W, H, pt) {
+      var bottom = Math.min(H, Math.round(pt[1] + H * 0.14)), ch = Math.min(bottom, Math.round(H * 0.46)), cw = Math.round(ch * 3 / 4);
+      if (cw > W) { cw = W; ch = Math.round(cw * 4 / 3); }
+      var y = Math.max(0, bottom - ch), x = Math.min(Math.max(0, Math.round(pt[0] - cw / 2)), W - cw);
+      return { x: x, y: y, w: cw, h: ch };
+    }
+    function abrirRemota(u) {
+      return new Promise(function (ok, mal) { var im = new Image(); im.crossOrigin = 'anonymous'; im.onload = function () { ok(im); }; im.onerror = function () { mal(new Error('No se pudo abrir la prueba creada')); }; im.src = u; });
+    }
+    // Pega la prueba sobre el cuadro final con bordes difuminados (cara, vestido y fondo quedan idénticos al video)
+    function pegar(base, im, R) {
+      var c = document.createElement('canvas'); c.width = base.width; c.height = base.height;
+      var g = c.getContext('2d'); g.drawImage(base, 0, 0);
+      var o = document.createElement('canvas'); o.width = R.w; o.height = R.h;
+      var go = o.getContext('2d', { willReadFrequently: true }); go.drawImage(im, 0, 0, R.w, R.h);
+      var d = go.getImageData(0, 0, R.w, R.h), px = d.data, f = Math.max(8, Math.round(R.w * 0.09));
+      var sube = R.y > 0, izq = R.x > 0, der = R.x + R.w < base.width, baja = R.y + R.h < base.height;
+      var rampa = function (v) { v = Math.max(0, Math.min(1, v / f)); return v * v * (3 - 2 * v); };
+      for (var y = 0; y < R.h; y++) for (var x = 0; x < R.w; x++) {
+        var a = 1;
+        if (sube) a *= rampa(y); if (baja) a *= rampa(R.h - 1 - y); if (izq) a *= rampa(x); if (der) a *= rampa(R.w - 1 - x);
+        if (a < 1) px[(y * R.w + x) * 4 + 3] = Math.round(255 * a);
+      }
+      go.putImageData(d, 0, 0); g.drawImage(o, R.x, R.y);
+      return c;
+    }
+    bIA.addEventListener('click', function () {
+      if (!D.foto || !D.foto.video) return A.msg('Primero sube el video (paso 3)', true);
+      if (!D.tacon || !D.tacon.punto) return A.msg('Primero elige el tacón y marca su etiqueta (pasos 5 y 6)', true);
+      if (!vMed) return A.msg('Espera a que cargue el video', true);
+      var ids = Object.keys(elegidos); if (!ids.length) return;
+      bIA.disabled = true; est7.textContent = 'Tomando el cuadro final…';
+      var base, R, trabajo = 'IA-' + Math.random().toString(36).slice(2, 12);
+      irA(vMed, Number(rFin.value)).then(function () {
+        base = cuadro(vMed); R = recorteDe(base.width, base.height, D.tacon.punto);
+        var cr = document.createElement('canvas'); cr.width = R.w; cr.height = R.h;
+        cr.getContext('2d').drawImage(base, R.x, R.y, R.w, R.h, 0, 0, R.w, R.h);
+        return aBlob(cr, 'image/jpeg', 0.92);
+      }).then(function (bl) {
+        if (!bl) throw new Error('El navegador no dejó leer el video. Vuelve a elegir el video desde tu teléfono.');
+        est7.textContent = 'Subiendo el cuadro…'; return subirDirecto(bl, 'image/jpeg');
+      }).then(function (url) {
+        var tac = ids.map(function (id) { var p = porId(id); return { id: id, n: p ? p.nombre : id, foto: fotoDe(p) }; });
+        return A.api('tacones-ia-background', { method: 'POST', body: { trabajo: trabajo, cuadro: url, tacones: tac } });
+      }).then(function () {
+        var t0 = Date.now();
+        return new Promise(function (ok, mal) {
+          (function mirar() {
+            var seg = Math.round((Date.now() - t0) / 1000);
+            est7.textContent = 'La IA está probándole los tacones a la modelo… (' + seg + ' s; tarda unos 30 s por tacón)';
+            A.api('fotos-ia-estado?trabajo=' + trabajo).then(function (r) {
+              if (r.listo) return r.error ? mal(new Error(r.error)) : ok(r);
+              if (Date.now() - t0 > 14 * 60 * 1000) return mal(new Error('La IA tardó demasiado. Intenta con menos tacones.'));
+              setTimeout(mirar, 5000);
+            }).catch(function () { setTimeout(mirar, 8000); });
+          })();
+        });
+      }).then(function (r) {
+        var fotos = r.fotos || [], cola = Promise.resolve();
+        fotos.forEach(function (f, i) {
+          cola = cola.then(function () {
+            est7.textContent = 'Ajustando la prueba ' + (i + 1) + ' de ' + fotos.length + ' sobre el video…';
+            return abrirRemota(f.url).then(function (im) { return aBlob(pegar(base, im, R), 'image/jpeg', 0.9); })
+              .then(function (bl) { return subirDirecto(bl, 'image/jpeg'); })
+              .then(function (u) {
+                var p = porId(f.id), rp = respaldoProducto(p, f.id);
+                D.pruebas = D.pruebas.filter(function (x) { return x.id !== f.id; });
+                D.pruebas.push({ id: f.id, n: rp.n, p: rp.p, colores: rp.colores, tallas: rp.tallas, agotadas: rp.agotadas, img: u, mini: fotoDe(p) || undefined });
+                t(); pintarRes7();
+              });
+          });
+        });
+        return cola.then(function () {
+          var malos = (r.errores || []).map(function (e) { var p = porId(e.id); return (p ? p.nombre : e.id) + ': ' + e.error; });
+          var dudas = fotos.filter(function (f) { return f.revisada === false; }).map(function (f) { var p = porId(f.id); return p ? p.nombre : f.id; });
+          est7.textContent = fotos.length + ' prueba(s) lista(s).' + (dudas.length ? ' Revisa con cuidado: ' + dudas.join(', ') + ' (el revisor no quedó seguro).' : '') + (malos.length ? ' No salieron: ' + malos.join(' · ') : '');
+          elegidos = {}; pintarChips(); bIA.disabled = false;
+        });
+      }).catch(function (e) { est7.textContent = ''; bIA.disabled = false; A.falla(e); });
+    });
+    p7.appendChild(el('h4', {}, [el('span', { class: 'vsA-n', text: '7' }), 'Pruébatelo con otros tacones (IA)']));
+    p7.appendChild(el('p', { class: 'vsA-ay', text: 'Elige tacones MF y la IA se los pone a la modelo en la pose final (solo cambia los zapatos; cara, vestido y fondo quedan idénticos). En la página aparecen como "Pruébatelo": la clienta toca un tacón y la modelo lo lleva puesto. Se cobra en tu Google Cloud, no en créditos de Netlify. Revisa cada prueba y quita las que no queden perfectas.' }));
+    p7.appendChild(chips7); p7.appendChild(bIA); p7.appendChild(est7); p7.appendChild(res7);
+    pintarChips(); pintarRes7();
+    ed.appendChild(p7);
 
     // Aplicar: sube lo pendiente, completa los datos de respaldo del catálogo y vuelve a la lista
     var aplicar = el('button', { type: 'button', text: idx > -1 ? 'Aplicar cambios' : 'Agregar look' });

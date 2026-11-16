@@ -209,6 +209,15 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .cr b{display:block;font:300 .8rem/1.15 Jost,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cr span{display:block;font-size:.76rem;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+/* Cabina: la modelo se prueba otros tacones MF (fotos hechas con IA en el panel, sobre el cuadro final) */
+.photo #lprueba{z-index:3;object-fit:fill;opacity:0;transition:opacity .5s}
+.photo #lprueba.on{opacity:1}
+.cabina{position:absolute;right:8px;top:50%;transform:translate(14px,-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;opacity:0;pointer-events:none;transition:opacity .45s,transform .45s}
+.cabina.on{opacity:1;transform:translate(0,-50%);pointer-events:auto}
+.cabina p{margin:0 0 1px;font:300 .56rem Jost,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--k);background:rgba(255,255,255,.86);padding:3px 6px;border-radius:8px;writing-mode:vertical-rl;transform:rotate(180deg)}
+.cabina button{width:46px;height:46px;border-radius:50%;border:1px solid #e6e6e6;background:#fff;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.12);cursor:pointer;transition:transform .25s,box-shadow .25s}
+.cabina button img{width:100%;height:100%;object-fit:contain;border-radius:50%;display:block}
+.cabina button[aria-pressed="true"]{border-color:var(--k);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--k),0 6px 16px rgba(0,0,0,.18);transform:scale(1.06)}
 </style>
 </head>
 <body>
@@ -224,10 +233,11 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 <section id="lookView" aria-label="Look completo">
   <div class="lhead"><p class="h2" id="lname"></p></div>
   <div id="lstage">
-    <div class="photo" id="photo"><video id="lvideo" muted playsinline preload="auto"></video><img id="lphoto" alt=""></div>
+    <div class="photo" id="photo"><video id="lvideo" muted playsinline preload="auto"></video><img id="lphoto" alt=""><img id="lprueba" alt=""></div>
     <div class="vf" id="vf"><b></b><b></b><b></b><b></b><div class="af" id="af"></div><span class="rec">REC</span><div class="meta"><span id="tc">00:00:00</span><span>ISO 100 · f/8</span><span id="shotN">FOTO 00</span></div></div>
     <button class="play" id="play" type="button">▶ En movimiento</button>
     <div class="ring" id="ring"></div>
+    <div class="cabina" id="cabina" aria-label="Pruébatelo con otro tacón MF"></div>
     <div class="hs der" id="hsV"><button class="pt" type="button" aria-label="Ver el vestido"></button><span class="ln"></span><button class="pl" type="button" id="plV"></button></div>
     <div class="hs der" id="hsT"><button class="pt" type="button" aria-label="Ver los tacones"></button><span class="ln"></span><button class="pl" type="button" id="plT"></button></div>
   </div>
@@ -491,7 +501,7 @@ function layoutPhoto(L){
 }
 function onPhoto(p){return {x:PH.x+p[0]*PH.k,y:PH.y+p[1]*PH.k}}
 $("full").addEventListener("click",function(){
-  if(!piece)return;var L=LOOKS[cur],P=L.prenda,h=L.tacon;
+  if(!piece)return;var L=LOOKS[cur];cabinaReset(L);var P=L.prenda,h=L.tacon;
   hideProbador();
   $("lname").textContent=L.nombre;$("topChip").textContent=L.color?L.color.n:String(grupoDe[cur]+1).padStart(2,"0")+" / "+String(GRUPOS.length).padStart(2,"0");
   var ph=$("photo");ph.classList.remove("shot","vid","vidout");ph.classList.toggle("suave",L.foto.fondo==="gris");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
@@ -535,7 +545,36 @@ function disparo(fn,fuerza){
    Al terminar, el último cuadro empalma con la foto y aparece la etiqueta 🏷️.
    ========================================================= */
 var vidState=0,camLoop=0,disparos=[];
+/* ---------------- Cabina: probarse otros tacones MF ---------------- */
+var CAT={};
+function tacon0(L){if(!L._t0)L._t0=L.tacon;return L._t0}
+function cabinaReset(L){if(L&&L._t0)L.tacon=L._t0;$("lprueba").classList.remove("on");$("cabina").classList.remove("on")}
+function cabina(L){
+  var box=$("cabina"),T0=L.tacon&&tacon0(L),P=(L.pruebas||[]).filter(function(x){return x&&x.img&&x.id});
+  if(!T0||!P.length){box.classList.remove("on");box.innerHTML="";return}
+  var ops=[{t:T0}].concat(P.map(function(x){return {x:x}}));
+  var mini=function(o){if(o.t)return o.t.mini||o.t.catImg||"";var c=CAT[o.x.id];return (c&&c.img)||o.x.mini||o.x.img};
+  var nom=function(o){return o.t?o.t.n:((CAT[o.x.id]&&CAT[o.x.id].name)||o.x.n||"")};
+  box.innerHTML='<p>Pruébatelo</p>'+ops.map(function(o,i){var on=o.t?L.tacon===T0:(L.tacon&&L.tacon._img===o.x.img);
+    return '<button type="button" data-i="'+i+'" aria-pressed="'+on+'" aria-label="'+nom(o)+'"><img src="'+mini(o)+'" alt=""></button>'}).join("");
+  box.querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();probar(L,ops[+b.dataset.i])})});
+  P.forEach(function(x){var i=new Image();i.src=x.img});
+  requestAnimationFrame(function(){box.classList.add("on")});
+}
+function probar(L,o){
+  var T0=tacon0(L),im=$("lprueba");
+  if(o.t){L.tacon=T0;im.classList.remove("on")}
+  else{
+    var x=o.x,t={id:x.id,n:x.n||x.id,p:x.p,punto:T0.punto,color:x.color,colores:(x.colores||[]).slice(),tallas:(x.tallas||T0.tallas||[]).slice(),agotadas:(x.agotadas||[]).slice(),fotos:[],_img:x.img};
+    sincronizar(t,CAT[x.id]);t.fotos=(t.fotos||[]).concat([{u:x.img,fit:"cover"}]); /* primero las fotos del tacón; al final, la modelo con él puesto */t.mini=t.catImg||x.mini||x.img;
+    im.classList.remove("on");im.onload=function(){im.classList.add("on")};im.src=x.img;if(im.complete&&im.naturalWidth)im.classList.add("on");
+    L.tacon=t;
+  }
+  var p=onPhoto(L.tacon.punto);ubicar($("hsT"),p);var ht=pastilla("hsT",L.tacon,p);ht.dataset.listo="1";ht.classList.add("on");
+  creditos(L,true,true);cabina(L);
+}
 function sesion(L){
+  cabinaReset(L);
   var v=$("lvideo"),ph=$("photo"),F=L.foto;
   showMarks(false);$("play").classList.remove("on");
   if(!F.video){
@@ -629,6 +668,7 @@ function focoTacon(L){
     r.style.left=p.x+"px";r.style.top=p.y+"px";r.classList.remove("go");void r.offsetWidth;r.classList.add("go");
     ubicar($("hsT"),p);var ht=pastilla("hsT",T,p);ht.dataset.listo="1";ht.classList.add("on");
     creditos(L,true,true);
+    setTimeout(function(){if($("lookView").classList.contains("on"))cabina(L)},reduce?0:700);
   },reduce?0:1300);
   if(L.foto.video||L.foto.sesion)$("play").classList.add("on");
 }
@@ -640,6 +680,7 @@ $("hsT").addEventListener("click",function(){openSheet("heel")});
 $("crV").addEventListener("click",function(){openSheet("garment")});
 $("crT").addEventListener("click",function(){openSheet("heel")});
 $("back").addEventListener("click",function(){
+  if(cur>-1)cabinaReset(LOOKS[cur]);
   limpiarPiezas();piece=null;abriendo=false;
   $("lookView").classList.remove("on");$("rackView").classList.remove("off");
   $("lvideo").pause();$("photo").classList.remove("vid");vidState=0;$("topChip").textContent="";
@@ -709,7 +750,7 @@ function sincronizar(it,P){
 function sincronizarCatalogo(){
   var API=window.MF_API_BASE||"";
   fetch(API+"/api/catalogo").then(function(r){return r.ok?r.json():null}).then(function(d){
-    if(!d||!Array.isArray(d.productos))return;var C={};d.productos.forEach(function(p){C[p.id]=p});
+    if(!d||!Array.isArray(d.productos))return;var C=CAT;d.productos.forEach(function(p){C[p.id]=p});
     LOOKS.forEach(function(L){sincronizar(L.tacon,C[L.tacon&&L.tacon.id]);if(L.prenda.venta)sincronizar(L.prenda.venta,C[L.prenda.venta.id]);
       if(cur>-1&&$("lookView").classList.contains("on")&&L===LOOKS[cur]){creditos(L,$("crV").classList.contains("on"),$("crT").classList.contains("on"))}});
   }).catch(function(){});

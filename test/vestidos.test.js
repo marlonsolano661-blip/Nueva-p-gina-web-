@@ -43,3 +43,10 @@ test('la tienda solo ve los visibles', () => {
   const v = validar([look(), look({ id: 'v2', visible: false })]).valor;
   assert.equal(paraTienda(v).length, 1);
 });
+
+test('guarda la cabina de tacones y descarta pruebas inválidas', () => {
+  const v = validar([look({ pruebas: [{ id: 'sandalia-miel', n: 'Miel', p: 199900, img: U + 'p1.jpg' }, { id: 'x', img: 'javascript:1' }, { img: U + 'p2.jpg' }] })]);
+  assert.equal(v.error, undefined);
+  assert.equal(v.valor[0].pruebas.length, 1);
+  assert.equal(v.valor[0].pruebas[0].img, U + 'p1.jpg');
+});
