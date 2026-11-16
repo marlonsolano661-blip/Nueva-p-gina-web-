@@ -235,7 +235,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 </section>
 
 <div id="veil"></div>
-<div class="finger" id="finger"><i>☝︎</i> <span id="fingerT">gírala con el dedo</span></div>
+<div class="finger" id="finger"><i>☝︎</i> <span id="fingerT">toca para ver la espalda · desliza para girarla</span></div>
 <div class="side" id="side"><button type="button" data-f="0" aria-pressed="true">Frente</button><button type="button" data-f="1" aria-pressed="false">Espalda</button></div>
 <div id="info">
   <div class="cols" id="cols"></div>
@@ -412,11 +412,10 @@ function cambiarColor(i){
 $("cols").addEventListener("click",function(e){var b=e.target.closest("[data-l]");if(b)cambiarColor(+b.dataset.l)});
 function sideUI(f){[].forEach.call($("side").children,function(b){b.setAttribute("aria-pressed",+b.dataset.f===f)})}
 function bindPiece(){
-  var sx=0,sy=0,lastTap=0;
+  var sx=0,sy=0,t0=0,mov=0;
   piece.addEventListener("pointerdown",function(e){
-    touching=true;sx=e.clientX;sy=e.clientY;piece.classList.add("touch");$("finger").classList.remove("on");
+    touching=true;sx=e.clientX;sy=e.clientY;t0=performance.now();mov=0;piece.classList.add("touch");$("finger").classList.remove("on");
     try{piece.setPointerCapture(e.pointerId)}catch(er){}
-    var now=performance.now();if(now-lastTap<300){zoom=zoom>1?1:1.8;tg.z=zoom;if(zoom===1){tg.tx=tg.ty=0}}lastTap=now;
     move(e);
   });
   function move(e){
@@ -439,10 +438,16 @@ function bindPiece(){
     if(touching||e.pointerType!=="mouse")return;
     piece.classList.remove("touch");tg.ry=base;tg.rx=0;if(zoom===1){tg.tx=tg.ty=0}
   });
-  var rel=function(){
+  var rel=function(e){
     if(!touching)return;touching=false;piece&&piece.classList.remove("touch");
-    /* al soltar queda de frente o de espalda, la que esté más cerca */
-    base=LOOKS[cur].prenda.espalda?Math.round(tg.ry/180)*180:0;tg.ry=base;tg.rx=0;if(zoom===1){tg.tx=tg.ty=0}
+    var toque=e&&e.type==="pointerup"&&Math.hypot(e.clientX-sx,e.clientY-sy)<10&&performance.now()-t0<450;
+    if(toque&&LOOKS[cur].prenda.espalda){
+      /* un toque (o un clic): voltea la prenda, de frente a espalda y al revés */
+      base=Math.round(base/180)*180+180;
+    }else if(toque){base=0;tg.ry=24;setTimeout(function(){tg.ry=0},280)}
+    /* al soltar después de deslizar: queda de frente o de espalda, la que esté más cerca */
+    else base=LOOKS[cur].prenda.espalda?Math.round(tg.ry/180)*180:0;
+    if(!(toque&&!LOOKS[cur].prenda.espalda))tg.ry=base;tg.rx=0;if(zoom===1){tg.tx=tg.ty=0}
     sideUI(Math.abs(Math.round(base/180))%2);
   };
   piece.addEventListener("pointerup",rel);piece.addEventListener("pointercancel",rel);
@@ -709,7 +714,7 @@ function sincronizar(it,P){
 })();
 
 /* ---------------- Arranque ---------------- */
-if(matchMedia("(hover: hover) and (pointer: fine)").matches)$("fingerT").textContent="pasa el mouse · arrastra para girarla";
+if(matchMedia("(hover: hover) and (pointer: fine)").matches)$("fingerT").textContent="clic para ver la espalda · arrastra para girarla";
 LOOKS.forEach(function(L){[L.prenda.frente,L.prenda.espalda,L.foto.src].concat(L.foto.sesion||[]).forEach(function(s){if(s){var i=new Image();i.src=s}})});
 if(!LOOKS.length){$("rackView").querySelector(".h1").textContent="Muy pronto";}
 buildRack();requestAnimationFrame(tick);
