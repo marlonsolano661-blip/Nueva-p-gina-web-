@@ -8,8 +8,7 @@
   'use strict';
   if (window.__mfAdminVestidos) return; window.__mfAdminVestidos = 1;
   var A = window.mfAdmin;
-  var tabs = document.getElementById('tabs');
-  if (!A || !tabs) return;
+  if (!A) return;
   var el = function () { return A.el.apply(null, arguments); };
   var MAX_LOOKS = 24, MAX_VIDEO = 50 * 1024 * 1024, PAD_TOP = 89;
   var TALLAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'Unica'];
@@ -54,25 +53,14 @@
   ].join('\n');
   document.head.appendChild(css);
 
-  // Botón en el menú (debajo de "Outfits" o de "Diseñador de inicio") y su sección
-  var btn = el('button', { type: 'button', 'data-vs': '1' });
-  btn.innerHTML = '<span class="ic">🎞️</span><span class="tx"><b>Vestidos</b><small>La sesión de estudio: prendas, video y tacones</small></span><i class="fl" aria-hidden="true">›</i>';
-  var ref = tabs.querySelector('button[data-of]') || tabs.querySelector('button[data-t="inicio"]');
-  if (ref && ref.parentNode) ref.parentNode.insertBefore(btn, ref.nextSibling); else tabs.appendChild(btn);
-  var sec = el('section', { class: 'panel', id: 'p-vestidos' });
-  var ult = document.querySelectorAll('.panel'); ult = ult[ult.length - 1];
-  if (ult && ult.parentNode) ult.parentNode.insertBefore(sec, ult.nextSibling); else document.getElementById('app').appendChild(sec);
-
-  function abrir() {
-    tabs.hidden = true;
-    var v = document.getElementById('volver'), t = document.getElementById('titulo'), ay = document.getElementById('ayuda');
-    if (v) v.hidden = false; if (t) t.textContent = 'Vestidos'; if (ay) ay.hidden = true;
-    document.querySelectorAll('.panel').forEach(function (p) { p.classList.toggle('on', p === sec); });
-    A.msg(''); window.scrollTo(0, 0);
-    sec.textContent = ''; sec.appendChild(el('p', { class: 'nota', text: 'Cargando…' }));
-    cargar().catch(A.falla);
+  // La sección vive en el menú lateral (panel-menu.js → Contenido › Vestidos, dirección #/vestidos)
+  var sec = document.getElementById('p-vestidos');
+  if (!sec) { sec = el('section', { class: 'panel', id: 'p-vestidos' }); var ult = document.querySelectorAll('.panel'); ult = ult[ult.length - 1]; ult.parentNode.insertBefore(sec, ult.nextSibling); }
+  var P = window.mfPanel;
+  if (P && P.CARGA) {
+    P.CARGA.vestidos = function () { sec.textContent = ''; sec.appendChild(el('p', { class: 'nota', text: 'Cargando…' })); return cargar(); };
+    if (P.TITULOS) P.TITULOS.vestidos = 'Vestidos';
   }
-  btn.addEventListener('click', abrir);
   window.addEventListener('beforeunload', function (e) { if (S.sucio) { e.preventDefault(); e.returnValue = ''; } });
 
   var copia = function (o) { return JSON.parse(JSON.stringify(o)); };
@@ -664,5 +652,5 @@
     return { id: p.id, n: p.nombre, p: Number(p.precio) || undefined, colores: (p.colores || []).map(function (c) { return c.n; }), tallas: tallas, agotadas: tallas.filter(function (t) { return !(stock[t] > 0); }) };
   }
 
-  window.mfAdminVestidos = { abrir: abrir };
+  window.mfAdminVestidos = { cargar: cargar };
 })();

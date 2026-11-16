@@ -143,7 +143,6 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .rs-pulso{flex:none;width:.8rem;height:.8rem;border-radius:50%;background:#ff4d4d;box-shadow:0 0 0 0 #ff4d4d99;animation:pulso 1.8s infinite}
 @keyframes pulso{70%{box-shadow:0 0 0 .7rem #ff4d4d00}100%{box-shadow:0 0 0 0 #ff4d4d00}}
 @media(prefers-reduced-motion:reduce){.rs-pulso{animation:none}}
-nav.tabs .bd{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .4rem;margin-left:.5rem;border-radius:999px;background:#d23b35;color:#fff;font:700 .75rem/1 Figtree,system-ui,sans-serif;vertical-align:middle}
 
 /* Ganancias y gastos (Finanzas): hojas de cálculo en verde, igual que la de WhatsApp */
 .gan{--hj-d:#075e54;--hj-m:#008069;--hj-c:#d9fdd3;--hj-s:#f1fbef;--hj-l:#c5dccd;--hj-t:#111b21;margin-top:1.4rem}

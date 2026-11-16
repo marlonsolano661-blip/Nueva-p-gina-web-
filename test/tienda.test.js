@@ -65,11 +65,11 @@ describe('tienda integrada', { skip: !hayDB && 'Falta TEST_DATABASE_URL' }, () =
       const mal = await tienda('POST', { body: { recurso: 'producto', producto: { ...NUEVO, id: 'luxury-31', imagenes: f(31), imagen: f(31)[0] } } });
       assert.equal(mal.status, 400);
     });
-    it('el catálogo público se guarda 30 s en la CDN y el navegador siempre revalida', async () => {
+    it('el catálogo público se guarda solo 10 s en la CDN, sin servir copias vencidas, y el navegador siempre revalida', async () => {
       const r = await verCatalogo();
       assert.equal(r.status, 200);
       assert.equal(r.headers['Cache-Control'], 'public, max-age=0, must-revalidate');
-      assert.match(r.headers['Netlify-CDN-Cache-Control'], /s-maxage=30/);
+      assert.equal(r.headers['Netlify-CDN-Cache-Control'], 'public, s-maxage=10');
     });
     it('un error del catálogo nunca se guarda en caché', async () => {
       const r = await catalogo({ method: 'POST', headers: {}, query: {} });

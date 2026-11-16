@@ -16,7 +16,7 @@
 
   // Insignia en la fila "Pedidos" del menú y número en la pestaña del navegador
   function marcarMenu(n) {
-    var b = document.querySelector('#tabs button[data-t="pedidos"] .tx b'); if (!b) return;
+    var b = document.querySelector('#menu [data-t="pedidos"] .tx'); if (!b) return;
     var x = b.querySelector('.bd'); if (x) x.remove();
     if (n > 0) { var s = document.createElement('span'); s.className = 'bd'; s.textContent = n >= 100 ? '99+' : String(n); s.setAttribute('aria-label', n + ' nuevos'); b.appendChild(s); }
     document.title = (n > 0 ? '(' + (n >= 100 ? '99+' : n) + ') ' : '') + 'Centro de control · MF Colombia';
@@ -107,15 +107,15 @@
     var t = e.target.closest && e.target.closest('[data-ir]'); if (!t) return;
     if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
-    var b = document.querySelector('#tabs button[data-t="' + t.getAttribute('data-ir') + '"]'); if (b) b.click();
+    location.hash = '#/' + t.getAttribute('data-ir');
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#resumen')) ir(e); });
   document.addEventListener('keydown', function (e) { if (e.target.closest && e.target.closest('#resumen')) ir(e); });
 
   // Mientras estés en el inicio, el resumen se actualiza solo cada 45 segundos (así ves llegar los pedidos nuevos)
   setInterval(function () {
-    var tabs = document.getElementById('tabs');
-    if (tabs && !tabs.hidden && !document.hidden && A() && document.getElementById('app') && !document.getElementById('app').hidden) cargar();
+    var p = document.getElementById('p-resumen');
+    if (p && p.classList.contains('on') && !document.hidden && A() && document.getElementById('app') && !document.getElementById('app').hidden) cargar();
   }, 45000);
 
   window.mfAdminResumen = { cargar: cargar };

@@ -305,7 +305,6 @@ html{scroll-padding-top:5rem}
 <main id="app"></main>
 <div id="sho" class="dro" data-n="shclose"></div><aside id="sh" class="sh" role="dialog" aria-modal="true" aria-label="Comparte tus MF" aria-hidden="true"></aside>
 <div id="dro" class="dro" data-n="bagclose"></div><aside id="dr" class="dr" role="dialog" aria-modal="true" aria-labelledby="drt" aria-hidden="true"></aside><div id="toast" role="status" aria-live="polite"></div>
-<script src="DATA/catalogo_tienda.js"></script>
 <script>
 /* ====== CONFIGURA AQUÍ ====== */
 const CFG={wa:'573115752334',pagos:[
@@ -322,12 +321,8 @@ const LOGO=document.querySelector('.logo').innerHTML;
 const CH={negro:'#111111',blanco:'#f5f5f5',rosado:'#e3c6c9',rosa:'#e3c6c9',verde:'#c6cdb5',salvia:'#c6cdb5',beige:'#e4d6c3',nude:'#e1c3b0',rojo:'#b3202a',azul:'#2c4a7c',dorado:'#c9a24b',plateado:'#c8c8c8',gris:'#9a9a9a',cafe:'#6b4630',marron:'#6b4630',vino:'#6d1f2f',camel:'#c19a6b',marfil:'#f1ead7',champana:'#ead9bd',morado:'#6b4c8a',amarillo:'#e8c84a',naranja:'#e07b39',crema:'#f3ead8'};
 const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const colorList=s=>String(s||'').split(/[,/;]+|\s+y\s+/).map(x=>x.trim()).filter(Boolean).map(n=>{const k=norm(n).split(/\s+/).find(x=>CH[x]);return{n:n[0].toUpperCase()+n.slice(1),h:CH[norm(n)]||(k?CH[k]:'#bdbdb8')}});
-const DEMO=[['Stiletto Noir',289900,'Tacón aguja de 10 cm en charol negro.','Negro, Blanco, Rosado, Verde'],['Sandalia Aurora',249900,'Tiras finas y cierre al tobillo.','Nude, Negro, Dorado'],['Plataforma Onyx',319900,'Plataforma discreta para más altura y comodidad.','Negro, Blanco'],['Slingback Marfil',269900,'Punta fina y talón abierto.','Marfil, Negro, Rosado'],['Cuña Lumière',239900,'Cuña estilizada con suela antideslizante.','Beige, Negro, Verde'],['Bota Eclipse',349900,'Bota de tacón en cuero, acabado mate.','Negro, Café']].map((x,i)=>({id:'d'+i,name:x[0],price:x[1],desc:x[2],img:'',colors:colorList(x[3]),tallas:TALLAS}));
-let ADM=null;try{ADM=JSON.parse(localStorage.getItem('marlon_admin_v1'))}catch(e){}
-let real=!!(ADM&&ADM.products&&ADM.products.length);
-const soldN=(p,t)=>(ADM.rows||[]).filter(r=>r.producto===p.name&&String(r.talla).trim()===t&&r.estado!=='Devuelto').reduce((s,r)=>s+(+r.cant||0),0);
-const catalog=()=>window.MF_API_OK&&Array.isArray(window.MF_CATALOGO_PRODUCTOS)?window.MF_CATALOGO_PRODUCTOS:real?ADM.products.filter(p=>p.vis!==false&&p.price>0).map(p=>({id:p.id,name:p.name,price:p.price,desc:p.desc||'',colors:colorList(p.color),img:(p.imgs&&p.imgs[0])||p.img||'',imgs:(p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[])),tallas:TALLAS.filter(t=>(+p.stock[t]||0)-soldN(p,t)>0)})):(Array.isArray(window.MF_CATALOGO_PRODUCTOS)?window.MF_CATALOGO_PRODUCTOS.filter(p=>p.price>0&&Object.keys(p.stock||{}).length>0).map(p=>({...p,tallas:TALLAS.filter(t=>(+p.stock[t]||0)>0)})):DEMO);
-const WA=(()=>{const d=String((real&&ADM.marca&&ADM.marca.telefono)||CFG.wa).replace(/\D/g,'');return d.length===10?'57'+d:d})();
+const catalog=()=>Array.isArray(window.MF_CATALOGO_PRODUCTOS)?window.MF_CATALOGO_PRODUCTOS:[]; // única fuente: el servidor (Supabase). Sin datos de demostración ni copias estáticas.
+const WA=(()=>{const d=String(CFG.wa).replace(/\D/g,'');return d.length===10?'57'+d:d})();
 const waLink=t=>`https://wa.me/${WA}?text=${encodeURIComponent(t)}`;
 let CART=[];try{CART=JSON.parse(localStorage.getItem('mf_cart'))||[]}catch(e){}
 const saveCart=()=>{try{localStorage.setItem('mf_cart',JSON.stringify(CART))}catch(e){}};
@@ -365,7 +360,8 @@ function home(){
  ${SEC('comunidad')?communityH():''}
  ${footer()}`}
 let Q='',SO='';const grid=()=>{let C=catalog().filter(p=>norm(p.name).includes(norm(Q.trim()))&&(!window.MF_COL||p.coleccion===window.MF_COL));if(SO)C.sort((a,b)=>SO==='a'?a.price-b.price:b.price-a.price);return C.map(card).join('')||`<p class="empty" style="grid-column:1/-1">${Q?'No encontramos ese modelo.':'Muy pronto nuevos modelos.'}</p>`};
-const col=()=>(window.mfRef&&window.mfRef.ok()?window.mfRef.col():!window.MF_API_FIN?'<div data-rnew="carga" aria-busy="true" style="min-height:80vh"></div>':'<section class="wrap" id="lista"><p class="empty">Muy pronto nuevos modelos.</p></section>')+footer();
+const colVacia=()=>`<section class="wrap" id="lista">${window.MF_API_ERR?'<p class="empty">No pudimos cargar el catálogo. <button class="btn s" onclick="location.reload()">Reintentar</button></p>':'<p class="empty">Muy pronto nuevos modelos.</p>'}</section>`;
+const col=()=>(window.mfRef&&window.mfRef.ok()?window.mfRef.col():!window.MF_API_FIN?'<div data-rnew="carga" aria-busy="true" style="min-height:80vh"></div>':colVacia())+footer();
 const GUIDE=[['34',22],['35',22.5],['36',23],['37',24],['38',25],['39',25.5],['40',26]],cmf=n=>String(n).replace('.',',');
 const MP=[['Bancolombia','Transferencia'],['Nequi','Billetera digital'],['Daviplata','Billetera digital'],['Visa','Crédito y débito'],['Mastercard','Crédito y débito'],['American Express','Crédito'],['PSE','Débito bancario'],['Contraentrega','Paga al recibir']];
 const pays=()=>`<section class="wrap narrow gd"><h2 class="st" style="margin-bottom:.4rem">Medios de pago</h2><p class="ds ctr">Paga como prefieras. Todos los pedidos se confirman por WhatsApp.</p><div class="mp">${MP.map(m=>`<div class="pm"><b>${m[0]}</b><small>${m[1]}</small></div>`).join('')}</div></section>`;
@@ -415,11 +411,8 @@ function done(){if(!LAST)return home();const L=LAST,W=L.mode==='wa',py=CFG.pagos
  return `<section class="wrap narrow ctr"><div class="ok">✓</div><h1 class="pt">${W?'Tu pedido va por WhatsApp':'¡Pedido recibido!'}</h1><p class="ds">Número de pedido <b>${L.num}</b></p><div class="sum">${L.lines.map(l=>`<p><span>${esc(l.name)}${l.color?' · '+esc(l.color):''} · ${esc(l.talla)} · x${l.q}</span><b>${fmt(l.price*l.q)}</b></p>`).join('')}<p class="tt"><span>Total</span><span>${fmt(L.total)}</span></p></div>
  ${W?`<p class="ds">Si WhatsApp no se abrió, toca el botón para enviar tu pedido.</p><a class="btn" href="${waLink(msg(L))}" target="_blank" rel="noopener">${I.wa} Abrir WhatsApp</a>`:`<p class="ds"><b>${esc(L.c.pay)}:</b> ${esc(py?py.t:'')}</p><a class="btn" href="${waLink('Hola! Ya hice mi pedido '+L.num+' y quiero coordinar el pago ('+L.c.pay+').')}" target="_blank" rel="noopener">${I.wa} Coordinar pago por WhatsApp</a>`}
  <div style="margin-top:1rem"><button class="btn o" data-n="go" data-p="col">Seguir comprando</button></div></section>`}
-function saveOrder(L){if(!real)return;try{const A=JSON.parse(localStorage.getItem('marlon_admin_v1')),f=new Date(),d=new Date(f-f.getTimezoneOffset()*6e4).toISOString().slice(0,10);
- L.lines.forEach(l=>{const p=A.products.find(x=>x.id==l.id);A.rows.push({id:Date.now()+Math.floor(Math.random()*1e6),fecha:d,cliente:L.c.nombre,tel:L.c.tel,producto:l.name,talla:l.talla,color:l.color||'',cant:l.q,precio:l.price,costo:p?p.cost:0,pago:'Pendiente',estado:'Nuevo',ciudad:L.c.ciudad,direccion:L.c.dir,transp:'',guia:'',origen:L.mode==='wa'?'WhatsApp':'Tienda web'})});
- localStorage.setItem('marlon_admin_v1',JSON.stringify(A))}catch(e){}}
 function submit(){const c=FRM;{const er=frmOk();if(er)return toast(er)}if(!c.pay)return toast('Elige un medio de pago');
- LAST={mode,num:'MF-'+String(Date.now()).slice(-6),c:{...c},lines:CART.slice(),total:total()};saveOrder(LAST);CART=[];saveCart();nav('done');
+ LAST={mode,num:'MF-'+String(Date.now()).slice(-6),c:{...c},lines:CART.slice(),total:total()};CART=[];saveCart();nav('done');
  if(mode==='wa')window.open(waLink(msg(LAST)),'_blank')}
 function add(id){const p=catalog().find(x=>String(x.id)===String(id));if(!p)return false;if(!selT){toast('Elige tu talla');return false}
  const cn=(p.colors[selC]||{}).n||'',l=CART.find(x=>String(x.id)===String(id)&&x.talla===selT&&(x.color||'')===cn);if(l)l.q++;else CART.push({id:p.id,name:p.name,price:p.price,img:(p.colors[selC]||{}).img||p.img,talla:selT,color:cn,q:1});saveCart();return true}
@@ -429,12 +422,11 @@ const PG={home,col,prod,cart,out,pay:payPg,done};
 /* ====== Comunidad Marlon ====== */
 /* Looks aprobados: agrega aquí cada uno cuando lo apruebes. Ej: {img:'looks/ana.jpg',n:'Ana M.',t:'Me encantaron mis MF.',ig:'@ana',v:true}  (v:true = compra verificada) */
 const LOOKS=[];
-const DEMO_LOOKS=[];
 const CK='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#0c0c0c"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CKO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>';
 const lookCard=l=>`<article class="lc"><div class="im">${l.img?`<img src="${esc(l.img)}" alt="Look de ${esc(l.n)}" loading="lazy">`:'Foto del look'}</div><p>${esc(l.t||'')}</p><div class="lkn">${esc(l.n)}${l.v?CK:''}</div>${l.ig?`<small>${esc(l.ig)}</small>`:''}</article>`;
 const lookPub=()=>{const l=window.MF_CONTENIDO&&window.MF_CONTENIDO.looks;return Array.isArray(l)?l.filter(x=>x&&x.img&&x.n):[]};
-const communityH=()=>{const P=lookPub();const L=P.length?P:(LOOKS.length?LOOKS:(real?[]:DEMO_LOOKS));
+const communityH=()=>{const P=lookPub();const L=P.length?P:LOOKS;
  return `<section class="wrap com"><h2 class="st">Comunidad Marlon</h2><p class="ds ctr">Looks reales. Estilo propio.</p><div class="lks">${L.length?L.map(lookCard).join(''):`<article class="lc"><div class="im">MF</div><p>Sé la primera en aparecer en Comunidad Marlon.</p></article>`}</div><div class="ctr"><button class="btn" data-n="shopen">Comparte tus MF</button><p class="ds sm">Compártenos tu outfit. Lo revisamos antes de publicarlo.</p></div></section>`};
 let shStep='g';const LK={nombre:'',mensaje:'',ig:'',ok:false,file:null,url:'',err:''};
 function renderSheet(){const s=$('#sh');if(!s)return;let b='';
@@ -516,9 +508,6 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-n]');if(!a
 document.addEventListener('change',e=>{const k=e.target.dataset.f;if(k&&e.target.tagName==='SELECT'){FRM[k]=e.target.value;syncF()}});document.addEventListener('click',e=>{const q=e.target.closest('.mf-q');if(q)toast(q.dataset.q)});
 document.addEventListener('input',e=>{const k=e.target.dataset.f;if(k){FRM[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;syncF()}const l=e.target.dataset.l;if(l)LK[l]=e.target.type==='checkbox'?e.target.checked:e.target.value});
 document.addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;$('#gr').innerHTML=grid()}});document.addEventListener('change',e=>{if(e.target.id==='so'){SO=e.target.value;$('#gr').innerHTML=grid()}});
-addEventListener('storage',e=>{if(e.key!=='marlon_admin_v1')return;try{ADM=JSON.parse(e.newValue)}catch(x){ADM=null}real=!!(ADM&&ADM.products&&ADM.products.length);draw()});
-try{history.replaceState({p:'home',a:null,m:mode},'')}catch(e){}
-draw();
 document.addEventListener('click',e=>{const m=e.target.closest('[data-mn]');if(!m)return;const d=m.dataset.mn,B=document.body;if(d==='o'){B.classList.add('mnopen');return}B.classList.remove('mnopen');if(d==='home')nav('home');else if(d==='col'){Q='';nav('col')}else if(d==='com'){nav('home');setTimeout(()=>{const c=document.querySelector('.com');if(c)c.scrollIntoView({behavior:'smooth'})},80)}else if(d==='bag')nav('cart');else if(d==='share')openSheet();else if(d==='wa')window.open(waLink('Hola! Quiero información sobre sus tacones.'),'_blank')});
 addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('mnopen')});
 $('#sf').addEventListener('submit',e=>{e.preventDefault();Q=$('#sq').value;$('#sq').value='';$('#sq').blur();nav('col')});

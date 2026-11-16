@@ -1,4 +1,4 @@
--- Carga inicial del catálogo real (55 productos de DATA/catalogo_tienda.js) en la tabla productos.
+-- Carga inicial del catálogo real (55 productos) en la tabla productos.
 -- Se ejecuta UNA vez en Supabase > SQL Editor, después de supabase/schema.sql (v4).
 -- 'on conflict do nothing': si ya existe un producto con ese id NO se sobrescribe (respeta lo editado desde el panel).
 -- Verifica precios e inventario en el panel antes de publicar: el inventario viene del archivo del catálogo.
