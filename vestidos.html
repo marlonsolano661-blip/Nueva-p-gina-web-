@@ -703,7 +703,10 @@ function openSheet(mode){
   var L=LOOKS[cur];size=null;
   item=mode==="heel"?L.tacon:(L.prenda.venta||null);
   if(!item){toast("Pronto disponible");return}
-  $("sn").textContent=item.n;$("sp").hidden=false;$("sp").textContent=fmt(item.p);
+  /* Sin precio = la prenda todavía no existe como producto en la tienda: se puede ver, pero no agregar a la bolsa */
+  var venta=item.p>0;
+  $("sn").textContent=item.n;$("sp").hidden=false;$("sp").textContent=venta?fmt(item.p):"Próximamente";
+  $("sadd").disabled=!venta;$("sadd").textContent=venta?"Agregar a la bolsa":"Próximamente";
   color=item.color&&item.colores.indexOf(item.color)>-1?item.color:item.colores[0];galeria(fotosTacon(item,color));
   $("sdesc").innerHTML=(item.desc||[]).map(function(t){return "<li>"+t+"</li>"}).join("");
   $("scol").hidden=item.colores.length<2;
@@ -738,6 +741,7 @@ $("scolors").addEventListener("click",function(e){var b=e.target.closest("[data-
 $("ssizes").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b||b.disabled)return;size=b.dataset.s;[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
 /* Agrega a la misma bolsa de la tienda (mf_cart). El servidor recalcula el precio al pagar. */
 $("sadd").addEventListener("click",function(){
+  if(!(item&&item.p>0)){toast("Esta prenda aún no está a la venta");return}
   if(!size){toast("Elige tu talla");return}
   var it=item,cart=[];
   try{cart=JSON.parse(localStorage.getItem("mf_cart"))||[]}catch(e){}

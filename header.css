@@ -179,3 +179,20 @@ html body header.bar.wd .wd-logo svg{height:1.75rem}
 button.mf-tira-c{cursor:pointer}
 .mf-tira-c b{display:block;font:500 .7rem/1.3 Jost,Helvetica,Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
 .mf-tira-c small{display:block;margin-top:.2rem;font:400 .74rem/1.3 Jost,Helvetica,Arial,sans-serif;letter-spacing:.04em;opacity:.92}
+
+/* Los botones que eran verdes (Elige tu talla / Agregar a la bolsa, Pagar, Aplicar y la barra de compra de abajo)
+   pasan al estilo del botón del banner "Ver colección": negro, rectos, Jost en mayúsculas espaciadas.
+   Los demás botones (Seguir comprando, tallas, etc.) se quedan como estaban. */
+html:root body .btn[data-n="add"],html:root body .dr .drf .ml-par .btn,html:root body .dr .dcb .btn,html:root body #app .stk.eg-stk .btn{
+  background:#0a0a0a!important;color:#fff!important;border:1px solid #0a0a0a!important;border-radius:0!important;
+  font:500 .76rem Jost,Helvetica,Arial,sans-serif!important;letter-spacing:.22em!important;text-transform:uppercase!important}
+html:root body .dr .drf .ml-par .btn{font-size:.72rem!important;letter-spacing:.16em!important}
+html:root body .btn[data-n="add"]:hover,html:root body .btn[data-n="add"]:active,html:root body .dr .drf .ml-par .btn:hover,html:root body .dr .drf .ml-par .btn:active,html:root body .dr .dcb .btn:hover,html:root body .dr .dcb .btn:active,html:root body #app .stk.eg-stk .btn:active{background:#2a2a2a!important;border-color:#2a2a2a!important}
+html:root body .btn.eg-carga[data-n="add"],html:root body .btn.eg-carga[data-n="add"]:hover,html:root body .btn.eg-carga[data-n="add"]:active{color:transparent!important;background:#cfcfcf!important;border-color:#cfcfcf!important}
+/* El aviso al recuadro de tallas también era verde: ahora es gris oscuro */
+html:root body .eg-sel.eg-aviso{animation:none;box-shadow:0 0 0 3px rgba(10,10,10,.18)}
+/* Botones del inicio con el mismo estilo del botón del banner: rectos, Jost en mayúsculas espaciadas */
+html:root body .com .ctr .btn{border-radius:0;background:#0a0a0a;color:#fff;border:1px solid #0a0a0a;font:500 .76rem Jost,Helvetica,Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase;min-height:3.4rem}
+html:root body .ft3 .ft3-f input{border-radius:0!important}
+html:root body .ft3 .ft3-f button{border-radius:0!important;font:500 .76rem Jost,Helvetica,Arial,sans-serif!important;letter-spacing:.22em!important;text-transform:uppercase!important}
+html:root body .rbtn{font:500 .76rem Jost,Helvetica,Arial,sans-serif;letter-spacing:.22em}
