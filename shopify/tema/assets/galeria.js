@@ -334,7 +334,7 @@
         var dentro = (x.foto ? '<img src="' + E(x.foto) + '" alt="" loading="lazy">' : '') + '<b>🏷️ ' + E(x.n) + '</b>' + (x.precio ? '<i>' + plata(x.precio) + '</i>' : '') + '<span>Comprar →</span>';
         return x.id ? '<button type="button" class="cl-c" data-n="prod" data-id="' + E(x.id) + '">' + dentro + '</button>'
           : '<a class="cl-c" href="' + E(x.link) + '" target="_blank" rel="noopener">' + dentro + '</a>';
-      }).join('') + '</div>';
+      }).join('') + '</div><a class="cl-ver" href="https://tienda.mfcol.com/outfits.html">Ver el look completo →</a>';
     }
     var fila = pi.querySelector(':scope > .row'), trust = pi.querySelector(':scope > .trust');
     if (fila && fila.nextSibling) pi.insertBefore(caja, fila.nextSibling);

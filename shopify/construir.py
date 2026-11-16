@@ -28,7 +28,7 @@ PAGINAS = {
 # Se quitan de la copia: el catálogo y las variantes los arma Shopify con Liquid
 QUITAR = {'DATA/catalogo_tienda.js', 'DATA/shopify-variantes.js'}
 # Scripts que la tienda carga sola después (vitrina, botón de outfits): se suben como assets y se cargan desde su URL de Shopify
-DINAMICOS = ['DATA/recortes.js', 'vitrina.js']
+DINAMICOS = ['DATA/recortes.js', 'vitrina.js', 'outfits-boton.js']
 
 
 def nombre_asset(ruta):
