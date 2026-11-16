@@ -33,6 +33,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 @keyframes sube{to{opacity:1;transform:none}}
 .sub{color:var(--g);font-size:.85rem;opacity:0;animation:sube .9s cubic-bezier(.2,.8,.2,1) .35s forwards}
 #rack{position:relative;flex:1;min-height:0;margin-top:.8rem;touch-action:none}
+@media (min-width:700px){#info,.lfoot{max-width:520px;margin-left:auto;margin-right:auto;width:100%}#sheet{max-width:560px;margin:0 auto}}
+@media (hover:hover){.hang{cursor:pointer}.piece{cursor:grab}.piece.touch{cursor:grabbing}.hs .pt,.hs .pl,.cr{cursor:pointer}}
 .rail{position:absolute;left:0;right:0;top:20px;height:5px;border-radius:3px;z-index:5;background:linear-gradient(#fff,#e2e2e2 40%,#bdbdbd 60%,#ededed);box-shadow:0 2px 6px rgba(0,0,0,.06)}
 #track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .hang{position:absolute;opacity:0}
@@ -217,7 +219,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 </section>
 
 <div id="veil"></div>
-<div class="finger" id="finger"><i>☝︎</i> gírala con el dedo</div>
+<div class="finger" id="finger"><i>☝︎</i> <span id="fingerT">gírala con el dedo</span></div>
 <div class="side" id="side"><button type="button" data-f="0" aria-pressed="true">Frente</button><button type="button" data-f="1" aria-pressed="false">Espalda</button></div>
 <div id="info">
   <p class="n" id="in"></p>
@@ -383,6 +385,19 @@ function bindPiece(){
     tilt.style.setProperty("--sx",((e.clientX-r.left)/r.width*100)+"%");tilt.style.setProperty("--sy",((e.clientY-r.top)/r.height*100)+"%");
   }
   piece.addEventListener("pointermove",move);
+  /* Computador: la prenda sigue al mouse sin hacer clic (arrastrando, gira completa) */
+  piece.addEventListener("pointermove",function(e){
+    if(touching||e.pointerType!=="mouse")return;
+    var r=piece.getBoundingClientRect(),nx=((e.clientX-r.left)/r.width-.5)*2,ny=((e.clientY-r.top)/r.height-.5)*2;
+    nx=Math.max(-1,Math.min(1,nx));ny=Math.max(-1,Math.min(1,ny));
+    tg.ry=base+nx*32;tg.rx=-ny*14;if(zoom===1){tg.tx=nx*10;tg.ty=ny*8}
+    piece.classList.add("touch");$("finger").classList.remove("on");
+    tilt.style.setProperty("--sx",((e.clientX-r.left)/r.width*100)+"%");tilt.style.setProperty("--sy",((e.clientY-r.top)/r.height*100)+"%");
+  });
+  piece.addEventListener("pointerleave",function(e){
+    if(touching||e.pointerType!=="mouse")return;
+    piece.classList.remove("touch");tg.ry=base;tg.rx=0;if(zoom===1){tg.tx=tg.ty=0}
+  });
   var rel=function(){
     if(!touching)return;touching=false;piece&&piece.classList.remove("touch");
     /* al soltar queda de frente o de espalda, la que esté más cerca */
@@ -627,6 +642,7 @@ function sincronizar(it,P){
 })();
 
 /* ---------------- Arranque ---------------- */
+if(matchMedia("(hover: hover) and (pointer: fine)").matches)$("fingerT").textContent="pasa el mouse · arrastra para girarla";
 LOOKS.forEach(function(L){[L.prenda.frente,L.prenda.espalda,L.foto.src].forEach(function(s){var i=new Image();i.src=s})});
 if(!LOOKS.length){$("rackView").querySelector(".h1").textContent="Muy pronto";}
 buildRack();requestAnimationFrame(tick);
