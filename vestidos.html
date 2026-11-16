@@ -562,7 +562,9 @@ function sesion(L){
   (function loop(){
     if(vidState!==1)return;
     var t=v.currentTime||0,fr=Math.floor(t*24)%24,ss=Math.floor(t);
-    if(!reduce&&v.duration&&!L.foto.vidFin){var rest=v.duration-t,vb=L.foto.velocidad||1;v.playbackRate=rest<.7?Math.max(.3,.3+(vb-.3)*rest/.7):vb}
+    /* fin: el cuadro donde termina la pose (elegido en el panel); si no hay, el último del video */
+    if(F.fin&&t>=F.fin-.02){try{v.pause()}catch(e){}finSesion(L);return}
+    if(!reduce&&v.duration&&!L.foto.vidFin){var rest=(F.fin||v.duration)-t,vb=L.foto.velocidad||1;v.playbackRate=rest<.7?Math.max(.3,.3+(vb-.3)*rest/.7):vb}
     $("tc").textContent="00:00:"+String(ss).padStart(2,"0")+":"+String(fr).padStart(2,"0");
     disparos.forEach(function(d){if(!d.ok&&t>=d.t){d.ok=true;n++;
       $("shotN").textContent="FOTO "+String(n).padStart(2,"0");
@@ -704,20 +706,32 @@ function sincronizar(it,P){
   (P.imgs||[]).forEach(function(u){if(!ya[u]){ya[u]=1;(it.fotos=it.fotos||[]).push(u)}});
   if(P.desc&&!it.desc)it.desc=String(P.desc).split(/\n+/).filter(Boolean);
 }
-(function(){
+function sincronizarCatalogo(){
   var API=window.MF_API_BASE||"";
   fetch(API+"/api/catalogo").then(function(r){return r.ok?r.json():null}).then(function(d){
     if(!d||!Array.isArray(d.productos))return;var C={};d.productos.forEach(function(p){C[p.id]=p});
     LOOKS.forEach(function(L){sincronizar(L.tacon,C[L.tacon&&L.tacon.id]);if(L.prenda.venta)sincronizar(L.prenda.venta,C[L.prenda.venta.id]);
       if(cur>-1&&$("lookView").classList.contains("on")&&L===LOOKS[cur]){creditos(L,$("crV").classList.contains("on"),$("crT").classList.contains("on"))}});
   }).catch(function(){});
-})();
+}
 
 /* ---------------- Arranque ---------------- */
-if(matchMedia("(hover: hover) and (pointer: fine)").matches)$("fingerT").textContent="clic para ver la espalda · arrastra para girarla";
-LOOKS.forEach(function(L){[L.prenda.frente,L.prenda.espalda,L.foto.src].concat(L.foto.sesion||[]).forEach(function(s){if(s){var i=new Image();i.src=s}})});
-if(!LOOKS.length){$("rackView").querySelector(".h1").textContent="Muy pronto";}
-buildRack();requestAnimationFrame(tick);
+/* Los looks salen del panel (/api/vestidos); si el panel nunca guardó o no responde, se usan los de vestidos/looks.js */
+var arrancado=false;
+function arrancar(lista){
+  if(arrancado)return;arrancado=true;
+  if(Array.isArray(lista))LOOKS=lista.slice();
+  started=performance.now();
+  if(matchMedia("(hover: hover) and (pointer: fine)").matches)$("fingerT").textContent="clic para ver la espalda · arrastra para girarla";
+  LOOKS.forEach(function(L){[L.prenda.frente,L.prenda.espalda,L.foto.src].concat(L.foto.sesion||[]).forEach(function(s){if(s){var i=new Image();i.src=s}})});
+  if(!LOOKS.length){$("rackView").querySelector(".h1").textContent="Muy pronto";}
+  buildRack();requestAnimationFrame(tick);
+  sincronizarCatalogo();
+}
+(function(){
+  var API=window.MF_API_BASE||"",t=setTimeout(function(){arrancar(null)},2500);
+  fetch(API+"/api/vestidos").then(function(r){return r.ok?r.json():null}).then(function(d){clearTimeout(t);arrancar(d&&Array.isArray(d.looks)?d.looks:null)}).catch(function(){clearTimeout(t);arrancar(null)});
+})();
 var rz;addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(function(){if(!piece){buildRack();items.forEach(function(it){it.on=it.arr=true;it.el.style.opacity=1});started=-1e9}
   if($("lookView").classList.contains("on"))layoutPhoto(LOOKS[cur])},150)});
 })();
