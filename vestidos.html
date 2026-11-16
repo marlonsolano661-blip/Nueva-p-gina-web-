@@ -332,9 +332,9 @@ function tick(now){
     var k=reduce?1:Math.min(1,(T-it.t0)/950);
     if(!it.on){it.on=true;it.el.style.opacity=1}
     var xo=(1-ease(k))*(innerWidth+160-(it.slot+R));
-    if(k>=1&&!it.arr){it.arr=true;landed++;if(!reduce)strobe();if(landed===items.length&&W>innerWidth)$("hint").classList.add("on");
-      /* sin tocar: apenas llega la primera prenda, se descuelga y se amplía sola */
-      if(landed===items.length&&!autoAbierta){autoAbierta=true;setTimeout(function(){if(!piece&&!$("lookView").classList.contains("on"))openPiece(0)},reduce?0:650)}}
+    if(k>=1&&!it.arr){it.arr=true;landed++;if(!reduce)strobe();if(landed===items.length){$("hint").textContent=W>innerWidth?"toca un vestido para verlo · desliza":"toca un vestido para verlo";$("hint").classList.add("on")}
+      /* la prenda se amplía solo cuando la clienta la toca (ya no se abre sola al llegar) */
+      }
     it.el.style.transform="translateX("+xo+"px)";
     /* física: la prenda se queda atrás cuando el riel acelera y luego se mece */
     var p=it.slot+R+xo;if(it.pp===null){it.pp=p;it.pv=0}
