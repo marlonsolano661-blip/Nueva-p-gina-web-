@@ -25,10 +25,10 @@ window.MF_VESTIDOS=[{
     fotosColor:{Plata:["vestidos/alessia-plata.jpg"]}}
 },{
   nombre:"Brisa celeste",grupo:"noche-glam",color:{n:"Celeste",h:"#a9c8ea"},
-  prenda:{n:"Noche glam",frente:"vestidos/celeste-frente.webp",espalda:null,w:772,h:1069,gancho:[386,92],
+  prenda:{n:"Noche glam",frente:"vestidos/celeste-frente.webp",espalda:"vestidos/celeste-espalda.webp",w:772,h:1069,gancho:[386,92],
     /* el mismo vestido del catálogo (noche-glam), abierto en color Celeste */
     venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Celeste",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
-      fotos:[{u:"vestidos/celeste-frente.webp",fit:"contain"}],fotosColor:{Celeste:[{u:"vestidos/celeste-frente.webp",fit:"contain"}]}}},
+      fotos:[{u:"vestidos/celeste-frente.webp",fit:"contain"},{u:"vestidos/celeste-espalda.webp",fit:"contain"}],fotosColor:{Celeste:[{u:"vestidos/celeste-frente.webp",fit:"contain"},{u:"vestidos/celeste-espalda.webp",fit:"contain"}]}}},
   /* sesión en video, en cámara lenta (0,75x): termina en la pose de frente con la mano en la cintura; el primer plano de las sandalias va en la compra del tacón */
   foto:{src:"vestidos/celeste-ini.jpg",inicio:"vestidos/celeste-ini.jpg",w:1080,h:1920,video:"vestidos/celeste.mp4",velocidad:.75,disparos:[0.35,0.85,1.35]},
   /* la prenda colgada cae sobre el vestido del PRIMER cuadro del video (cuello y=318, ruedo y=1089) */
