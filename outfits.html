@@ -131,12 +131,48 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
   .bar button{min-height:46px;padding:0 .85rem;border:1px solid var(--k);background:var(--k);color:var(--w);font:500 .64rem Jost,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Mismo estilo de la tienda: franja negra, botones cuadrados, letra Figtree negra y botón verde de compra.
+   Antes la página mezclaba letra serif, títulos dorados y un encabezado distinto al de la tienda. */
+:root{--o:#111;--verde:#02836f}
+.ofa{background:#111;color:#fff;text-align:center;font:500 .62rem/1.4 Jost,Helvetica,Arial,sans-serif;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;padding:.6rem 1rem;padding-top:calc(.6rem + env(safe-area-inset-top))}
+.top{display:grid;grid-template-columns:auto 1fr auto;padding:.7rem 1rem}
+.top .lg{justify-self:center}.top .lg img{height:1.9rem}
+.top .sq{display:flex;align-items:center;justify-content:center;gap:.4rem;min-width:2.5rem;height:2.5rem;border:1px solid #111;border-radius:6px;background:#fff;color:#111;text-decoration:none}
+.top .sq svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.top .sq.bolsa{background:#111;color:#fff;padding:0 .8rem}
+.top .sq.bolsa svg{width:1.1rem;height:1.1rem}
+.top .sq.bolsa b{font:500 .85rem Jost,Helvetica,sans-serif}
+.k{color:#6b6b66}
+h1,.look-name{font:700 1.45rem/1.2 Figtree,Helvetica,sans-serif;letter-spacing:.02em;text-transform:uppercase}
+@media(max-width:959px){h1{font-size:1.25rem}}
+.look-name{font-size:1.25rem}
+.p-top h2,.look-oc{color:#6b6b66}
+.lbl{color:#111;font:700 .78rem Figtree,Helvetica,sans-serif;letter-spacing:.06em}
+.panel{border-color:#e6e6e6}
+.prod strong,.pz-card strong{font:700 1.05rem/1.25 Figtree,Helvetica,sans-serif;text-transform:uppercase}
+.prod .price{font:700 1.1rem Figtree,Helvetica,sans-serif}
+.size{border-color:#cfcfcf;font:500 1rem Figtree,Helvetica,sans-serif}
+.btn{background:var(--verde);border-color:var(--verde);font:700 .9rem Figtree,Helvetica,sans-serif;letter-spacing:.1em;min-height:3.4rem}
+.btn:active{background:#016a5a}
+.btn.o{background:#fff;color:#111;border-color:#111;font:700 .8rem Figtree,Helvetica,sans-serif}
+.pieces li{background:#fff;border-color:#e6e6e6}
+.pieces li img{background:#f6f6f4}
+.oc{border-radius:999px;font:500 .78rem Figtree,Helvetica,sans-serif;letter-spacing:.02em;text-transform:none;padding:.45rem 1rem}
+.arrow{border-radius:6px}
+/* El difuminado a los lados es solo para las modelos de atrás: la del centro se ve completa y nítida */
+.fig[aria-current="true"]{-webkit-mask-image:none;mask-image:none}
+@media(max-width:959px){
+  .bar strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:700 .95rem/1.25 Figtree,Helvetica,sans-serif;text-transform:uppercase}
+  .bar button{background:var(--verde);border-color:var(--verde);font:700 .78rem Figtree,Helvetica,sans-serif;letter-spacing:.08em;border-radius:0}
+}
 </style></head><body>
-<header class="top"><a href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="v" href="index.html">← Volver a la tienda</a></header>
+<div class="ofa">Envíos a toda Colombia · Entrega estimada en 6 días</div>
+<header class="top"><a class="sq" href="index.html" aria-label="Volver a la tienda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a><a class="lg" href="index.html" aria-label="Marlon Footwear, ir al inicio"><img src="assets/brand/logo-negro.png" alt="MF" width="48" height="42"></a><a class="sq bolsa" href="index.html" aria-label="Ver mi bolsa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><b id="ofCnt">0</b></a></header>
 
 <div class="wrap">
   <div class="head">
-    <div><p class="k">Ideas de outfits</p><h1>Try the look</h1></div>
+    <div><p class="k">Looks Marlon</p><h1>Ideas de outfits</h1></div>
     <p class="lead">Looks completos de pies a cabeza. Cambia de look con las flechas o deslizando, y mira cada outfit de frente y de lado.</p>
   </div>
   <p class="filtro" id="filtro" hidden></p>
@@ -177,6 +213,12 @@ h1{font:500 clamp(2.3rem,7vw,3.8rem)/1.02 "Cormorant Garamond",Georgia,serif;mar
 <script src="outfits-img/negro-jean-lado.js"></script>
 <script src="outfits-img/camel-vestido-frente.js"></script>
 <script src="outfits-img/camel-falda-frente.js"></script>
+<script>
+/* Nombre sin emojis (en el panel algunos productos los tienen) y número de la bolsa en el encabezado */
+function limpio(t) { return String(t == null ? "" : t).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "").replace(/\s+/g, " ").trim(); }
+function contarBolsa() { var n = 0; try { (JSON.parse(localStorage.getItem("mf_cart")) || []).forEach(function (x) { n += Number(x.q) || 0; }); } catch (e) {} var b = document.getElementById("ofCnt"); if (b) b.textContent = n; }
+contarBolsa();
+</script>
 <script>
 /* ================================================================
    Los looks se arman en el panel de la tienda (sección "Outfits").
@@ -250,7 +292,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
   $("ocas").addEventListener("click", function (e) { var b = e.target.closest("[data-oc]"); if (!b) return; OC = b.getAttribute("data-oc"); construir(); });
   function filtro(on) {
     var e = $("filtro"); e.hidden = !on; if (!on) return;
-    e.innerHTML = "Ideas para combinar: <b>" + esc(prod(PID).name) + '</b> · <a href="outfits.html">Ver todos los looks</a>';
+    e.innerHTML = "Ideas para combinar: <b>" + esc(limpio(prod(PID).name)) + '</b> · <a href="outfits.html">Ver todos los looks</a>';
   }
 
   /* Celular: altura de la pasarela = lo que queda de pantalla debajo del encabezado (ver --top en el CSS) */
@@ -286,7 +328,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
       b.setAttribute("aria-label", "Ver " + p.n); b.setAttribute("aria-expanded", "false");
       var d = destino(p), pr = d && d.prod, precio = pr && pr.price != null ? pr.price : p.precio;
       if (q[0] > 55) b.className += " izq";
-      b.innerHTML = '<span class="tag"><b>🏷️ ' + esc(p.n) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
+      b.innerHTML = '<span class="tag"><b>' + esc(limpio(p.n)) + "</b>" + (precio ? "<i>" + fmt(precio) + "</i>" : "") + "</span>";
       b.addEventListener("click", function (e) { e.stopPropagation(); if (abierto === b) cerrarTarjeta(); else abrirTarjeta(p, b); });
       capa.appendChild(b);
     });
@@ -298,7 +340,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var precio = pr && pr.price != null ? pr.price : p.precio;
     var t = document.createElement("div"); t.className = "pz-card" + (foto ? "" : " sin-foto"); t.setAttribute("role", "dialog"); t.setAttribute("aria-label", p.n);
     t.innerHTML = (foto ? '<img src="' + esc(foto) + '" alt="">' : "") +
-      "<div><strong>🏷️ " + esc(p.n) + "</strong>" + (precio ? '<span class="pr">' + fmt(precio) + "</span>" : "") +
+      "<div><strong>" + esc(limpio(p.n)) + "</strong>" + (precio ? '<span class="pr">' + fmt(precio) + "</span>" : "") +
       (d ? '<a href="' + esc(d.href) + '"' + (d.fuera ? ' target="_blank" rel="noopener"' : "") + ">Comprar →</a>" : "") + "</div>" +
       '<button class="x" type="button" aria-label="Cerrar">×</button>';
     t.querySelector(".x").addEventListener("click", function (e) { e.stopPropagation(); cerrarTarjeta(); });
@@ -339,7 +381,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     $("lookName").textContent = L.nombre;
     $("lookOc").hidden = !L.ocasion; $("lookOc").textContent = L.ocasion || "";
     $("prodImg").src = c.img || p.img || foto(L.angulos[0][1]); $("prodImg").alt = p.name + (L.color ? " color " + L.color : "");
-    $("prodName").textContent = p.name;
+    $("prodName").textContent = limpio(p.name);
     $("prodMeta").textContent = L.color ? "Color " + L.color : "";
     $("prodPrice").textContent = p.price != null ? fmt(p.price) : "";
     var href = "index.html?producto=" + encodeURIComponent(L.producto);
@@ -347,7 +389,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     $("add").textContent = "Agregar a la bolsa" + (p.price != null ? " · " + fmt(p.price) : "");
     /* Barra fija del celular */
     $("barImg").src = $("prodImg").src; $("barImg").alt = $("prodImg").alt;
-    $("barName").textContent = p.name;
+    $("barName").textContent = limpio(p.name);
     $("barPrice").innerHTML = (p.price != null ? "<b>" + fmt(p.price) + "</b>" : "") + (p.price != null && L.color ? " · " : "") + (L.color ? "Color " + esc(L.color) : "");
     $("barLink").href = href;
     $("pieces").parentNode.hidden = !L.piezas.length;
@@ -424,6 +466,7 @@ var RESPALDO = { "sandalia-miel-elite-mf": { id: "sandalia-miel-elite-mf", name:
     var l = cart.filter(function (x) { return String(x.id) === String(p.id) && x.talla === size && (x.color || "") === L.color; })[0];
     if (l) l.q++; else cart.push({ id: p.id, name: p.name, price: p.price, img: c.img || p.img || "", talla: size, color: L.color, q: 1 });
     try { localStorage.setItem("mf_cart", JSON.stringify(cart)); } catch (e) {}
+    contarBolsa();
     var t = $("toast"); t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("on"); }, 3500);
   });
 
