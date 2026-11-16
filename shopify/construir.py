@@ -97,6 +97,12 @@ def main():
     renders = ''.join("{%% render 'mf-pagina-%d' %%}\n" % i for i in range(1, len(partes) + 1))
 
     escribir('layout/mf.liquid', inicio + cabeza + '\n' + renders + '{{ content_for_layout }}</body>' + final)
+    # Producto, colección, bolsa, búsqueda y 404 también abren dentro del diseño de la tienda (no con el tema base):
+    # la sección mf-ruta deja la dirección como la entiende la tienda (/?producto=… o la colección) y la abre.
+    escribir('sections/mf-ruta.liquid', leer('shopify/ruta.liquid'))
+    for plantilla in ('product', 'collection', 'list-collections', 'cart', 'search', '404'):
+        escribir('templates/%s.json' % plantilla,
+                 '{"layout":"mf","sections":{"mf":{"type":"mf-ruta","settings":{}}},"order":["mf"]}\n')
     escribir('sections/mf-vacio.liquid',
              '{% comment %}La página la dibuja layout/mf.liquid{% endcomment %}\n'
              '{% schema %}{"name":"MF Netlify","settings":[]}{% endschema %}\n')

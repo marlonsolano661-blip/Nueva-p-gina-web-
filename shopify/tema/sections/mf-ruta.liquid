@@ -1,0 +1,29 @@
+{%- comment -%}
+  Abre dentro del diseño de la tienda lo que en Shopify tiene su propia dirección:
+  /products/<id> → la ficha del producto · /collections/<id> → esa colección · /collections → todos los modelos
+  /cart → la bolsa · /search y páginas que no existen → el inicio.
+  Corre al final de la página, antes de que la tienda se dibuje con el catálogo (DOMContentLoaded).
+{%- endcomment -%}
+<script>
+(function () {
+  var tipo = {{ template.name | json }};
+  var id = {% if template.name == 'product' %}{{ product.handle | json }}{% elsif template.name == 'collection' %}{{ collection.handle | json }}{% else %}''{% endif %};
+  if (tipo === 'collection' && (id === 'all' || id === 'vitrina' || id === 'frontpage')) id = '';
+  var dir = '/';
+  if (tipo === 'product' && id) dir = '/?producto=' + encodeURIComponent(id);
+  else if (tipo === 'collection' && id) dir = '/#' + id;
+  try { history.replaceState(null, '', dir); } catch (e) { /* sin historial */ }
+  if (tipo === 'collection' || tipo === 'list-collections' || tipo === 'cart') {
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        try {
+          if (tipo === 'cart') { if (typeof openBag === 'function') openBag(); return; }
+          window.MF_COL = id;
+          if (typeof nav === 'function') nav('col');
+        } catch (e) { /* se queda en el inicio */ }
+      }, 0);
+    });
+  }
+})();
+</script>
+{% schema %}{"name":"MF ruta","settings":[]}{% endschema %}
