@@ -156,6 +156,23 @@ def vestidos():
         if viejo not in html:
             raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo[:60])
         html = html.replace(viejo, nuevo)
+    # Perchero más real y más rápido (solo en la copia de Shopify): sin la barra gris, llegan más rápido
+    # y se mecen como un gancho de verdad (más firme y se detiene pronto, casi sin "viento").
+    ajustes = [
+        ('t0:reduce?0:500+i*720', 't0:reduce?0:120+i*230'),
+        ('(T-it.t0)/950', '(T-it.t0)/560'),
+        ('it.om+=(-40*it.th-2*it.om-a*.006+breeze)*dt;', 'it.om+=(-60*it.th-4.5*it.om-a*.0045+breeze)*dt;'),
+        ('Math.sin(now/900+i*1.7)*1.1', 'Math.sin(now/1300+i*1.7)*.3'),
+        ('transition:transform 1.25s cubic-bezier(.5,0,.25,1)', 'transition:transform .7s cubic-bezier(.5,0,.25,1)'),
+        ('transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s', 'transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .3s'),
+        ('transition:filter .9s', 'transition:filter .5s'),
+        ('transition:opacity .7s', 'transition:opacity .4s'),
+    ]
+    for viejo, nuevo in ajustes:
+        if viejo not in html:
+            raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo)
+        html = html.replace(viejo, nuevo)
+    html = html.replace('</style>', '.rail{display:none}\n</style>', 1)
     html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
     html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)
