@@ -180,6 +180,13 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .opt[aria-pressed=true]{background:var(--k);color:#fff;border-color:var(--k)}
 .opt:disabled{opacity:.35;text-decoration:line-through}
 #sheet .btn{width:100%}
+/* la ficha siempre tiene salida: la X queda fija arriba y "Volver" fija abajo junto a "Agregar a la bolsa" */
+#sheet{padding-top:0}
+#sheet .stop{position:sticky;top:0;z-index:4;height:30px;margin:0 -1.2rem .2rem;background:linear-gradient(#fff 70%,rgba(255,255,255,0));display:flex;justify-content:center}
+#sheet .grip{width:42px;height:5px;border-radius:3px;background:#d9d9d9;margin-top:10px}
+#sheet .stop .x{top:8px;right:.9rem;width:40px;height:40px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.14);display:grid;place-items:center;line-height:1}
+#sheet .sbar{position:sticky;bottom:calc(-1.2rem - env(safe-area-inset-bottom));z-index:4;margin:0 -1.2rem calc(-1.2rem - env(safe-area-inset-bottom));padding:.7rem 1.2rem calc(.9rem + env(safe-area-inset-bottom));background:linear-gradient(rgba(255,255,255,0),#fff 22%)}
+#sheet .sbar .btn{width:auto}
 .note{font-size:.75rem;color:var(--g);margin-top:.6rem;text-align:center}
 .toast a{color:var(--k);font-weight:400;margin-left:.4rem;pointer-events:auto}
 .toast{position:fixed;left:50%;bottom:calc(1.4rem + env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,20px);opacity:0;background:#fff;color:var(--k);border:1px solid var(--l);border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:.65rem 1.1rem;font-size:.88rem;transition:.3s;white-space:nowrap;pointer-events:none}
@@ -255,11 +262,11 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 
 <div id="sheetVeil"></div>
 <div id="sheet" role="dialog" aria-label="Comprar">
-  <button class="x" id="sx" type="button" aria-label="Cerrar">×</button>
+  <div class="stop"><span class="grip" aria-hidden="true"></span><button class="x" id="sx" type="button" aria-label="Cerrar">×</button></div>
   <div class="sgal" id="sgal"></div><p class="n" id="sn"></p><p class="p" id="sp"></p><ul class="sdesc" id="sdesc"></ul>
   <div id="scol"><p class="lbl">Color</p><div class="row" id="scolors"></div></div>
   <div id="ssz"><p class="lbl">Talla</p><div class="row" id="ssizes"></div></div>
-  <button class="btn" id="sadd" type="button">Agregar a la bolsa</button>
+  <div class="btns sbar"><button class="btn o" id="sback" type="button">Volver</button><button class="btn" id="sadd" type="button">Agregar a la bolsa</button></div>
   <p class="note" id="snote"></p>
 </div>
 <div class="toast" id="toast"><span id="toastT"></span> <a href="index.html" id="toastA" hidden>Ver bolsa</a></div>
@@ -703,7 +710,8 @@ function openSheet(mode){
   $("scolors").innerHTML=item.colores.map(function(c){return '<button class="opt" type="button" data-c="'+c+'" aria-pressed="'+(c===color)+'">'+c+'</button>'}).join("");
   $("ssizes").innerHTML=item.tallas.map(function(t){return '<button class="opt" type="button" data-s="'+t+'" aria-pressed="false"'+(item.agotadas.indexOf(t)>-1?" disabled":"")+'>'+t+'</button>'}).join("");
   $("snote").textContent="";
-  $("sheetVeil").classList.add("on");$("sheet").classList.add("on");
+  $("sheetVeil").classList.add("on");$("sheet").classList.add("on");$("sheet").scrollTop=0;
+  if(!fichaHist){try{history.pushState({ficha:1},"");fichaHist=true}catch(e){}}
 }
 function fotosTacon(h,c){var extra=(h.fotosColor&&h.fotosColor[c])||[],F=h.fotos||[];
   /* el video del producto va primero; luego la foto del color elegido y el resto */
@@ -715,7 +723,17 @@ function galeria(L2){
   [].forEach.call($("sgal").querySelectorAll("video"),function(v){var pr=v.play();if(pr&&pr.catch)pr.catch(function(){})});
 }
 function closeSheet(){$("sheetVeil").classList.remove("on");$("sheet").classList.remove("on");[].forEach.call($("sgal").querySelectorAll("video"),function(v){v.pause()})}
-$("sx").addEventListener("click",closeSheet);$("sheetVeil").addEventListener("click",closeSheet);
+$("sx").addEventListener("click",cerrarFicha);$("sheetVeil").addEventListener("click",cerrarFicha);$("sback").addEventListener("click",cerrarFicha);
+/* El botón "atrás" del teléfono también cierra la ficha (en vez de salir de la página) */
+var fichaHist=false;
+function cerrarFicha(){if(fichaHist){history.back()}else closeSheet()}
+addEventListener("popstate",function(){if(fichaHist){fichaHist=false;closeSheet()}});
+/* Deslizar hacia abajo desde arriba de la ficha la cierra */
+(function(){var sh=$("sheet"),y0=null,dy=0;
+  sh.addEventListener("touchstart",function(e){y0=sh.scrollTop<=0?e.touches[0].clientY:null;dy=0},{passive:true});
+  sh.addEventListener("touchmove",function(e){if(y0==null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition="none";sh.style.transform="translateY("+dy+"px)"}},{passive:true});
+  sh.addEventListener("touchend",function(){if(y0==null)return;sh.style.transition="";sh.style.transform="";if(dy>110)cerrarFicha();y0=null});
+})();
 $("scolors").addEventListener("click",function(e){var b=e.target.closest("[data-c]");if(!b)return;color=b.dataset.c;galeria(fotosTacon(item,color));[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
 $("ssizes").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b||b.disabled)return;size=b.dataset.s;[].forEach.call(this.children,function(x){x.setAttribute("aria-pressed",x===b)})});
 /* Agrega a la misma bolsa de la tienda (mf_cart). El servidor recalcula el precio al pagar. */
@@ -727,7 +745,7 @@ $("sadd").addEventListener("click",function(){
   var l=cart.filter(function(x){return String(x.id)===String(it.id)&&x.talla===size&&(x.color||"")===(color||"")})[0];
   if(l)l.q++;else cart.push({id:it.id,name:it.n,price:it.p,img:col.img||it.catImg||"",talla:size,color:color||"",q:1});
   try{localStorage.setItem("mf_cart",JSON.stringify(cart))}catch(e){}
-  closeSheet();toast("Añadido a la bolsa",true);
+  cerrarFicha();toast("Añadido a la bolsa",true);
 });
 function toast(t,bolsa){var e=$("toast");$("toastT").textContent=t;$("toastA").hidden=!bolsa;e.style.pointerEvents=bolsa?"auto":"none";e.classList.add("on");clearTimeout(e._h);e._h=setTimeout(function(){e.classList.remove("on")},bolsa?4200:2600)}
 
