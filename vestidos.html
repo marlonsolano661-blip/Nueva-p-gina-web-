@@ -57,6 +57,9 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .face img{width:100%;height:100%;display:block;filter:drop-shadow(0 20px 28px rgba(0,0,0,.12))}
 .piece .hook{transition:opacity .4s}
 .piece.dress .hook,.piece.dress .hanger-hide{opacity:0}
+/* al posarse sobre la modelo, el gancho de madera se oculta: solo queda la prenda */
+.face img{clip-path:inset(0 0 0 0);transition:clip-path .55s cubic-bezier(.4,0,.2,1)}
+.piece.dress .face img{clip-path:inset(14% 0 0 0)}
 .sheen{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .3s;
   background:radial-gradient(circle at var(--sx,50%) var(--sy,40%),rgba(255,255,255,.28),rgba(255,255,255,0) 42%)}
 .piece.touch .sheen{opacity:1}
@@ -438,8 +441,9 @@ function layoutPhoto(L){
   el.style.cssText="left:"+(w-pw)/2+"px;top:"+(h-ph)/2+"px;width:"+pw+"px;height:"+ph+"px";
   PH={x:(w-pw)/2,y:(h-ph)/2,k:pw/F.w};
   $("vf").style.cssText="left:"+PH.x+"px;top:"+PH.y+"px;width:"+pw+"px;height:"+ph+"px";
-  if(F.video){var k=PH.k,vf=F.vidFin,vh=vf.w*F.vidH/F.vidW,v=$("lvideo");
+  if(F.video&&F.vidFin){var k=PH.k,vf=F.vidFin,vh=vf.w*F.vidH/F.vidW,v=$("lvideo");
     v.style.cssText="left:"+(vf.c[0]-vf.w/2)*k+"px;top:"+(vf.c[1]-vh/2)*k+"px;width:"+vf.w*k+"px;height:"+vh*k+"px"}
+  else if(F.video)$("lvideo").style.cssText="left:0;top:0;width:100%;height:100%";
   return PH;
 }
 function onPhoto(p){return {x:PH.x+p[0]*PH.k,y:PH.y+p[1]*PH.k}}
@@ -448,7 +452,7 @@ $("full").addEventListener("click",function(){
   hideProbador();
   $("lname").textContent=L.nombre;$("topChip").textContent=String(cur+1).padStart(2,"0")+" / "+String(LOOKS.length).padStart(2,"0");
   var ph=$("photo");ph.classList.remove("shot","vid","vidout");$("lphoto").src=L.foto.src;vidState=0;cancelAnimationFrame(camLoop);
-  var v=$("lvideo");v.pause();if(L.foto.video){if(v.getAttribute("src")!==L.foto.video)v.src=L.foto.video}else v.removeAttribute("src");$("lphoto").classList.remove("cam");$("lphoto").style.transform="";
+  var v=$("lvideo");v.pause();if(L.foto.video){v.poster=L.foto.inicio||"";if(v.getAttribute("src")!==L.foto.video){v.src=L.foto.video;v.load()}try{v.currentTime=0}catch(e){}}else v.removeAttribute("src");if(L.foto.inicio)$("lphoto").src=L.foto.inicio;$("lphoto").classList.remove("cam");$("lphoto").style.transform="";
   $("play").classList.remove("on");$("play").hidden=!(L.foto.video||L.foto.sesion);
   marcas(false);creditos(L,false,false);
   $("lookView").classList.add("on");$("rackView").classList.add("off");$("veil").classList.remove("on");
@@ -464,6 +468,7 @@ $("full").addEventListener("click",function(){
     },180*D);
     /* visor: aparece, el cuadro de enfoque busca la prenda y fija; flash y arranca la sesión en video */
     setTimeout(function(){
+      if(L.foto.video&&!L.foto.vidFin)ph.classList.add("vid");
       var vf=$("vf"),af=$("af");vf.classList.add("on");$("tc").textContent="00:00:00";$("shotN").textContent="FOTO 00";
       af.classList.remove("lock");af.style.cssText="left:12%;top:10%;width:76%;height:70%";
       setTimeout(function(){var E2=L.encaje,pw=PH.k;af.style.cssText="left:"+(E2.x+E2.w*.28)*pw+"px;top:"+(E2.y+150)*pw+"px;width:"+E2.w*.44*pw+"px;height:"+E2.w*.44*pw+"px"},80*D);
@@ -525,9 +530,14 @@ function sesion(L){
 }
 function finSesion(L){
   vidState=0;if(!L.foto.video)$("lphoto").src=L.foto.src;cancelAnimationFrame(camLoop);
-  var ph=$("photo");ph.classList.add("shot"); /* la foto queda debajo: es igual al último cuadro */
-  requestAnimationFrame(function(){ph.classList.add("vidout");ph.classList.remove("vid")});
-  setTimeout(function(){disparo(null,1);$("shotN").textContent="LISTO"},reduce?0:350);
+  var ph=$("photo");
+  if(L.foto.video&&!L.foto.vidFin){ /* el video queda quieto en su último cuadro: los puntos se dibujan encima */
+    var v=$("lvideo");if(!v.ended){try{v.pause()}catch(e){}}
+  }else{
+    ph.classList.add("shot"); /* la foto queda debajo: es igual al último cuadro */
+    requestAnimationFrame(function(){ph.classList.add("vidout");ph.classList.remove("vid")});
+  }
+  setTimeout(function(){disparo(null,.5);$("shotN").textContent="LISTO"},reduce?0:350);
   setTimeout(function(){$("vf").classList.remove("on")},reduce?0:1000);
   setTimeout(function(){focoTacon(L);var b=$("play");b.textContent="↻ Ver la sesión";b.classList.toggle("on",!!(L.foto.video||L.foto.sesion))},reduce?0:1200);
 }

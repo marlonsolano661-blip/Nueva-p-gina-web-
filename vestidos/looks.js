@@ -11,14 +11,14 @@ window.MF_VESTIDOS=[{
     /* el vestido en la tienda (catálogo: noche-glam) */
     venta:{id:"noche-glam",n:"Noche glam",p:169900,colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
       fotos:[{u:"vestidos/prenda-frente.webp",fit:"contain"},{u:"vestidos/prenda-espalda.webp",fit:"contain"}],fotosColor:{}}},
-  foto:{src:"vestidos/look-1.jpg",w:1179,h:2096,video:"vestidos/look-1.mp4",poster:"vestidos/look-1-poster.jpg",
-    /* dónde cae el primer y el último cuadro del video dentro de la foto (centro y ancho), para empalmar sin corte */
-    vidIni:{c:[588,691],w:760},vidFin:{c:[603.5,1040],w:1166},vidW:1066,vidH:1894,
+  foto:{src:"vestidos/look-1-ini.jpg",inicio:"vestidos/look-1-ini.jpg",w:1066,h:1894,video:"vestidos/look-1.mp4",
+    /* el video es el escenario: empieza en su primer cuadro (inicio) y termina quieto en el último */
     disparos:[1.0,2.2,3.4,5.2,6.6]},
-  /* la prenda colgada (cuello y=175, ruedo y=1065) cae sobre la modelo (cuello y=380, ruedo y=1200) */
-  encaje:{x:208,y:219,w:715},
-  puntoPrenda:[560,860],
-  tacon:{id:"tacones-alessia-noir",n:"Tacones Alessia Noir",p:210000,colores:["Negro","Plata"],tallas:["34","35","36","37","38","39","40"],agotadas:[],punto:[652,1812],mini:"vestidos/alessia-mini.jpg",
+  /* la prenda colgada cae sobre el vestido del PRIMER cuadro del video (cuello y=500, ruedo y=1666) */
+  encaje:{x:46,y:308,w:996},
+  /* puntos sobre el ÚLTIMO cuadro del video */
+  puntoPrenda:[525,770],
+  tacon:{id:"tacones-alessia-noir",n:"Tacones Alessia Noir",p:210000,colores:["Negro","Plata"],tallas:["34","35","36","37","38","39","40"],agotadas:[],punto:[583,1636],mini:"vestidos/alessia-mini.jpg",
     desc:["Aguja negra de tiras delgadas con pulsera al tobillo","Tacón 11 cm"],
     /* fotos propias del look; las del catálogo se agregan solas detrás */
     fotos:[{u:"vestidos/alessia-1.jpg",fit:"contain"},"vestidos/alessia-2.jpg","vestidos/alessia-3.jpg"],
@@ -29,10 +29,11 @@ window.MF_VESTIDOS=[{
     /* el mismo vestido del catálogo (noche-glam), abierto en color Celeste */
     venta:{id:"noche-glam",n:"Noche glam",p:169900,color:"Celeste",colores:["Negro","Celeste","Beige"],tallas:["XS","S","M","L","XL"],agotadas:["XS","XL"],
       fotos:[{u:"vestidos/celeste-frente.webp",fit:"contain"}],fotosColor:{Celeste:[{u:"vestidos/celeste-frente.webp",fit:"contain"}]}}},
-  /* sin video: la sesión es de fotos (primer plano, perfil y al final la foto de frente) */
-  foto:{src:"vestidos/celeste-2.jpg",w:768,h:1376,sesion:["vestidos/celeste-1.jpg","vestidos/celeste-3.jpg"]},
-  /* la prenda colgada (cuello y=135, ruedo y=960) cae sobre la modelo (cuello y=215, ruedo y=705) */
-  encaje:{x:146,y:135,w:459},
-  puntoPrenda:[375,560],
+  /* sesión en video (termina en el último cuadro de cuerpo entero; el primer plano de las sandalias va en la compra del tacón) */
+  foto:{src:"vestidos/celeste-ini.jpg",inicio:"vestidos/celeste-ini.jpg",w:1080,h:1920,video:"vestidos/celeste.mp4",disparos:[0.9,2.0,3.1,4.3]},
+  /* la prenda colgada cae sobre el vestido del PRIMER cuadro del video (cuello y=318, ruedo y=1089) */
+  encaje:{x:188,y:189,w:656},
+  /* puntos sobre el ÚLTIMO cuadro del video */
+  puntoPrenda:[580,790],
   tacon:null /* pendiente: ¿cuál sandalia dorada MF es? */
 }];
