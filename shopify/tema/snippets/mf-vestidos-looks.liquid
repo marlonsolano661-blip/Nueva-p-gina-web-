@@ -113,6 +113,7 @@ window.MF_VESTIDOS=[{
     foto: {% if fm %}{{ fm | image_url: width: 1080 | prepend: 'https:' | json }}{% else %}""{% endif %},
     w: {{ fm.width | default: 1080 }}, h: {{ fm.height | default: 1920 }},
     video: {{ video_url | json }},
+    sesion: [{%- for im in lk.fotos_sesion.value -%}{{ im | image_url: width: 1080 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
     vestido: {% if vd %}{ id: {{ vd.handle | json }}, n: {{ vd.title | json }}, p: {{ vd.price | divided_by: 100 }} }{% else %}null{% endif %},
     tacon: {% if tc %}{ id: {{ tc.handle | json }}, n: {{ tc.title | json }}, p: {{ tc.price | divided_by: 100 }},
       mini: {% if tc.featured_image %}{{ tc.featured_image | image_url: width: 200 | prepend: 'https:' | json }}{% else %}""{% endif %} }{% else %}null{% endif %}
@@ -131,7 +132,7 @@ window.MF_VESTIDOS=[{
     .sort(function (a, b) { return a.orden - b.orden; })
     .map(function (a) {
       var esp = a.espalda || a.frente, V = a.vestido, T = a.tacon;
-      if (a.video && a.fondo) fondos[a.video.split('?')[0]] = a.fondo;
+      if (a.fondo) fondos[(a.video || a.foto).split('?')[0]] = a.fondo;
       return {
         nombre: a.nombre, grupo: V ? V.id : slug(a.nombre),
         color: { n: a.color || '', h: a.muestra || '#cccccc' },
@@ -144,7 +145,7 @@ window.MF_VESTIDOS=[{
             fotos: [{ u: a.frente, fit: 'contain' }, { u: esp, fit: 'contain' }], fotosColor: {}
           }
         },
-        foto: { src: a.foto, inicio: a.foto, w: a.w, h: a.h, video: a.video || undefined, disparos: [1.0, 2.4, 3.8, 5.2, 6.6] },
+        foto: { src: a.foto, inicio: a.foto, w: a.w, h: a.h, video: a.video || undefined, sesion: !a.video && a.sesion.length ? a.sesion : undefined, disparos: [1.0, 2.4, 3.8, 5.2, 6.6] },
         encaje: { x: Math.round(a.w * 0.18), y: Math.round(a.h * 0.16), w: Math.round(a.w * 0.64) },
         puntoPrenda: punto(a.pv, a.w, a.h, 50, 42),
         tacon: T ? { id: T.id, n: T.n, p: T.p, colores: [], tallas: [], agotadas: [], punto: punto(a.pt, a.w, a.h, 55, 88), mini: T.mini, desc: [], fotos: [] } : undefined
