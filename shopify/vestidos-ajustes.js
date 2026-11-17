@@ -38,7 +38,8 @@
     if (!lv || !lv.classList.contains('on')) { pintar('#fff'); return; }
     var v = document.getElementById('lvideo'), im = document.getElementById('lphoto');
     var src = (v && (v.currentSrc || v.src)) || (im && im.src) || '';
-    var color = GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
+    var F = window.MF_FONDOS || {}, limpio = String(src).split('?')[0];
+    var color = F[limpio] || GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
     if (color) pintar(color);
   }
   function iniciar() {

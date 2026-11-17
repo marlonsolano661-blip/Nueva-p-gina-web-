@@ -74,7 +74,87 @@ window.MF_VESTIDOS=[{
     desc:["Aguja negra de tiras delgadas con pulsera al tobillo","Tacón 11 cm"],
     fotos:[{u:"{{ vb }}vestidos-alessia-1.jpg",fit:"contain"},"{{ vb }}vestidos-alessia-2.jpg","{{ vb }}vestidos-alessia-3.jpg"],fotosColor:{Plata:["{{ vb }}vestidos-alessia-plata.jpg"]}}
 }];
-</script><script>/* Fondo que se acomoda solo al video de cada look (copia de Shopify).
+</script>{%- comment -%}
+  Looks del perchero de Vestidos manejados desde el panel de Shopify:
+  Contenido → Metaobjetos → "Look de Vestidos". Si hay looks activos, reemplazan a los fijos de vestidos/looks.js.
+  Por cada look: vestido colgado (frente/espalda sin fondo), foto y video de la modelo, vestido y tacón (productos),
+  color del fondo del video y dónde van los puntos de compra (en % del último cuadro).
+{%- endcomment -%}
+{%- assign looks_mf = metaobjects.mf_look.values -%}
+{%- if looks_mf.size > 0 -%}
+<script>
+(function () {
+  var L = [];
+  {%- for lk in looks_mf -%}
+  {%- assign fm = lk.foto_modelo.value -%}
+  {%- assign fr = lk.vestido_frente.value -%}
+  {%- assign es = lk.vestido_espalda.value -%}
+  {%- assign vd = lk.vestido.value -%}
+  {%- assign tc = lk.tacon.value -%}
+  {%- assign vf = lk.video_modelo.value -%}
+  {%- assign video_url = '' -%}
+  {%- if vf.media_type == 'video' -%}
+    {%- for s in vf.sources -%}{%- if s.format == 'mp4' and s.height <= 1920 -%}{%- assign video_url = s.url -%}{%- endif -%}{%- endfor -%}
+  {%- elsif vf -%}
+    {%- assign video_url = vf.url -%}
+  {%- endif -%}
+  L.push({
+    orden: {{ lk.orden.value | default: 99 }},
+    activo: {% if lk.activo.value == false %}false{% else %}true{% endif %},
+    nombre: {{ lk.nombre.value | json }},
+    color: {{ lk.color.value | default: '' | json }},
+    muestra: {{ lk.color_muestra.value | default: '' | json }},
+    fondo: {{ lk.color_fondo.value | default: '' | json }},
+    pv: {{ lk.punto_vestido.value | default: '' | json }},
+    pt: {{ lk.punto_tacon.value | default: '' | json }},
+    frente: {% if fr %}{{ fr | image_url: width: 900 | prepend: 'https:' | json }}{% else %}""{% endif %},
+    fw: {{ fr.width | default: 776 }}, fh: {{ fr.height | default: 1071 }},
+    espalda: {% if es %}{{ es | image_url: width: 900 | prepend: 'https:' | json }}{% else %}""{% endif %},
+    foto: {% if fm %}{{ fm | image_url: width: 1080 | prepend: 'https:' | json }}{% else %}""{% endif %},
+    w: {{ fm.width | default: 1080 }}, h: {{ fm.height | default: 1920 }},
+    video: {{ video_url | json }},
+    vestido: {% if vd %}{ id: {{ vd.handle | json }}, n: {{ vd.title | json }}, p: {{ vd.price | divided_by: 100 }} }{% else %}null{% endif %},
+    tacon: {% if tc %}{ id: {{ tc.handle | json }}, n: {{ tc.title | json }}, p: {{ tc.price | divided_by: 100 }},
+      mini: {% if tc.featured_image %}{{ tc.featured_image | image_url: width: 200 | prepend: 'https:' | json }}{% else %}""{% endif %} }{% else %}null{% endif %}
+  });
+  {%- endfor -%}
+
+  function punto(txt, w, h, dx, dy) {
+    var m = String(txt || '').split(','), x = parseFloat(m[0]), y = parseFloat(m[1]);
+    if (isNaN(x) || isNaN(y)) { x = dx; y = dy; }
+    return [Math.round(w * x / 100), Math.round(h * y / 100)];
+  }
+  function slug(t) { return String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+
+  var fondos = {};
+  var looks = L.filter(function (a) { return a.activo && a.foto && a.frente; })
+    .sort(function (a, b) { return a.orden - b.orden; })
+    .map(function (a) {
+      var esp = a.espalda || a.frente, V = a.vestido, T = a.tacon;
+      if (a.video && a.fondo) fondos[a.video.split('?')[0]] = a.fondo;
+      return {
+        nombre: a.nombre, grupo: V ? V.id : slug(a.nombre),
+        color: { n: a.color || '', h: a.muestra || '#cccccc' },
+        prenda: {
+          n: V ? V.n : a.nombre, frente: a.frente, espalda: esp, w: a.fw, h: a.fh,
+          gancho: [Math.round(a.fw / 2), Math.round(a.fh * 0.086)],
+          venta: {
+            id: V ? V.id : 'vestido-' + slug(a.nombre), n: V ? V.n : a.nombre, p: V ? V.p : 0,
+            color: a.color || '', colores: a.color ? [a.color] : [], tallas: [], agotadas: [],
+            fotos: [{ u: a.frente, fit: 'contain' }, { u: esp, fit: 'contain' }], fotosColor: {}
+          }
+        },
+        foto: { src: a.foto, inicio: a.foto, w: a.w, h: a.h, video: a.video || undefined, disparos: [1.0, 2.4, 3.8, 5.2, 6.6] },
+        encaje: { x: Math.round(a.w * 0.18), y: Math.round(a.h * 0.16), w: Math.round(a.w * 0.64) },
+        puntoPrenda: punto(a.pv, a.w, a.h, 50, 42),
+        tacon: T ? { id: T.id, n: T.n, p: T.p, colores: [], tallas: [], agotadas: [], punto: punto(a.pt, a.w, a.h, 55, 88), mini: T.mini, desc: [], fotos: [] } : undefined
+      };
+    });
+  if (looks.length) { window.MF_VESTIDOS = looks; window.MF_FONDOS = fondos; }
+})();
+</script>
+{%- endif -%}
+<script>/* Fondo que se acomoda solo al video de cada look (copia de Shopify).
    Los videos traen su propio fondo de estudio (blanco, gris claro o rosado). Al abrir un look, la página
    toma ese mismo color y los bordes del video se difuminan, así el video se funde con la página.
    El color de cada video ya está medido (GUARDADO); para un video nuevo se mide del primer cuadro. */
@@ -114,7 +194,8 @@ window.MF_VESTIDOS=[{
     if (!lv || !lv.classList.contains('on')) { pintar('#fff'); return; }
     var v = document.getElementById('lvideo'), im = document.getElementById('lphoto');
     var src = (v && (v.currentSrc || v.src)) || (im && im.src) || '';
-    var color = GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
+    var F = window.MF_FONDOS || {}, limpio = String(src).split('?')[0];
+    var color = F[limpio] || GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
     if (color) pintar(color);
   }
   function iniciar() {

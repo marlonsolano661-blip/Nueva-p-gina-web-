@@ -141,7 +141,8 @@ def vestidos():
         return
     base = "{%- assign vb = 'vestidos-looks.js' | asset_url | split: 'vestidos-looks.js' | first -%}"
     looks = leer('vestidos/looks.js').replace("'vestidos/", "'{{ vb }}vestidos-").replace('"vestidos/', '"{{ vb }}vestidos-')
-    escribir('snippets/mf-vestidos-looks.liquid', base + '<script>' + looks + '</script><script>' + leer('shopify/vestidos-ajustes.js') + '</script>')
+    escribir('snippets/mf-vestidos-looks.liquid', base + '<script>' + looks + '</script>' + leer('shopify/vestidos-looks.liquid')
+             + '<script>' + leer('shopify/vestidos-ajustes.js') + '</script>')
     html = leer('vestidos.html')
     if '{{' in html or '{%' in html:
         raise SystemExit('vestidos.html tiene {{ o {%')
