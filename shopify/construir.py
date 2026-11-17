@@ -318,6 +318,11 @@ def vestidos():
                         'if(ph){ph.classList.add("mf-sobre");setTimeout(function(){ph.classList.remove("mf-sobre")},330)}'
                         'setTimeout(function(){f.remove()},1350)};</script>', 1)
     # Nombre de la sección en Shopify: MF Clóset
+    # "Llévate el look perfecto": vestido + tacones en una sola ficha (va dentro del script del perchero)
+    marca = 'function showMarks(on){'
+    if html.count(marca) != 1:
+        raise SystemExit('vestidos.html cambió, no encuentro: ' + marca)
+    html = html.replace(marca, leer('shopify/vestidos-look-completo.js') + '\n' + marca)
     for viejo, nuevo in [('<title>Vestidos · Marlon Footwear</title>', '<title>MF Clóset · Marlon Footwear</title>'),
                          ('content="Vestidos Marlon Footwear:', 'content="MF Clóset de Marlon Footwear:'),
                          ('content="Vestidos · Marlon Footwear"', 'content="MF Clóset · Marlon Footwear"'),
