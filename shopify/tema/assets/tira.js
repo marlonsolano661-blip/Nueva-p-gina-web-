@@ -26,7 +26,7 @@
   function foto() {
     var im = app.querySelector('.bn-ph img, .rh-ph img');
     var src = im && (im.currentSrc || im.getAttribute('src'));
-    if (src && bg.getAttribute('data-src') !== src) { bg.setAttribute('data-src', src); bg.style.backgroundImage = 'url("' + src.replace(/"/g, '%22') + '")'; }
+    if (src && bg.getAttribute('data-src') !== src) { bg.setAttribute('data-src', src); bg.style.backgroundImage = 'url("' + src.replace(/"/g, '%22') + '")'; document.documentElement.style.setProperty('--mf-tira-foto', bg.style.backgroundImage); }
   }
   function revisar() {
     var enInicio = false; try { enInicio = pg === 'home'; } catch (e) { enInicio = false; }

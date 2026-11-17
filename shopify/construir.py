@@ -66,6 +66,17 @@ html body .mfp .mfp-go.mfp-full{background:#fff;color:#0a0a0a}
 """
 
 
+FT_FRANJA = """
+/* Copia Shopify: "Únete a la comunidad MF" con el fondo de la franja del inicio (foto difuminada + azul pizarra), de borde a borde */
+html body .ft3-nlw{position:relative;isolation:isolate;overflow:hidden;max-width:none;border-bottom:0;background:#3e4c5c;
+  padding-left:max(1.5rem,calc((100% - 1100px) / 2 + 1.5rem));padding-right:max(1.5rem,calc((100% - 1100px) / 2 + 1.5rem))}
+html body .ft3-nlw::before{content:"";position:absolute;inset:0;z-index:-2;background:#5d6f82 var(--mf-tira-foto,none) center/cover no-repeat;filter:blur(18px) saturate(.9);transform:scale(1.15)}
+html body .ft3-nlw::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(20,28,38,.38)}
+html body .ft3-nlw .ft3-f input{border-color:rgba(255,255,255,.75)!important;background:rgba(255,255,255,.06)!important;color:#fff!important}
+html body .ft3-nlw .ft3-f input::placeholder{color:rgba(255,255,255,.75)}
+"""
+
+
 def nombre_asset(ruta):
     return ruta.replace('/', '-')
 
@@ -213,6 +224,13 @@ def main():
         for verde, pizarra in (('#02836f', '#3e4c5c'), ('#3a8273', '#3e4c5c'), ('#016a5a', '#2f3b48'), ('#2f6c5f', '#2f3b48')):
             texto = texto.replace(verde, pizarra).replace(verde.upper(), pizarra)
         texto = texto.replace('rgba(2,131,111,', 'rgba(62,76,92,').replace('#1d5c45', '#3e4c5c')
+        if ruta == 'footer.css':  # "Únete a la comunidad MF" con el mismo fondo de la franja del inicio
+            texto += FT_FRANJA
+        if ruta == 'tira.js':  # la foto de la franja queda disponible para el pie (--mf-tira-foto)
+            viejo = "bg.style.backgroundImage = 'url(\"' + src.replace(/\"/g, '%22') + '\")'; }"
+            if texto.count(viejo) != 1:
+                raise SystemExit('tira.js cambió, no encuentro el fondo de la franja')
+            texto = texto.replace(viejo, viejo[:-2] + " document.documentElement.style.setProperty('--mf-tira-foto', bg.style.backgroundImage); }")
         if ruta == 'descuento.css':  # aviso de bienvenida con el fondo de la franja del inicio
             texto += MFP_FRANJA
         escribir('assets/' + nombre_asset(ruta), texto)
