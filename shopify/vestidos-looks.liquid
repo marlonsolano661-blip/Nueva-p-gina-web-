@@ -15,6 +15,11 @@
   {%- assign es = lk.vestido_espalda.value -%}
   {%- assign vd = lk.vestido.value -%}
   {%- assign tc = lk.tacon.value -%}
+  {%- assign tcol = lk.tacon_color.value | default: '' | strip -%}
+  {%- assign tmini = tc.featured_image -%}
+  {%- if tc and tcol != '' -%}
+    {%- for vr in tc.variants -%}{%- for ov in vr.options -%}{%- if ov == tcol and vr.featured_image -%}{%- assign tmini = vr.featured_image -%}{%- endif -%}{%- endfor -%}{%- endfor -%}
+  {%- endif -%}
   {%- assign vf = lk.video_modelo.value -%}
   {%- assign video_url = '' -%}
   {%- if vf.media_type == 'video' -%}
@@ -40,7 +45,8 @@
     sesion: [{%- for im in lk.fotos_sesion.value -%}{{ im | image_url: width: 1080 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
     vestido: {% if vd %}{ id: {{ vd.handle | json }}, n: {{ vd.title | json }}, p: {{ vd.price | divided_by: 100 }} }{% else %}null{% endif %},
     tacon: {% if tc %}{ id: {{ tc.handle | json }}, n: {{ tc.title | json }}, p: {{ tc.price | divided_by: 100 }},
-      mini: {% if tc.featured_image %}{{ tc.featured_image | image_url: width: 200 | prepend: 'https:' | json }}{% else %}""{% endif %} }{% else %}null{% endif %}
+      color: {{ tcol | json }},
+      mini: {% if tmini %}{{ tmini | image_url: width: 200 | prepend: 'https:' | json }}{% else %}""{% endif %} }{% else %}null{% endif %}
   });
   {%- endfor -%}
 
@@ -72,7 +78,7 @@
         foto: { src: a.foto, inicio: a.foto, w: a.w, h: a.h, video: a.video || undefined, sesion: !a.video && a.sesion.length ? a.sesion : undefined, disparos: [1.0, 2.4, 3.8, 5.2, 6.6] },
         encaje: { x: Math.round(a.w * 0.18), y: Math.round(a.h * 0.16), w: Math.round(a.w * 0.64) },
         puntoPrenda: punto(a.pv, a.w, a.h, 50, 42),
-        tacon: T ? { id: T.id, n: T.n, p: T.p, colores: [], tallas: [], agotadas: [], punto: punto(a.pt, a.w, a.h, 55, 88), mini: T.mini, desc: [], fotos: [] } : undefined
+        tacon: T ? { id: T.id, n: T.n, p: T.p, color: T.color || '', colores: T.color ? [T.color] : [], tallas: [], agotadas: [], punto: punto(a.pt, a.w, a.h, 55, 88), mini: T.mini, desc: [], fotos: [] } : undefined
       };
     });
   if (looks.length) { window.MF_VESTIDOS = looks; window.MF_FONDOS = fondos; }
