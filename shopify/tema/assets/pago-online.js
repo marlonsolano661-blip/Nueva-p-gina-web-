@@ -36,7 +36,7 @@
     l.style.cssText = 'display:flex;gap:.7rem;align-items:flex-start;font-size:.95rem;margin:1.1rem 0;cursor:pointer';
     var i = document.createElement('input');
     i.type = 'checkbox'; i.checked = WA_OK;
-    i.style.cssText = 'margin-top:.3rem;flex:none;accent-color:#1d5c45';
+    i.style.cssText = 'margin-top:.3rem;flex:none;accent-color:#3e4c5c';
     i.onchange = function (e) { WA_OK = e.target.checked; };
     var s = document.createElement('span');
     s.textContent = 'Quiero recibir actualizaciones de mi pedido por WhatsApp. Puedes dejar de recibirlas cuando quieras.';

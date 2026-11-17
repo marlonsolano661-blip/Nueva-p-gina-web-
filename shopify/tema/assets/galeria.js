@@ -149,18 +149,18 @@
     }
   }
   /* Barra de abajo del producto (móvil) estilo EGO: blanca, nombre + precio + color, botón a todo lo ancho.
-     Botones de compra en el verde de EGO (#02836f) con letra blanca. */
+     Botones de compra en el verde de EGO (#3e4c5c) con letra blanca. */
   var egCss = [
     'html body #app .stk.eg-stk{display:block;padding:1.05rem 1.25rem calc(1rem + env(safe-area-inset-bottom,0px));background:#fff;color:#111;border-top:1px solid #e6e6e6;box-shadow:0 -8px 28px rgba(0,0,0,.08);-webkit-backdrop-filter:none;backdrop-filter:none}',
     'html body #app .stk.eg-stk>div{margin:0 0 .85rem}',
     'html body #app .stk.eg-stk .eg-nm{display:block;margin:0 0 .35rem;font:700 1.08rem/1.25 Figtree,system-ui,sans-serif;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     'html body #app .stk.eg-stk b{display:block;font:700 1.2rem/1.2 Figtree,system-ui,sans-serif;letter-spacing:0;color:#111}',
     'html body #app .stk.eg-stk small{display:block;margin-top:.55rem;font:400 .98rem/1.3 Figtree,system-ui,sans-serif;letter-spacing:0;color:#555}',
-    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#02836f;color:#fff;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
-    'html body #app .stk.eg-stk .btn:active{background:#016a5a}',
+    'html body #app .stk.eg-stk .btn{display:block;width:100%;max-width:none;min-height:3.5rem;margin:0;border:0;border-radius:0;background:#3e4c5c;color:#fff;font:700 1rem Figtree,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}',
+    'html body #app .stk.eg-stk .btn:active{background:#2f3b48}',
     // Verde EGO en "Elige tu talla / Agregar a la bolsa" (ficha y barra de abajo), PAGAR y APLICAR de la bolsa
-    'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn,html body .dr .dcb .btn{background:#02836f!important;color:#fff!important;border:2px solid #02836f!important}',
-    'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .dr .dcb .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#016a5a!important;border-color:#016a5a!important}',
+    'html body .btn[data-n="add"],html body .dr .drf .ml-par .btn,html body .dr .dcb .btn{background:#3e4c5c!important;color:#fff!important;border:2px solid #3e4c5c!important}',
+    'html body .btn[data-n="add"]:hover,html body .dr .drf .ml-par .btn:hover,html body .dr .dcb .btn:hover,html body .btn[data-n="add"]:active,html body .dr .drf .ml-par .btn:active{background:#2f3b48!important;border-color:#2f3b48!important}',
     'html body #app .stk.eg-stk .btn{border:0!important}',
     'html body .btn.eg-carga[data-n="add"],html body .btn.eg-carga[data-n="add"]:active,html body .btn.eg-carga[data-n="add"]:hover{position:relative;color:transparent!important;background:#cdc7c8!important;border-color:#cdc7c8!important;pointer-events:none}',
     "html body .btn.eg-carga[data-n='add']::after{content:'';position:absolute;left:50%;top:50%;width:1.35rem;height:1.35rem;margin:-.7rem 0 0 -.7rem;border:2px solid #3a3a3a;border-top-color:transparent;border-radius:50%;animation:egGira .7s linear infinite}",
@@ -174,7 +174,7 @@
     'html body .eg-dd-o.on{font-weight:600;color:#111}',
     'html body .eg-dd-o:active,html body .eg-dd-o:hover{background:#eef7f5}',
     'html body.eg-dd-ab #app .stk{transform:translateY(105%)!important}',
-    '@keyframes egAviso{0%,40%{border-color:#02836f;box-shadow:0 0 0 4px rgba(2,131,111,.22)}100%{box-shadow:0 0 0 0 rgba(2,131,111,0)}}',
+    '@keyframes egAviso{0%,40%{border-color:#3e4c5c;box-shadow:0 0 0 4px rgba(62,76,92,.22)}100%{box-shadow:0 0 0 0 rgba(62,76,92,0)}}',
     '@media(max-width:799px){html body main:has(.stk.eg-stk){padding-bottom:12rem}}'
   ].join('\n');
   var egSt = document.createElement('style'); egSt.setAttribute('data-eg-barra', '1'); egSt.textContent = egCss; document.head.appendChild(egSt);
@@ -227,7 +227,7 @@
     'html body .eg-cant:focus{outline:0;border-color:#111}',
     'html body .eg-acc{display:flex;gap:1rem;margin-top:.8rem}',
     'html body .eg-ic{display:inline-flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;padding:0;border:0;border-radius:0;background:none;color:#111;cursor:pointer}',
-    'html body .eg-ic:hover{color:#02836f}',
+    'html body .eg-ic:hover{color:#3e4c5c}',
     'html body .eg-ic[aria-pressed="true"] svg{fill:#111}'
   ].join('\n');
   var st = document.createElement('style'); st.setAttribute('data-eg-bolsa', '1'); st.textContent = css; document.head.appendChild(st);

@@ -135,8 +135,8 @@ html body .dr .drf .tt{display:flex;justify-content:space-between;align-items:ba
 html body .dr .drf .ml-par{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 html body .dr .drf .ml-par .ml-sigue,html body .dr .drf .ml-par .btn{min-height:3.4rem;margin:0;padding:0 .4rem;white-space:nowrap;font:600 .74rem Jost,sans-serif;letter-spacing:.07em;text-transform:uppercase;border-radius:0}
 html body .dr .drf .ml-par .ml-sigue{background:#fff;color:#0a0a0a;border:2px solid #0a0a0a}
-html body .dr .drf .ml-par .btn{background:#3a8273;color:#fff;border:2px solid #3a8273}
-html body .dr .drf .ml-par .btn:hover{background:#2f6c5f;border-color:#2f6c5f}
+html body .dr .drf .ml-par .btn{background:#3e4c5c;color:#fff;border:2px solid #3e4c5c}
+html body .dr .drf .ml-par .btn:hover{background:#2f3b48;border-color:#2f3b48}
 html body .dr .drf .ml-par .btn:disabled{opacity:.45}
 
 /* Bolsa sin parpadeo de colores: contorno más marcado y un solo color suave fijo cuando tiene productos */

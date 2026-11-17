@@ -209,6 +209,10 @@ def main():
         texto = texto.replace('https://tienda.mfcol.com/outfits.html', '/pages/mf-closet')
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
+        # Botones verdes → azul pizarra de la franja del inicio (mismo tono que "Paga como quieras · 15 % OFF")
+        for verde, pizarra in (('#02836f', '#3e4c5c'), ('#3a8273', '#3e4c5c'), ('#016a5a', '#2f3b48'), ('#2f6c5f', '#2f3b48')):
+            texto = texto.replace(verde, pizarra).replace(verde.upper(), pizarra)
+        texto = texto.replace('rgba(2,131,111,', 'rgba(62,76,92,').replace('#1d5c45', '#3e4c5c')
         if ruta == 'descuento.css':  # aviso de bienvenida con el fondo de la franja del inicio
             texto += MFP_FRANJA
         escribir('assets/' + nombre_asset(ruta), texto)

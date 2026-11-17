@@ -28,7 +28,7 @@ html body .ck-side{background:#f5f5f5!important;border-left:1px solid #e3e3e3!im
 html body .ckt .mf-fl input,html body .ckt .mf-fl select,html body .ckt .fg input,html body .ckt .fg textarea,html body .ck-pais,html body .ck-ship,html body .ck-sum .dcb input,html body .ck-mp,html body .ck-pn input,html body .ck-pn select{border-color:#d4d4d4!important}
 html body .ck-pn{background:#f5f5f5!important}
 html body .ck-th b{border-color:#f5f5f5!important}
-html body .ckt .mf-fl input:focus,html body .ckt .mf-fl select:focus,html body .ckt .fg input:focus,html body .ckt .fg textarea:focus,html body .ck-pn input:focus,html body .ck-pn select:focus,html body .ck-sum .dcb input:focus{border-color:#3a8273!important;box-shadow:0 0 0 1px #3a8273!important;outline:0!important}
-html body .ckt .mf-chk input:checked{background:#3a8273!important;border-color:#3a8273!important}
-html body .ck-mo:has(input:checked){box-shadow:inset 0 0 0 1.5px #3a8273!important}
-html body .ck-mo input,html body .ck-pn .ck-acp input{accent-color:#3a8273!important}
+html body .ckt .mf-fl input:focus,html body .ckt .mf-fl select:focus,html body .ckt .fg input:focus,html body .ckt .fg textarea:focus,html body .ck-pn input:focus,html body .ck-pn select:focus,html body .ck-sum .dcb input:focus{border-color:#3e4c5c!important;box-shadow:0 0 0 1px #3e4c5c!important;outline:0!important}
+html body .ckt .mf-chk input:checked{background:#3e4c5c!important;border-color:#3e4c5c!important}
+html body .ck-mo:has(input:checked){box-shadow:inset 0 0 0 1.5px #3e4c5c!important}
+html body .ck-mo input,html body .ck-pn .ck-acp input{accent-color:#3e4c5c!important}
