@@ -47,6 +47,25 @@ QUITAR = {'DATA/catalogo_tienda.js', 'DATA/shopify-variantes.js'}
 DINAMICOS = ['DATA/recortes.js', 'vitrina.js', 'outfits-boton.js']
 
 
+MFP_FRANJA = """
+/* Copia Shopify: el aviso de bienvenida usa el mismo fondo de la franja del inicio (foto difuminada + tono azul pizarra) */
+html body .mfp{background:#5d6f82;color:#fff;isolation:isolate}
+html body .mfp .mfp-bg{position:absolute;inset:0;z-index:-2;background:#5d6f82 center/cover no-repeat;filter:blur(18px) saturate(.9)}
+html body .mfp::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(20,28,38,.38);pointer-events:none}
+html body .mfp .mfp-ph{background:transparent}
+html body .mfp .mfp-x,html body .mfp h2,html body .mfp .mfp-logo,html body .mfp .mfp-cod{color:#fff}
+html body .mfp .mfp-ey{color:rgba(255,255,255,.82)}
+html body .mfp p.mfp-tx{color:rgba(255,255,255,.88)}
+html body .mfp p.mfp-n{color:rgba(255,255,255,.72)}
+html body .mfp .mfp-no{color:#fff}
+html body .mfp p.mfp-e{color:#ffd6d6}
+html body .mfp .mfp-f{border-color:rgba(255,255,255,.9)}
+html body .mfp .mfp-cb{border-color:rgba(255,255,255,.8)}
+html body .mfp .mfp-cp{background:rgba(255,255,255,.16);color:#fff;border-left-color:rgba(255,255,255,.8)}
+html body .mfp .mfp-go.mfp-full{background:#fff;color:#0a0a0a}
+"""
+
+
 def nombre_asset(ruta):
     return ruta.replace('/', '-')
 
@@ -153,6 +172,10 @@ def main():
                  "'</b> ' + (S.pct ? 'aplicado · −' + S.pct + '%' : 'se aplica al pagar') + '</span>"),
                 ("toast('Descuento del ' + d.pct + '% aplicado')",
                  "toast(d.pct ? 'Descuento del ' + d.pct + '% aplicado' : 'Código guardado: se aplica al pagar')"),
+                # fondo del aviso = el mismo de la franja del inicio (su foto difuminada)
+                ("fl.innerHTML = '<button type=\"button\" class=\"mfp-x\" data-mfx aria-label=\"Cerrar\">×</button>' +",
+                 "var tb = document.querySelector('.mf-tira-bg'), tf = tb && tb.getAttribute('data-src');\n"
+                 "    fl.innerHTML = '<div class=\"mfp-bg\" aria-hidden=\"true\"' + (tf ? ' style=\"background-image:url(&quot;' + E(tf) + '&quot;)\"' : '') + '></div><button type=\"button\" class=\"mfp-x\" data-mfx aria-label=\"Cerrar\">×</button>' +"),
             ],
             # InitiateCheckout lo manda la app Facebook & Instagram (checkout de Shopify): aquí no, para no contarlo doble
             'shopify-checkout.js': [("    try { if (window.fbq) fbq('track', 'InitiateCheckout', { currency: 'COP', num_items: items.length }); } catch (err) {}\n", "")],
@@ -186,6 +209,8 @@ def main():
         texto = texto.replace('https://tienda.mfcol.com/outfits.html', '/pages/mf-closet')
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
+        if ruta == 'descuento.css':  # aviso de bienvenida con el fondo de la franja del inicio
+            texto += MFP_FRANJA
         escribir('assets/' + nombre_asset(ruta), texto)
 
     vestidos()

@@ -28,6 +28,15 @@
       return 'rgb(' + Math.round(r / n) + ',' + Math.round(g / n) + ',' + Math.round(b / n) + ')';
     } catch (e) { return ''; } // imagen de otro dominio: no se puede medir
   }
+  /* Color elegido en el panel (Look de MF Clóset → color de fondo). Se busca por el nombre del archivo del video:
+     la dirección cambia según el dominio (dominio de la tienda o CDN de Shopify) pero el nombre no. */
+  function nombre(u) { return String(u || '').split('?')[0].split('#')[0].split('/').pop(); }
+  function deFondos(src) {
+    var F = window.MF_FONDOS || {}, n = nombre(src);
+    if (!n) return '';
+    for (var k in F) if (nombre(k) === n) return F[k];
+    return '';
+  }
   function pintar(color) {
     document.documentElement.style.backgroundColor = color;
     document.body.style.backgroundColor = color;
@@ -38,8 +47,7 @@
     if (!lv || !lv.classList.contains('on')) { pintar('#fff'); return; }
     var v = document.getElementById('lvideo'), im = document.getElementById('lphoto');
     var src = (v && (v.currentSrc || v.src)) || (im && im.src) || '';
-    var F = window.MF_FONDOS || {}, limpio = String(src).split('?')[0];
-    var color = F[limpio] || GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
+    var color = deFondos(src) || GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
     if (color) pintar(color);
   }
   function iniciar() {

@@ -110,7 +110,8 @@
     fl = document.createElement('aside'); fl.className = 'mfp'; fl.setAttribute('role', 'dialog'); fl.setAttribute('aria-label', 'Descuento de bienvenida');
     var conFoto = typeof foto === 'string' && RE_FOTO.test(foto);
     if (conFoto) fl.classList.add('fo');
-    fl.innerHTML = '<button type="button" class="mfp-x" data-mfx aria-label="Cerrar">×</button>' + (conFoto ? '<div class="mfp-ph"><img src="' + E(foto) + '" alt="" decoding="async"></div>' : '') + '<div class="mfp-c"></div>';
+    var tb = document.querySelector('.mf-tira-bg'), tf = tb && tb.getAttribute('data-src');
+    fl.innerHTML = '<div class="mfp-bg" aria-hidden="true"' + (tf ? ' style="background-image:url(&quot;' + E(tf) + '&quot;)"' : '') + '></div><button type="button" class="mfp-x" data-mfx aria-label="Cerrar">×</button>' + (conFoto ? '<div class="mfp-ph"><img src="' + E(foto) + '" alt="" decoding="async"></div>' : '') + '<div class="mfp-c"></div>';
     fl.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target : null; if (!t) return;
       if (t.closest('[data-dapply]')) return cerrar(false);

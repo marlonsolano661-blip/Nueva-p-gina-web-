@@ -69,3 +69,19 @@ html body .mfp-tab .mfp-tab-a{padding:.3rem .9rem .3rem .3rem;gap:.5rem}
 html body .mfp-tab .mfp-tab-i{width:1.95rem;height:1.95rem}
 html body .mfp-tab .mfp-tab-a b{font-size:.8rem}
 html body .mfp-tab .mfp-tab-a small{font-size:.64rem}
+
+/* Copia Shopify: el aviso de bienvenida usa el mismo fondo de la franja del inicio (foto difuminada + tono azul pizarra) */
+html body .mfp{background:#5d6f82;color:#fff;isolation:isolate}
+html body .mfp .mfp-bg{position:absolute;inset:0;z-index:-2;background:#5d6f82 center/cover no-repeat;filter:blur(18px) saturate(.9)}
+html body .mfp::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(20,28,38,.38);pointer-events:none}
+html body .mfp .mfp-ph{background:transparent}
+html body .mfp .mfp-x,html body .mfp h2,html body .mfp .mfp-logo,html body .mfp .mfp-cod{color:#fff}
+html body .mfp .mfp-ey{color:rgba(255,255,255,.82)}
+html body .mfp p.mfp-tx{color:rgba(255,255,255,.88)}
+html body .mfp p.mfp-n{color:rgba(255,255,255,.72)}
+html body .mfp .mfp-no{color:#fff}
+html body .mfp p.mfp-e{color:#ffd6d6}
+html body .mfp .mfp-f{border-color:rgba(255,255,255,.9)}
+html body .mfp .mfp-cb{border-color:rgba(255,255,255,.8)}
+html body .mfp .mfp-cp{background:rgba(255,255,255,.16);color:#fff;border-left-color:rgba(255,255,255,.8)}
+html body .mfp .mfp-go.mfp-full{background:#fff;color:#0a0a0a}
