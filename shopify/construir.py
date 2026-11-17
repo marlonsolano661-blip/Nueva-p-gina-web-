@@ -121,6 +121,11 @@ def main():
     for viejo, nuevo in [
         ("fetch((window.MF_API_BASE||'')+'/api/bienvenida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:m})})",
          "window.mfSuscribir(m)"),
+        # Video del producto (metacampo "Video del producto"): en la galería se ve como video en bucle, sin sonido
+        ("const imgH=p=>p.img?`<img src=\"${p.img}\"",
+         "const imgH=p=>p.img&&/\\.mp4(\\?|$)/i.test(p.img)?`<video src=\"${p.img}\" autoplay muted loop playsinline preload=\"metadata\" style=\"width:100%;height:100%;object-fit:cover;display:block\"></video>`:p.img?`<img src=\"${p.img}\""),
+        ('aria-label="Foto ${i+1}"><img src="${u}" alt="" loading="lazy"></button>',
+         'aria-label="Foto ${i+1}">${/\\.mp4(\\?|$)/i.test(u)?`<video src="${u}#t=0.5" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${u}" alt="" loading="lazy">`}</button>'),
         # "Comparte tus MF": sin servidor para guardar fotos, la clienta la manda por WhatsApp
         ("fetch((window.MF_API_BASE||'')+'/api/look',",
          "(function(){return Promise.resolve({ok:false,json:function(){return Promise.resolve({error:'Envíanos tu foto por WhatsApp'})}})})("),
@@ -190,7 +195,13 @@ def main():
             ],
             # InitiateCheckout lo manda la app Facebook & Instagram (checkout de Shopify): aquí no, para no contarlo doble
             'shopify-checkout.js': [("    try { if (window.fbq) fbq('track', 'InitiateCheckout', { currency: 'COP', num_items: items.length }); } catch (err) {}\n", "")],
-            'galeria.js': [("fetch((window.MF_API_BASE || '') + '/api/outfits')", "Promise.resolve({ ok: false })")],
+            'galeria.js': [
+                ("var th = gal.querySelectorAll('.th img'); if (th.length < 2) return;",
+                 "var th = gal.querySelectorAll('.th img, .th video'); if (th.length < 2) return;"),
+                ("var srcs = Array.prototype.map.call(th, function (i) { return i.getAttribute('src'); }).filter(Boolean);",
+                 "var srcs = Array.prototype.map.call(th, function (i) { return String(i.getAttribute('src') || '').replace(/#t=[\\d.]+$/, ''); }).filter(Boolean);"),
+                ("return '<div class=\"gsl-s\"><img src=\"' + E(s) + '\"",
+                 "if (/\\.mp4(\\?|$)/i.test(s)) return '<div class=\"gsl-s\"><video src=\"' + E(s) + '\" autoplay muted loop playsinline preload=\"metadata\" style=\"display:block;width:100%;height:100%;object-fit:cover\"></video></div>';\n      return '<div class=\"gsl-s\"><img src=\"' + E(s) + '\""),("fetch((window.MF_API_BASE || '') + '/api/outfits')", "Promise.resolve({ ok: false })")],
             'outfits-boton.js': [("fetch((window.MF_API_BASE || '') + '/api/outfits')", "Promise.resolve({ ok: false })")],
         }
         for viejo, nuevo in PARCHES.get(ruta, []):

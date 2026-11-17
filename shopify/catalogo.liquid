@@ -93,7 +93,7 @@ window.MF_SHOPIFY_CATALOGO = [
     "price": {{ p.price | divided_by: 100 }},
     "desc": {% if extra.desc %}{{ extra.desc | json }}{% else %}{{ p.description | strip_html | strip | json }}{% endif %},
     "img": {{ p.featured_image | image_url: width: 1400 | prepend: 'https:' | json }},
-    "imgs": [{%- for im in p.images -%}{{ im | image_url: width: 1400 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
+    "imgs": [{%- assign vid = p.metafields.mfcol.video.value -%}{%- for im in p.images -%}{{ im | image_url: width: 1400 | prepend: 'https:' | json }}{% if forloop.first and vid and vid.url %},{{ vid.url | json }}{% endif %}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
     "colors": [{%- for c in extra.colors -%}{"h": {{ c.h | json }}, "n": {{ c.n | json }}{% if c.i != nil and p.images[c.i] %}, "img": {{ p.images[c.i] | image_url: width: 1400 | prepend: 'https:' | json }}{% endif %}}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
     "coleccion": {{ extra.coleccion | default: colh | json }},
     "destacado": {% if extra.destacado or p.tags contains 'Destacado' %}true{% else %}false{% endif %},

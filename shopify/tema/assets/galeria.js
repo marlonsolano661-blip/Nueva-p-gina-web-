@@ -21,12 +21,13 @@
 
   function mejorar() {
     var gal = document.querySelector('#app .pd .gal'); if (!gal || gal.querySelector('.gsl')) return;
-    var th = gal.querySelectorAll('.th img'); if (th.length < 2) return;
-    var srcs = Array.prototype.map.call(th, function (i) { return i.getAttribute('src'); }).filter(Boolean);
+    var th = gal.querySelectorAll('.th img, .th video'); if (th.length < 2) return;
+    var srcs = Array.prototype.map.call(th, function (i) { return String(i.getAttribute('src') || '').replace(/#t=[\d.]+$/, ''); }).filter(Boolean);
     var nombre = ((document.querySelector('#app .pi h1') || {}).textContent || '').trim();
     var ini = 0; Array.prototype.forEach.call(gal.querySelectorAll('.th button'), function (b, i) { if (b.classList.contains('on')) ini = i; });
     var w = document.createElement('div'); w.className = 'gsl';
     w.innerHTML = '<div class="gsl-t">' + srcs.map(function (s, i) {
+      if (/\.mp4(\?|$)/i.test(s)) return '<div class="gsl-s"><video src="' + E(s) + '" autoplay muted loop playsinline preload="metadata" style="display:block;width:100%;height:100%;object-fit:cover"></video></div>';
       return '<div class="gsl-s"><img src="' + E(s) + '" alt="' + E(nombre + ' · foto ' + (i + 1)) + '"' + (i ? ' loading="lazy"' : '') + ' decoding="async"></div>';
     }).join('') + '</div><span class="gsl-n" aria-hidden="true">1 / ' + srcs.length + '</span><div class="gsl-d">' + srcs.map(function (s, i) {
       return '<button type="button" aria-label="Ver foto ' + (i + 1) + '"></button>';
