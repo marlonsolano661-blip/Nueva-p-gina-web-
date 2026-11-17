@@ -506,7 +506,7 @@ $("close").addEventListener("click",function(){
 var PH=null,tagAnim=0;
 function layoutPhoto(L){
   var S=$("lstage"),w=S.clientWidth,h=S.clientHeight,F=L.foto;
-  var ph=Math.min(h*1.16,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo"),tp=Math.max(0,(h-ph)/2);
+  var ph=Math.min(h*1.1,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo"),tp=ph>h?h-ph:(h-ph)/2;
   el.style.cssText="left:"+(w-pw)/2+"px;top:"+tp+"px;width:"+pw+"px;height:"+ph+"px";
   PH={x:(w-pw)/2,y:tp,k:pw/F.w};
   $("vf").style.cssText="left:"+PH.x+"px;top:"+PH.y+"px;width:"+pw+"px;height:"+ph+"px";

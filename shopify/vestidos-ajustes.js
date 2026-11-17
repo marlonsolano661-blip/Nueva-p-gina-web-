@@ -7,8 +7,9 @@
   var css = document.createElement('style');
   css.textContent =
     'html,body,#lookView{transition:background-color .6s ease}' +
-    '#photo{-webkit-mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);' +
-    '-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);mask-composite:intersect}';
+    '#photo{-webkit-mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 6%,#000 98%,transparent);' +
+    '-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 6%,#000 98%,transparent);mask-composite:intersect}';
+  css.textContent += '.lhead{position:relative;z-index:3}#lstage{z-index:1}.lfoot{position:relative;z-index:4}';
   document.head.appendChild(css);
 
   function clave(src) {

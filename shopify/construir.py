@@ -287,8 +287,8 @@ def vestidos():
         ('transition:transform 1.25s cubic-bezier(.5,0,.25,1)', 'transition:transform .7s cubic-bezier(.5,0,.25,1)'),
         ('transition:transform .8s cubic-bezier(.65,0,.2,1),opacity .5s', 'transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .3s'),
         ('transition:filter .9s', 'transition:filter .5s'),
-        # Video de la modelo más grande: puede crecer un 16 % sobre el espacio libre (los bordes ya se difuminan)
-        ('var ph=Math.min(h,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo");', 'var ph=Math.min(h*1.16,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo"),tp=Math.max(0,(h-ph)/2);'),
+        # Video de la modelo más grande: crece hasta un 10 % y, si no cabe, sobra por arriba (nunca por abajo): los tacones siempre quedan a la vista sobre las tarjetas
+        ('var ph=Math.min(h,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo");', 'var ph=Math.min(h*1.1,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo"),tp=ph>h?h-ph:(h-ph)/2;'),
         ('top:"+(h-ph)/2+"px;width:"+pw', 'top:"+tp+"px;width:"+pw'),
         ('PH={x:(w-pw)/2,y:(h-ph)/2,k:pw/F.w};', 'PH={x:(w-pw)/2,y:tp,k:pw/F.w};'),
         # Paso a la modelo: el vestido vuela ya sin gancho y se funde con la modelo mientras arranca el video
