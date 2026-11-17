@@ -19,7 +19,7 @@
   window.mfDescuento = function () { return S.codigo && !wa() ? Math.floor(subtotal() * S.pct / 100) : 0; };
   window.mfDescBox = function () {
     if (wa() || !subtotal()) return '';
-    if (S.codigo) return '<div class="dcb on"><span>Código <b>' + E(S.codigo) + '</b> aplicado · −' + S.pct + '%</span><button type="button" class="lk" data-dq="1">Quitar</button></div>';
+    if (S.codigo) return '<div class="dcb on"><span>Código <b>' + E(S.codigo) + '</b> ' + (S.pct ? 'aplicado · −' + S.pct + '%' : 'se aplica al pagar') + '</span><button type="button" class="lk" data-dq="1">Quitar</button></div>';
     return '<form class="dcb" data-dform autocomplete="off"><input data-dcode type="text" maxlength="20" placeholder="Código de descuento" aria-label="Código de descuento" autocapitalize="characters" spellcheck="false" value="' + E(S.texto) + '"><button type="submit" class="btn o s"' + (S.espera ? ' disabled' : '') + '>' + (S.espera ? '…' : 'Aplicar') + '</button></form>' + (S.msg ? '<p class="dcm" role="status">' + E(S.msg) + '</p>' : '');
   };
 
@@ -29,10 +29,10 @@
     var items = (typeof CART !== 'undefined' ? CART : []).map(function (l) { return { id: l.id, talla: l.talla, cant: l.q != null ? l.q : l.cant }; });
     if (!items.length) { S.msg = 'Agrega un producto a tu bolsa primero'; return repintar(); }
     S.espera = true; S.msg = ''; S.texto = codigo; repintar();
-    fetch(API + '/api/descuento', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: codigo, items: items }) })
+    window.mfValidarCodigo(codigo)
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos validar el código'); return d; }); })
       .then(function (d) {
-        if (d.ok) { S.codigo = d.codigo; S.pct = d.pct; S.texto = ''; S.msg = ''; guardar(); if (typeof toast === 'function') toast('Descuento del ' + d.pct + '% aplicado'); }
+        if (d.ok) { S.codigo = d.codigo; S.pct = d.pct; S.texto = ''; S.msg = ''; guardar(); if (typeof toast === 'function') toast(d.pct ? 'Descuento del ' + d.pct + '% aplicado' : 'Código guardado: se aplica al pagar'); }
         else S.msg = d.error || 'Ese código no es válido';
       })
       .catch(function (e) { S.msg = (e && e.message) || 'No pudimos validar el código'; })
@@ -97,7 +97,7 @@
   function pedir(pct, email) {
     if (enviando) return; enviando = true;
     var b = fl && fl.querySelector('.mfp-go'); if (b) { b.disabled = true; b.textContent = 'Enviando…'; }
-    fetch(API + '/api/bienvenida', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
+    window.mfSuscribir(email)
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos enviar tu código. Intenta de nuevo.'); return d; }); })
       .then(function (d) { if (d.ok && d.codigo) { setSes(CERRADO); setSes(OK); paso2(d, email); } else paso1(pct, d.error || 'Ese descuento no está disponible'); })
       .catch(function (e) { paso1(pct, (e && e.message) || 'No pudimos enviar tu código. Intenta de nuevo.'); })

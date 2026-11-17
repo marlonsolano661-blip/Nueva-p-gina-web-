@@ -324,7 +324,7 @@
     var viejo = pi.querySelector('.cl-look');
     if (viejo && viejo.getAttribute('data-id') === String(id)) return;
     if (viejo) viejo.remove();
-    if (LOOKS === null) { if (!pidiendo) { pidiendo = true; fetch((window.MF_API_BASE || '') + '/api/outfits').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { LOOKS = (d && d.outfits) || []; prog(); }).catch(function () { LOOKS = []; }); } return; }
+    if (LOOKS === null) { if (!pidiendo) { pidiendo = true; Promise.resolve({ ok: false }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { LOOKS = (d && d.outfits) || []; prog(); }).catch(function () { LOOKS = []; }); } return; }
     var cat = []; try { cat = catalog() || []; } catch (e) { return; }
     if (!cat.length) return;
     var s = sugerencias(id, cat);
@@ -334,7 +334,7 @@
         var dentro = (x.foto ? '<img src="' + E(x.foto) + '" alt="" loading="lazy">' : '') + '<b>🏷️ ' + E(x.n) + '</b>' + (x.precio ? '<i>' + plata(x.precio) + '</i>' : '') + '<span>Comprar →</span>';
         return x.id ? '<button type="button" class="cl-c" data-n="prod" data-id="' + E(x.id) + '">' + dentro + '</button>'
           : '<a class="cl-c" href="' + E(x.link) + '" target="_blank" rel="noopener">' + dentro + '</a>';
-      }).join('') + '</div><a class="cl-ver" href="https://tienda.mfcol.com/outfits.html">Ver el look completo →</a>';
+      }).join('') + '</div><a class="cl-ver" href="/pages/mf-closet">Ver el look completo →</a>';
     }
     var fila = pi.querySelector(':scope > .row'), trust = pi.querySelector(':scope > .trust');
     if (fila && fila.nextSibling) pi.insertBefore(caja, fila.nextSibling);

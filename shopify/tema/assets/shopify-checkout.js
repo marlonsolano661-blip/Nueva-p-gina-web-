@@ -50,7 +50,6 @@
     if (faltan.length) { console.warn('[MF] Sin variante en Shopify:', faltan); return; }
 
     e.stopImmediatePropagation(); e.preventDefault();
-    try { if (window.fbq) fbq('track', 'InitiateCheckout', { currency: 'COP', num_items: items.length }); } catch (err) {}
     b.disabled = true;
     aviso('Te llevamos al pago seguro…');
     location.href = urlCheckout(items);

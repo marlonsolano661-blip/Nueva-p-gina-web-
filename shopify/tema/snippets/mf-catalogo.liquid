@@ -4,7 +4,68 @@
   - Descripción corta, colores con su tono, colección y "destacado": del metacampo mfcol.tienda (copiado de Supabase).
 {%- endcomment -%}
 <script>
-window.MF_SHOPIFY_CONTENIDO = {{ shop.metafields.mfcol.contenido.value | json }};
+window.MF_SHOPIFY_CONTENIDO = {{ shop.metafields.mfcol.contenido.value | json }} || {};
+{%- comment -%}
+  Panel del inicio en Shopify (Contenido → Metaobjetos): "Inicio de la tienda", "Banner del inicio" y
+  "Comunidad Marlon". Si existe la entrada "inicio", todo sale de ahí y la tienda no depende de Netlify ni de Supabase.
+{%- endcomment -%}
+{%- assign ini = metaobjects.mf_inicio.inicio -%}
+{%- if ini -%}
+(function (C) {
+  function si(v, d) { return v === null || v === undefined || v === '' ? d : v; }
+  C.textos = {
+    hero_titulo: {{ ini.titulo_portada.value | json }},
+    hero_kicker: {{ ini.subtitulo_portada.value | json }},
+    boton_coleccion: {{ ini.boton_portada.value | json }},
+    band_titulo: {{ ini.franja_titulo.value | json }},
+    band_texto: {{ ini.franja_texto.value | json }},
+    band_boton: {{ ini.franja_boton.value | json }}
+  };
+  C.secciones = {
+    band: {% if ini.mostrar_franja.value == true %}true{% else %}false{% endif %},
+    valores: {% if ini.mostrar_valores.value == false %}false{% else %}true{% endif %},
+    comunidad: {% if ini.mostrar_comunidad.value == false %}false{% else %}true{% endif %}
+  };
+  C.promo = {
+    correo: {% if ini.promo_activa.value == true %}true{% else %}false{% endif %},
+    pct: {{ ini.promo_porcentaje.value | default: 0 }},
+    codigo: {{ ini.promo_codigo.value | strip | upcase | json }},
+    foto: {% if ini.promo_foto.value %}{{ ini.promo_foto.value | image_url: width: 900 | prepend: 'https:' | json }}{% else %}''{% endif %}
+  };
+  C.colecciones = [
+    {%- for c in ini.colecciones.value -%}
+    { id: {{ c.handle | json }}, nombre: {{ c.title | json }}, mensaje: {{ c.description | strip_html | strip | json }},
+      portada: {% if c.image %}{{ c.image | image_url: width: 1600 | prepend: 'https:' | json }}{% else %}''{% endif %}, visible: true }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ];
+  C.banners = [
+    {%- for b in metaobjects.mf_banner.values -%}
+    {%- capture colr -%}{{ b.color_texto.value }}{%- endcapture -%}
+    {
+      id: {{ b.system.handle | json }}, o: {{ b.orden.value | default: 99 }},
+      visible: {% if b.activo.value == false %}false{% else %}true{% endif %},
+      foto: {% if b.foto.value %}{{ b.foto.value | image_url: width: 1800 | prepend: 'https:' | json }}{% else %}''{% endif %},
+      fx: 50, fy: si({{ b.enfoque.value | json }}, 50), fondo: '#111111', oscuro: si({{ b.oscurecer.value | json }}, 25), vidrio: true,
+      capas: {% if b.titulo.value != blank %}[{ t: {{ b.titulo.value | json }}, x: 50, y: 50, tam: 4.8, ancho: 86, color: si({{ colr | strip | json }}, '#ffffff'),
+        mayus: {% if b.mayusculas.value == true %}true{% else %}false{% endif %}, alinea: 'center', fuente: 'sans', grueso: false, cursiva: false }]{% else %}[]{% endif %},
+      boton: {% if b.boton_texto.value != blank %}{ x: 50, y: 64.5, texto: {{ b.boton_texto.value | json }}, estilo: 'claro', destino:
+        {%- if b.boton_producto.value -%} { tipo: 'prod', id: {{ b.boton_producto.value.handle | json }} }
+        {%- elsif b.boton_coleccion.value -%} { tipo: 'col', id: {{ b.boton_coleccion.value.handle | json }} }
+        {%- elsif b.boton_enlace.value != blank -%} { tipo: 'url', url: {{ b.boton_enlace.value | json }} }
+        {%- else -%} { tipo: 'go' }{%- endif -%} }{% else %}null{% endif %}
+    }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ].sort(function (a, b) { return a.o - b.o; });
+  C.looks = [
+    {%- for r in metaobjects.mf_resena.values -%}
+    {%- if r.activa.value != false and r.foto.value -%}
+    { n: {{ r.nombre.value | json }}, t: {{ r.texto.value | json }}, ig: {{ r.instagram.value | default: '' | json }},
+      img: {{ r.foto.value | image_url: width: 900 | prepend: 'https:' | json }}, o: {{ r.orden.value | default: 99 }} },
+    {%- endif -%}
+    {%- endfor -%}
+  ].sort(function (a, b) { return a.o - b.o; });
+})(window.MF_SHOPIFY_CONTENIDO);
+{%- endif -%}
 {%- comment -%} Panel propio de Shopify: la vitrina es la colección "Vitrina" (en su orden) y la portada de cada colección es su imagen en Shopify {%- endcomment -%}
 window.MF_SHOPIFY_VITRINA = [{%- for p in collections['vitrina'].products limit: 40 -%}{{ p.handle | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}];
 window.MF_SHOPIFY_PORTADAS = { {%- for c in collections -%}{%- if c.image -%}{{ c.handle | json }}: {{ c.image | image_url: width: 1600 | prepend: 'https:' | json }},{%- endif -%}{%- endfor -%} };

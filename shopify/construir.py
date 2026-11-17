@@ -16,6 +16,22 @@ import shutil
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SALIDA = os.path.join(RAIZ, 'shopify', 'tema')
 NETLIFY = 'https://tienda.mfcol.com'
+# La copia de Shopify no depende de Netlify: fotos en Archivos de Shopify y funciones propias en el navegador
+AVATAR = 'https://cdn.shopify.com/s/files/1/1007/3476/3375/files/mf-avatar-negro-512.png?v=1794888780'
+# Funciones que reemplazan al servidor de Netlify (se ponen en el <head> de los dos layouts):
+#  - mfSuscribir(correo): guarda el correo como cliente suscrito de Shopify (formulario de clientes de la tienda)
+#    y entrega el código de bienvenida configurado en Contenido → Metaobjetos → Inicio de la tienda.
+#  - mfValidarCodigo(codigo): el código lo valida Shopify al pagar; aquí solo se reconoce el de bienvenida.
+SIN_NETLIFY = (
+    "window.MF_API_BASE='';"
+    "function mfResp(d){return Promise.resolve({ok:true,json:function(){return Promise.resolve(d)}})}"
+    "function mfPromo(){var p=(window.MF_SHOPIFY_CONTENIDO||{}).promo||{};return p}"
+    "window.mfSuscribir=function(m){var f=new FormData();f.append('form_type','customer');f.append('utf8','\u2713');"
+    "f.append('contact[email]',m);f.append('contact[tags]','newsletter,bienvenida');f.append('contact[accepts_marketing]','true');"
+    "var p=mfPromo(),d=p.correo&&p.codigo?{ok:true,codigo:p.codigo,pct:p.pct,enviado:false}:{ok:true};"
+    "return fetch('/contact',{method:'POST',body:f,credentials:'same-origin'}).catch(function(){}).then(function(){return mfResp(d)})};"
+    "window.mfValidarCodigo=function(c){var p=mfPromo();return mfResp({ok:true,codigo:c,pct:p.codigo&&String(p.codigo).toUpperCase()===c?p.pct:0})};"
+)
 
 PAGINAS = {
     'terminos.html': '/pages/terminos',
@@ -72,12 +88,24 @@ def main():
         raise SystemExit('index.html cambió: no encuentro el tiempo de espera de la portada')
     html = html.replace(viejo, viejo.replace('2500', '12000'))
     html = html.replace('<script src="DATA/shopify-variantes.js"></script>', '')
+    for viejo, nuevo in [
+        ("fetch((window.MF_API_BASE||'')+'/api/bienvenida',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:m})})",
+         "window.mfSuscribir(m)"),
+        # "Comparte tus MF": sin servidor para guardar fotos, la clienta la manda por WhatsApp
+        ("fetch((window.MF_API_BASE||'')+'/api/look',",
+         "(function(){return Promise.resolve({ok:false,json:function(){return Promise.resolve({error:'Envíanos tu foto por WhatsApp'})}})})("),
+        ("function openSheet(){",
+         "function openSheet(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent('Hola MF 👋 Quiero compartir mi outfit con mis MF para Comunidad Marlon'),'_blank');return;"),
+    ]:
+        if html.count(viejo) != 1:
+            raise SystemExit('index.html cambió, no encuentro: ' + viejo[:60])
+        html = html.replace(viejo, nuevo)
     for viejo, nuevo in PAGINAS.items():
         html = html.replace('href="%s"' % viejo, 'href="%s"' % nuevo)
 
     mapa = ','.join("%r:'{{ %r | asset_url }}'" % (r, nombre_asset(r)) for r in DINAMICOS)
     cabeza = ('<head>{{ content_for_header }}'
-              '<script>window.MF_API_BASE=%r;window.MF_SHOPIFY={tienda:location.host,activo:true};window.MF_ASSETS={%s};</script>' % (NETLIFY, mapa))
+              '<script>%swindow.MF_SHOPIFY={tienda:location.host,activo:true};window.MF_ASSETS={%s};</script>' % (SIN_NETLIFY, mapa))
     assets.extend(DINAMICOS)
     assert html.count('<head>') == 1 and html.count('</body>') == 1
     inicio, resto = html.split('<head>', 1)
@@ -115,7 +143,26 @@ def main():
         # scripts que se cargan solos: desde su URL en Shopify; fotos de assets/: desde la tienda de Netlify
         texto = texto.replace("s.src = src;", "s.src = (window.MF_ASSETS && window.MF_ASSETS[src]) || src;")
         texto = texto.replace("s.src = 'outfits-boton.js';", "s.src = (window.MF_ASSETS && window.MF_ASSETS['outfits-boton.js']) || 'outfits-boton.js';")
-        texto = texto.replace("'assets/", "'%s/assets/" % NETLIFY).replace('"assets/', '"%s/assets/' % NETLIFY)
+        PARCHES = {
+            'descuento.js': [
+                ("fetch(API + '/api/descuento', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: codigo, items: items }) })",
+                 "window.mfValidarCodigo(codigo)"),
+                ("fetch(API + '/api/bienvenida', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })",
+                 "window.mfSuscribir(email)"),
+                ("'</b> aplicado · −' + S.pct + '%</span>",
+                 "'</b> ' + (S.pct ? 'aplicado · −' + S.pct + '%' : 'se aplica al pagar') + '</span>"),
+                ("toast('Descuento del ' + d.pct + '% aplicado')",
+                 "toast(d.pct ? 'Descuento del ' + d.pct + '% aplicado' : 'Código guardado: se aplica al pagar')"),
+            ],
+            # InitiateCheckout lo manda la app Facebook & Instagram (checkout de Shopify): aquí no, para no contarlo doble
+            'shopify-checkout.js': [("    try { if (window.fbq) fbq('track', 'InitiateCheckout', { currency: 'COP', num_items: items.length }); } catch (err) {}\n", "")],
+            'galeria.js': [("fetch((window.MF_API_BASE || '') + '/api/outfits')", "Promise.resolve({ ok: false })")],
+            'outfits-boton.js': [("fetch((window.MF_API_BASE || '') + '/api/outfits')", "Promise.resolve({ ok: false })")],
+        }
+        for viejo, nuevo in PARCHES.get(ruta, []):
+            if texto.count(viejo) != 1:
+                raise SystemExit(ruta + ' cambió, no encuentro: ' + viejo[:60])
+            texto = texto.replace(viejo, nuevo)
         if ruta == 'meta-pixel.js':  # en la copia de Shopify el píxel también se activa en el dominio de Shopify
             texto = texto.replace("var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'];",
                                   "var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com', 'npckie-04.myshopify.com'];")
@@ -135,12 +182,14 @@ def main():
             texto = texto.replace("    if (!LISTA) {\n", "    if (!LISTA) {\n      if (!window.MF_API_OK) return;\n", 1)
         texto = texto.replace('"vestidos.html', '"/pages/mf-closet')
         texto = texto.replace('"/pages/mf-closet">Vestidos</button>', '"/pages/mf-closet">MF Clóset</button>')
-        texto = texto.replace('"outfits.html', '"%s/outfits.html' % NETLIFY).replace("'outfits.html", "'%s/outfits.html" % NETLIFY)
+        texto = texto.replace('"outfits.html', '"/pages/mf-closet').replace("'outfits.html", "'/pages/mf-closet")
+        texto = texto.replace('https://tienda.mfcol.com/outfits.html', '/pages/mf-closet')
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
         escribir('assets/' + nombre_asset(ruta), texto)
 
     vestidos()
+    revisar_sin_netlify()
 
     print('Listo:', len(set(assets)), 'archivos de estilo y código en', os.path.relpath(SALIDA, RAIZ))
 
@@ -218,8 +267,8 @@ def vestidos():
         if viejo not in html:
             raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo)
         html = html.replace(viejo, nuevo)
-    html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
-    html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
+    html = html.replace('href="assets/brand/avatar-negro-512.png"', 'href="%s"' % AVATAR)
+    html = html.replace('<head>', '<head>{{ content_for_header }}<script>' + SIN_NETLIFY + '</script>', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)
     escribir('templates/page.vestidos.json',
              '{"layout":"mf-vestidos","sections":{"mf":{"type":"mf-vacio","settings":{}}},"order":["mf"]}\n')
@@ -231,6 +280,27 @@ def vestidos():
         os.makedirs(os.path.dirname(destino), exist_ok=True)
         nuevo = os.path.join(RAIZ, 'shopify', 'vestidos-nuevos', nombre)  # videos rehechos (fondo blanco) solo para Shopify
         shutil.copyfile(nuevo if os.path.exists(nuevo) else os.path.join(ruta_dir, nombre), destino)
+
+def revisar_sin_netlify():
+    """La copia de Shopify debe funcionar aunque se borre Netlify: nada puede pedir datos ni fotos a tienda.mfcol.com o a Supabase."""
+    malos = []
+    for base, _, archivos in os.walk(SALIDA):
+        for n in archivos:
+            ruta = os.path.join(base, n)
+            if not n.endswith(('.js', '.liquid', '.json', '.css')):
+                continue
+            t = open(ruta, encoding='utf-8').read()
+            t = t.replace("'tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'", '')  # lista de dominios del píxel (no es una conexión)
+            # pago-online.js (Wompi dentro de Netlify) y tienda-api.js (catálogo de Netlify) no se usan en Shopify:
+            # el pago es el checkout de Shopify y el catálogo sale de Liquid (if (SH) return;)
+            for marca in ('tienda.mfcol.com', 'supabase.co', "/api/"):
+                if marca == '/api/' and (n in ('pago-online.js', 'tienda-api.js') or not re.search(r"['\"]/api/", t)):
+                    continue
+                if marca in t:
+                    malos.append((os.path.relpath(ruta, SALIDA), marca))
+    if malos:
+        raise SystemExit('Todavía depende de Netlify: ' + ', '.join('%s (%s)' % m for m in malos))
+
 
 if __name__ == '__main__':
     main()

@@ -36,14 +36,14 @@
     if (!id || ids.indexOf(id) < 0) return;
     var a = document.createElement('a');
     a.className = 'of-ideas';
-    a.href = 'https://tienda.mfcol.com/outfits.html?producto=' + encodeURIComponent(id);
+    a.href = '/pages/mf-closet?producto=' + encodeURIComponent(id);
     a.innerHTML = (fotos[id] ? '<img alt="" loading="lazy">' : '') + '<span><b>Ideas para combinar este tacón</b><small>Outfits para cada ocasión</small></span><i aria-hidden="true">→</i>';
     if (fotos[id]) a.querySelector('img').src = fotos[id];
     var t = pd.querySelector('.pi .trust');
     if (t) t.parentNode.insertBefore(a, t); else (pd.querySelector('.pi') || pd).appendChild(a);
   }
 
-  fetch((window.MF_API_BASE || '') + '/api/outfits').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+  Promise.resolve({ ok: false }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     var L = d && Array.isArray(d.outfits) ? d.outfits : [];
     ids = L.length ? L.map(function (x) { return String(x.producto); }) : EJEMPLO;
     L.forEach(function (x) { if (!fotos[x.producto] && x.fotos && x.fotos[0]) fotos[x.producto] = x.fotos[0].url; });
