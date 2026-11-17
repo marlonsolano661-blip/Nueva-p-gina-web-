@@ -74,7 +74,7 @@ window.MF_SHOPIFY_PORTADAS = { {%- for c in collections -%}{%- if c.image -%}{{ 
   if (window.MF_SHOPIFY_VITRINA.length) C.vitrina = window.MF_SHOPIFY_VITRINA;
   (C.colecciones || []).forEach(function (k) { var u = window.MF_SHOPIFY_PORTADAS[k.id]; if (u) k.portada = u; });
 })();
-window.MF_SHOPIFY_ENVIO = 17500;
+window.MF_SHOPIFY_ENVIO = {{ shop.metafields.mfcol.envio.value | default: 18500 }};{%- comment -%} Configuración → Datos personalizados → Tienda → Valor del envío {%- endcomment -%}
 window.MF_SHOPIFY_VARIANTES = {};
 window.MF_SHOPIFY_CATALOGO = [
 {%- paginate collections.all.products by 250 -%}
