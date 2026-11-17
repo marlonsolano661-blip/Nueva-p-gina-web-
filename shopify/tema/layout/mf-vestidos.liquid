@@ -226,6 +226,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .cabina button img{width:100%;height:100%;object-fit:contain;border-radius:50%;display:block}
 .cabina button[aria-pressed="true"]{border-color:var(--k);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--k),0 6px 16px rgba(0,0,0,.18);transform:scale(1.06)}
 .rail{display:none}
+.creditos,#creditos{position:relative;z-index:7}
 .piece.dress .face img{clip-path:inset(30% 0 0 0);transition:none}
 .piece.fly.dress{opacity:0;transition:transform .5s cubic-bezier(.65,0,.2,1),opacity .28s ease-in .3s}
 .mf-flash{position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 42%,#fff 0,#fff 55%,#fffaf0 80%,#f3efe6 100%);animation:mfFlash 1.25s cubic-bezier(.2,.7,.3,1) forwards}
@@ -505,9 +506,9 @@ $("close").addEventListener("click",function(){
 var PH=null,tagAnim=0;
 function layoutPhoto(L){
   var S=$("lstage"),w=S.clientWidth,h=S.clientHeight,F=L.foto;
-  var ph=Math.min(h,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo");
-  el.style.cssText="left:"+(w-pw)/2+"px;top:"+(h-ph)/2+"px;width:"+pw+"px;height:"+ph+"px";
-  PH={x:(w-pw)/2,y:(h-ph)/2,k:pw/F.w};
+  var ph=Math.min(h*1.16,w*F.h/F.w),pw=ph*F.w/F.h,el=$("photo"),tp=Math.max(0,(h-ph)/2);
+  el.style.cssText="left:"+(w-pw)/2+"px;top:"+tp+"px;width:"+pw+"px;height:"+ph+"px";
+  PH={x:(w-pw)/2,y:tp,k:pw/F.w};
   $("vf").style.cssText="left:"+PH.x+"px;top:"+PH.y+"px;width:"+pw+"px;height:"+ph+"px";
   if(F.video&&F.vidFin){var k=PH.k,vf=F.vidFin,vh=vf.w*F.vidH/F.vidW,v=$("lvideo");
     v.style.cssText="left:"+(vf.c[0]-vf.w/2)*k+"px;top:"+(vf.c[1]-vh/2)*k+"px;width:"+vf.w*k+"px;height:"+vh*k+"px"}
