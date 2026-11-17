@@ -121,7 +121,8 @@ def main():
                                   "var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com', 'npckie-04.myshopify.com'];")
         if ruta == 'vitrina.js':  # la vitrina se arma cuando ya están el catálogo y la lista del panel (si no, sale vacía)
             texto = texto.replace("    if (!LISTA) {\n", "    if (!LISTA) {\n      if (!window.MF_API_OK) return;\n", 1)
-        texto = texto.replace('"vestidos.html', '"/pages/vestidos')
+        texto = texto.replace('"vestidos.html', '"/pages/mf-closet')
+        texto = texto.replace('"/pages/mf-closet">Vestidos</button>', '"/pages/mf-closet">MF Clóset</button>')
         texto = texto.replace('"outfits.html', '"%s/outfits.html' % NETLIFY).replace("'outfits.html", "'%s/outfits.html" % NETLIFY)
         for viejo, nuevo in PAGINAS.items():
             texto = texto.replace('"%s"' % viejo, '"%s"' % nuevo).replace("'%s'" % viejo, "'%s'" % nuevo)
@@ -197,6 +198,14 @@ def vestidos():
                         'document.body.appendChild(f);var ph=document.getElementById("photo");'
                         'if(ph){ph.classList.add("mf-sobre");setTimeout(function(){ph.classList.remove("mf-sobre")},330)}'
                         'setTimeout(function(){f.remove()},1350)};</script>', 1)
+    # Nombre de la sección en Shopify: MF Clóset
+    for viejo, nuevo in [('<title>Vestidos · Marlon Footwear</title>', '<title>MF Clóset · Marlon Footwear</title>'),
+                         ('content="Vestidos Marlon Footwear:', 'content="MF Clóset de Marlon Footwear:'),
+                         ('content="Vestidos · Marlon Footwear"', 'content="MF Clóset · Marlon Footwear"'),
+                         ('<h1 class="h1"><span>Vestidos</span></h1>', '<h1 class="h1"><span>MF Clóset</span></h1>')]:
+        if viejo not in html:
+            raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo)
+        html = html.replace(viejo, nuevo)
     html = html.replace('href="assets/brand/', 'href="%s/assets/brand/' % NETLIFY)
     html = html.replace('<head>', '<head>{{ content_for_header }}', 1).replace('</body>', '{{ content_for_layout }}</body>', 1)
     escribir('layout/mf-vestidos.liquid', html)
