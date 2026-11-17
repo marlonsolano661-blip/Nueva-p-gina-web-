@@ -202,7 +202,7 @@ def vestidos():
     for viejo, nuevo in [('<title>Vestidos · Marlon Footwear</title>', '<title>MF Clóset · Marlon Footwear</title>'),
                          ('content="Vestidos Marlon Footwear:', 'content="MF Clóset de Marlon Footwear:'),
                          ('content="Vestidos · Marlon Footwear"', 'content="MF Clóset · Marlon Footwear"'),
-                         ('<h1 class="h1"><span>Vestidos</span></h1>', '<h1 class="h1"><span>MF Clóset</span></h1>')]:
+                         ('<h1 class="h1"><span>Vestidos</span></h1>', '<p class="sub" style="letter-spacing:.32em;font-size:.7rem;margin-bottom:.4rem">MF CLÓSET</p><h1 class="h1"><span>Colección Vestidos Glam</span></h1>')]:
         if viejo not in html:
             raise SystemExit('vestidos.html cambió, no encuentro: ' + viejo)
         html = html.replace(viejo, nuevo)
