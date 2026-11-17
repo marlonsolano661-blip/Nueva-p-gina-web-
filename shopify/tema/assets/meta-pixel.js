@@ -24,7 +24,7 @@
   /* Código base oficial del píxel */
   !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   window.fbq('init', ID);
-  window.fbq('track', 'PageView');
+  /* PageView: lo manda la app Facebook & Instagram */
 
   var MON = 'COP';
   function prod(id) { try { return (typeof catalog === 'function' ? catalog() : []).find(function (x) { return String(x.id) === String(id); }) || null; } catch (e) { return null; } }
@@ -35,7 +35,7 @@
     var add0 = window.add;
     window.add = function (id) {
       var r = add0.apply(this, arguments);
-      if (r) { var p = prod(id); if (p) ev('AddToCart', { content_ids: [String(p.id)], content_name: p.name, content_type: 'product', value: p.price, currency: MON }); }
+      if (r) { var p = prod(id); if (p) ev('AddToCart', { content_ids: [String(p.sid || p.id)], content_name: p.name, content_type: 'product_group', value: p.price, currency: MON }); }
       return r;
     };
   }
@@ -44,8 +44,8 @@
     window.nav = function (p, a) {
       var r = nav0.apply(this, arguments);
       try {
-        if (p === 'prod') { var q = prod(a); if (q) ev('ViewContent', { content_ids: [String(q.id)], content_name: q.name, content_type: 'product', value: q.price, currency: MON }); }
-        else if (p === 'out') { var L = lineas(); if (L.length) ev('InitiateCheckout', { content_ids: L.map(function (x) { return x.id; }), contents: L, content_type: 'product', num_items: L.reduce(function (t, x) { return t + x.quantity; }, 0), value: typeof total === 'function' ? total() : 0, currency: MON }); }
+        if (p === 'prod') { var q = prod(a); if (q) ev('ViewContent', { content_ids: [String(q.sid || q.id)], content_name: q.name, content_type: 'product_group', value: q.price, currency: MON }); }
+        else if (false) { var L = lineas(); if (L.length) ev('InitiateCheckout', { content_ids: L.map(function (x) { return x.id; }), contents: L, content_type: 'product', num_items: L.reduce(function (t, x) { return t + x.quantity; }, 0), value: typeof total === 'function' ? total() : 0, currency: MON }); }
       } catch (e) { /* nada */ }
       return r;
     };

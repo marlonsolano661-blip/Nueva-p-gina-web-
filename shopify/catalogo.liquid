@@ -27,6 +27,7 @@ window.MF_SHOPIFY_CATALOGO = [
   {%- assign colh = '' -%}{%- for c in p.collections -%}{%- if colh == '' and c.handle != 'vitrina' and c.handle != 'frontpage' -%}{%- assign colh = c.handle -%}{%- endif -%}{%- endfor -%}
   {
     "id": {{ p.handle | json }},
+    "sid": {{ p.id | json }},
     "name": {{ p.title | json }},
     "price": {{ p.price | divided_by: 100 }},
     "desc": {% if extra.desc %}{{ extra.desc | json }}{% else %}{{ p.description | strip_html | strip | json }}{% endif %},

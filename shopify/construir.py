@@ -119,6 +119,18 @@ def main():
         if ruta == 'meta-pixel.js':  # en la copia de Shopify el píxel también se activa en el dominio de Shopify
             texto = texto.replace("var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com'];",
                                   "var DOMINIOS = ['tienda.mfcol.com', 'mfcol.com', 'www.mfcol.com', 'npckie-04.myshopify.com'];")
+            # La app Facebook & Instagram ya manda PageView, InitiateCheckout y Purchase (web + servidor):
+            # aquí solo quedan ViewContent y AddToCart, con el id de producto de Shopify (coincide con el catálogo de la app).
+            for viejo, nuevo in [
+                ("  window.fbq('track', 'PageView');\n", "  /* PageView: lo manda la app Facebook & Instagram */\n"),
+                ("else if (p === 'out') {", "else if (false) {"),
+                ("ev('AddToCart', { content_ids: [String(p.id)], content_name: p.name, content_type: 'product',",
+                 "ev('AddToCart', { content_ids: [String(p.sid || p.id)], content_name: p.name, content_type: 'product_group',"),
+                ("ev('ViewContent', { content_ids: [String(q.id)], content_name: q.name, content_type: 'product',",
+                 "ev('ViewContent', { content_ids: [String(q.sid || q.id)], content_name: q.name, content_type: 'product_group',")]:
+                if texto.count(viejo) != 1:
+                    raise SystemExit('meta-pixel.js cambió, no encuentro: ' + viejo[:60])
+                texto = texto.replace(viejo, nuevo)
         if ruta == 'vitrina.js':  # la vitrina se arma cuando ya están el catálogo y la lista del panel (si no, sale vacía)
             texto = texto.replace("    if (!LISTA) {\n", "    if (!LISTA) {\n      if (!window.MF_API_OK) return;\n", 1)
         texto = texto.replace('"vestidos.html', '"/pages/mf-closet')
