@@ -74,21 +74,55 @@ window.MF_VESTIDOS=[{
     desc:["Aguja negra de tiras delgadas con pulsera al tobillo","Tacón 11 cm"],
     fotos:[{u:"{{ vb }}vestidos-alessia-1.jpg",fit:"contain"},"{{ vb }}vestidos-alessia-2.jpg","{{ vb }}vestidos-alessia-3.jpg"],fotosColor:{Plata:["{{ vb }}vestidos-alessia-plata.jpg"]}}
 }];
-</script><script>/* Videos nuevos (fondo blanco) de "Arena beige" y "Brisa celeste" en la copia de Shopify:
-   tamaño del video, momentos del flash y dónde van los puntos de compra sobre el último cuadro. */
+</script><script>/* Fondo que se acomoda solo al video de cada look (copia de Shopify).
+   Los videos traen su propio fondo de estudio (blanco, gris claro o rosado). Al abrir un look, la página
+   toma ese mismo color y los bordes del video se difuminan, así el video se funde con la página.
+   El color de cada video ya está medido (GUARDADO); para un video nuevo se mide del primer cuadro. */
 (function () {
-  var N = {
-    'Arena beige': { w: 1080, h: 1676, puntoPrenda: [510, 600], tacon: [525, 1560] },
-    'Brisa celeste': { w: 1080, h: 1606, puntoPrenda: [549, 570], tacon: [594, 1530] }
-  };
-  (window.MF_VESTIDOS || []).forEach(function (L) {
-    var n = N[L.nombre]; if (!n || !L.foto) return;
-    L.foto.w = n.w; L.foto.h = n.h;
-    delete L.foto.velocidad; delete L.foto.fondo;
-    L.foto.disparos = [1.5, 3.5, 5.5, 7.5, 9.2];
-    L.encaje = { x: Math.round(n.w * 0.28), y: Math.round(n.h * 0.17), w: Math.round(n.w * 0.44) };
-    L.puntoPrenda = n.puntoPrenda;
-    if (L.tacon) L.tacon.punto = n.tacon;
-  });
+  var GUARDADO = { 'look-1': '#fefaff', 'verde': '#fbf4fc', 'celeste-tacon': '#f7ecf3', 'celeste': '#fbf9fb', 'beige': '#e7e6e4' };
+  var css = document.createElement('style');
+  css.textContent =
+    'html,body,#lookView{transition:background-color .6s ease}' +
+    '#photo{-webkit-mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);' +
+    '-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 7%,#000 93%,transparent),linear-gradient(to bottom,transparent,#000 5%,#000 95%,transparent);mask-composite:intersect}';
+  document.head.appendChild(css);
+
+  function clave(src) {
+    src = String(src || '');
+    var ks = Object.keys(GUARDADO).sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < ks.length; i++) if (new RegExp('vestidos[-/]' + ks[i] + '[.-]').test(src)) return ks[i];
+    return '';
+  }
+  function medir(el) {
+    try {
+      var w = el.videoWidth || el.naturalWidth, h = el.videoHeight || el.naturalHeight;
+      if (!w || !h) return '';
+      var c = document.createElement('canvas'); c.width = 40; c.height = 40;
+      var x = c.getContext('2d'); x.drawImage(el, 0, 0, 40, 40);
+      var d = x.getImageData(0, 0, 40, 40).data, r = 0, g = 0, b = 0, n = 0;
+      [[20, 1], [10, 1], [30, 1], [1, 12], [38, 12]].forEach(function (p) { var k = (p[1] * 40 + p[0]) * 4; r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; });
+      return 'rgb(' + Math.round(r / n) + ',' + Math.round(g / n) + ',' + Math.round(b / n) + ')';
+    } catch (e) { return ''; } // imagen de otro dominio: no se puede medir
+  }
+  function pintar(color) {
+    document.documentElement.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
+    var lv = document.getElementById('lookView'); if (lv) lv.style.backgroundColor = color === '#fff' ? '' : color;
+  }
+  function revisar() {
+    var lv = document.getElementById('lookView');
+    if (!lv || !lv.classList.contains('on')) { pintar('#fff'); return; }
+    var v = document.getElementById('lvideo'), im = document.getElementById('lphoto');
+    var src = (v && (v.currentSrc || v.src)) || (im && im.src) || '';
+    var color = GUARDADO[clave(src)] || (v && v.readyState >= 2 && medir(v)) || (im && im.complete && medir(im)) || '';
+    if (color) pintar(color);
+  }
+  function iniciar() {
+    var lv = document.getElementById('lookView'); if (!lv) return;
+    new MutationObserver(revisar).observe(lv, { attributes: true, attributeFilter: ['class'] });
+    var v = document.getElementById('lvideo'); if (v) { v.addEventListener('loadeddata', revisar); v.addEventListener('play', revisar); }
+    var im = document.getElementById('lphoto'); if (im) im.addEventListener('load', revisar);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
 </script>
