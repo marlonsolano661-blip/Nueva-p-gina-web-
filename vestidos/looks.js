@@ -60,8 +60,8 @@ window.MF_VESTIDOS=[{
   /* vestido de lentejuelas, un hombro, con abertura en la cintura. La espalda en gancho se armó desde el frente
      (espejo, falda lisa y ruedo recto como en la foto de la modelo de espalda): cámbiala si llega la foto real */
   prenda:{n:"Vestido Esmeralda",frente:"vestidos/verde-frente.webp",espalda:"vestidos/verde-espalda.webp",w:684,h:1067,gancho:[342,92],
-    /* PENDIENTE: crear el producto en la tienda (id vestido-esmeralda) con su precio y tallas */
-    venta:{id:"vestido-esmeralda",n:"Vestido Esmeralda",color:"Verde esmeralda",colores:["Verde esmeralda"],tallas:["XS","S","M","L","XL"],agotadas:[],
+    /* el vestido en la tienda (catálogo: vestido-esmeralda), talla única */
+    venta:{id:"vestido-esmeralda",n:"Vestido Esmeralda",p:159900,color:"Verde esmeralda",colores:["Verde esmeralda"],tallas:["Única"],agotadas:[],
       fotos:[{u:"vestidos/verde-frente.webp",fit:"contain"},{u:"vestidos/verde-espalda.webp",fit:"contain"},"vestidos/verde-modelo-frente.jpg","vestidos/verde-modelo-espalda.jpg"],fotosColor:{}}},
   /* video 4K recortado a 1080 de ancho (bordes negros fuera): termina con la mano en el pelo y la otra en la cintura */
   foto:{src:"vestidos/verde-ini.jpg",inicio:"vestidos/verde-ini.jpg",w:1080,h:1938,video:"vestidos/verde.mp4",disparos:[1.0,2.4,3.8,5.4,6.8]},
